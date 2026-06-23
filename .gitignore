@@ -1,0 +1,7 @@
+build/
+build-*/
+cmake-build-*/
+*.o
+*.a
+*.elf
+*.map
