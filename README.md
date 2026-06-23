@@ -6,7 +6,7 @@ This C++20 version is a new implementation inspired by that C design, built to m
 
 The framework is sample-wise by design: it processes one sample at a time, accumulates gradients, and applies an optimizer step according to the configured batch policy. This keeps activation memory bounded by one sample rather than by the whole batch, following the same broad motivation as memory-efficient large-batch and edge-training work such as Piao et al. (2023) and Re-Forward-style memory-efficient backpropagation for edge reinforcement learning.
 
-The v0.1 implementation is Dense-only and fully supports FP32 on the generic scalar backend. It does not include PPO, reinforcement learning applications, CarRacing, Pendulum, STM32N6 application code, STAI integration, host-MCU protocols, private datasets, generated models, or post-baseline optimized kernels. The old C baseline is referenced for methodology and regression measurements only; its source is not vendored in this repository.
+The v0.1 implementation fully supports Dense layers, vector-shaped custom layers, custom activations, custom losses, custom initializers, and model-level precision policies on the generic scalar backend. It does not include PPO, reinforcement learning applications, CarRacing, Pendulum, STM32N6 application code, STAI integration, host-MCU protocols, private datasets, generated models, or post-baseline optimized kernels. The old C baseline is referenced for methodology and regression measurements only; its source is not vendored in this repository.
 
 ## Build
 
@@ -59,6 +59,37 @@ using M = edge::Model<
 
 `Backend::M55` is a tag placeholder in v0.1 and falls back to the generic implementation. Vendor STM32 headers are not included by public generic headers.
 
+Precision is also a model-level policy. The default is `edge::precision::FP32`, but a project can define its own policy:
+
+```cpp
+struct DoublePrecision {
+    using ParameterT = double;
+    using ActivationT = double;
+    using GradientT = double;
+    using AccumulatorT = double;
+    using OptimizerStateT = double;
+    using LossT = double;
+};
+
+using DoubleModel = edge::Model<
+    DoublePrecision,
+    edge::Input<8>,
+    edge::Dense<16, edge::ReLU>,
+    edge::Dense<1>>;
+```
+
+The same syntax can be combined with an explicit backend:
+
+```cpp
+using M = edge::Model<
+    edge::Backend::Generic,
+    DoublePrecision,
+    edge::Input<8>,
+    edge::Dense<1>>;
+```
+
+See `examples/custom_precision.cpp` for a compilable example.
+
 ## Current Support
 
 | Component | v0.1 status | Notes |
@@ -67,10 +98,11 @@ using M = edge::Model<
 | Conv2D layer | No | Future layer type |
 | Dropout layer | No | Future layer type |
 | LayerNorm layer | No | Future layer type |
-| Custom layer | Extension point only | Layer concepts exist, but `Model` currently instantiates Dense only |
+| Custom layer | Yes | Vector-shaped layers with compile-time feature, parameter, cache, and workspace counts |
 | Custom activation | Yes | Generic backend supports user activation policies |
 | Custom loss | Yes | Loss computes `value` and `dLoss/dOutput` through the training loss API |
-| Custom initializer | Yes | User initializers can fill Dense weights |
+| Custom initializer | Yes | User initializers can fill Dense weights with the model parameter type |
+| Custom precision policy | Yes | Model-level type bundle for parameters, activations, gradients, accumulators, optimizer state, and loss |
 
 ## Memory Planning
 
@@ -104,6 +136,16 @@ Model model{edge::external_arena(arena)};
 
 `std::span<std::byte, N>` and `std::byte (&)[N]` are also supported. A future `void* + size_t` API, if added, must return `Status` and be documented as runtime-checked only.
 
+The planner is compile-time because the model topology and precision policy are types. For a given `Model`, the compiler knows every layer input/output size, parameter count, activation cache requirement, optimizer state count, and the byte size/alignment of each precision type. The arena is then split into typed sections:
+
+- parameters: `Model::parameter_type`
+- gradients: `Model::gradient_type`
+- optimizer state: `Model::optimizer_state_type`
+- activations and layer caches: `Model::activation_type`
+- temporary backward workspace: `Model::accumulator_type`
+
+This is strong for embedded and RTOS targets because the framework does not allocate from the heap at runtime. If the external arena is too small, typed arena APIs fail at compile time; if the storage is not correctly aligned, construction reports `Status::UnalignedArena`. The shared RTOS heap is not touched by the training path.
+
 ## Training
 
 ```cpp
@@ -132,12 +174,14 @@ Custom losses provide `value` and `evaluate`:
 ```cpp
 struct MyLoss {
     template<typename Prediction, typename Target>
-    static float value(const Prediction& y, const Target& t);
+    static auto value(const Prediction& y, const Target& t);
 
     template<typename Prediction, typename Target, typename Gradient>
-    static float evaluate(const Prediction& y, const Target& t, Gradient& g);
+    static auto evaluate(const Prediction& y, const Target& t, Gradient& g);
 };
 ```
+
+Returning `float` is valid, but a loss can also return the policy loss type or another arithmetic type compatible with it.
 
 ## Custom Activation
 
@@ -155,6 +199,49 @@ struct MyActivation {
 ```
 
 Built-ins are `Linear`, `ReLU`, `Tanh`, and `Sigmoid`.
+
+## Custom Layer
+
+A custom vector layer provides a nested `Instance<InFeatures>` with compile-time shape and memory counts, plus typed `initialize`, `forward`, and `backward` functions:
+
+```cpp
+struct TrainableScale {
+    template<std::size_t InFeatures>
+    struct Instance {
+        static constexpr std::size_t in_features = InFeatures;
+        static constexpr std::size_t out_features = InFeatures;
+        static constexpr std::size_t parameter_count = InFeatures;
+        static constexpr std::size_t cache_count = 0;
+        static constexpr std::size_t workspace_count = 0;
+
+        template<typename Types>
+        static void initialize(edge::TensorView<typename Types::ParameterT, parameter_count> p,
+                               edge::DeterministicRng& rng,
+                               const edge::InitConfig& config) noexcept;
+
+        template<typename Types>
+        static void forward(edge::TensorView<const typename Types::ActivationT, in_features> x,
+                            edge::TensorView<typename Types::ActivationT, out_features> y,
+                            edge::TensorView<const typename Types::ParameterT, parameter_count> p,
+                            edge::TensorView<typename Types::ActivationT, cache_count> cache,
+                            edge::TensorView<typename Types::AccumulatorT, workspace_count> work) noexcept;
+
+        template<typename Types>
+        static void backward(edge::TensorView<const typename Types::ActivationT, in_features> x,
+                             edge::TensorView<const typename Types::ActivationT, out_features> y,
+                             edge::TensorView<const typename Types::AccumulatorT, out_features> dy,
+                             edge::TensorView<typename Types::AccumulatorT, in_features> dx,
+                             edge::TensorView<const typename Types::ParameterT, parameter_count> p,
+                             edge::TensorView<typename Types::GradientT, parameter_count> dp,
+                             edge::TensorView<const typename Types::ActivationT, cache_count> cache,
+                             edge::TensorView<typename Types::AccumulatorT, workspace_count> work) noexcept;
+    };
+};
+
+using M = edge::Model<edge::Input<4>, TrainableScale, edge::Dense<1>>;
+```
+
+`TensorView` is passed by value because it is a small typed view, similar to `std::span<T, N>`. Data that the layer must not modify is exposed through `TensorView<const T, N>`. Backend code can still use `view.data()` when a contiguous pointer is needed for an optimized kernel. See `examples/custom_layer.cpp` for a full implementation.
 
 ## Benchmarks
 

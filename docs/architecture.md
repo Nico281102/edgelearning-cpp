@@ -9,7 +9,7 @@ using Model = edge::Model<
     edge::Dense<1>>;
 ```
 
-The model infers each Dense input dimension from the previous layer. v0.1 supports Dense layers only. Future layers should satisfy the layer concepts in `include/edge/layers/layer_concepts.hpp` and provide compile-time shape and memory traits.
+The model infers each layer input dimension from the previous layer. v0.1 supports Dense layers and vector-shaped custom layers. Custom layers satisfy the layer concepts in `include/edge/layers/layer_concepts.hpp` and provide compile-time shape and memory traits.
 
 Backend selection is a model-level policy:
 
@@ -18,6 +18,8 @@ edge::Model<edge::Backend::Generic, edge::Input<8>, edge::Dense<1>>;
 ```
 
 Activation policies are semantic policies, not hardware policies. A user writes `Dense<32, ReLU>`; a backend may later specialize that operation for a target. The generic backend uses scalar C++ and supports custom activations.
+
+Precision is a model-level policy. `edge::precision::FP32` is the default, and user policies can provide `ParameterT`, `ActivationT`, `GradientT`, `AccumulatorT`, `OptimizerStateT`, and `LossT`. These aliases feed both the layer signatures and the compile-time memory planner.
 
 The v0.1 M55 backend is a clean tag and fallback point. It intentionally does not include vendor headers or post-baseline optimized code.
 
@@ -46,6 +48,7 @@ This can still be improved. A future cleanup could split the public API into cle
 | Conv2D | No | Planned extension |
 | Dropout | No | Planned extension |
 | LayerNorm | No | Planned extension |
-| Custom layer | Not yet | Concepts exist, but model execution is Dense-only |
+| Custom layer | Yes | Vector-shaped custom layers |
 | Custom activation | Yes | User policies supported |
 | Custom loss | Yes | User policies supported |
+| Custom precision policy | Yes | Model-level policy supported |

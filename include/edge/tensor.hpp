@@ -27,14 +27,14 @@ public:
     constexpr TensorView(const std::array<U, N>& data) noexcept
         : data_(data.data()) {}
 
-    template<typename U>
-        requires std::is_convertible_v<U*, T*>
-    constexpr TensorView(U (&data)[N]) noexcept
+    template<typename U, std::size_t M>
+        requires(M == N) && (M > 0) && std::is_convertible_v<U*, T*>
+    constexpr TensorView(U (&data)[M]) noexcept
         : data_(data) {}
 
-    template<typename U>
-        requires std::is_convertible_v<const U*, T*>
-    constexpr TensorView(const U (&data)[N]) noexcept
+    template<typename U, std::size_t M>
+        requires(M == N) && (M > 0) && std::is_convertible_v<const U*, T*>
+    constexpr TensorView(const U (&data)[M]) noexcept
         : data_(data) {}
 
     constexpr T* data() const noexcept {
@@ -79,4 +79,3 @@ struct StaticTensor {
 };
 
 } // namespace edge
-

@@ -29,6 +29,9 @@ public:
     using Loss = LossT;
     using Optimizer = OptimizerT;
     using OptimizerConfig = typename Optimizer::Config;
+    using activation_type = typename Model::activation_type;
+    using accumulator_type = typename Model::accumulator_type;
+    using loss_type = typename Model::loss_type;
 
     Trainer() noexcept
         : model_(&owned_model_) {}
@@ -49,8 +52,8 @@ public:
           optimizer_(optimizer_config),
           config_(config) {}
 
-    Status train_step(TensorView<const float, Model::input_size> input,
-                      TensorView<const float, Model::output_size> target) noexcept {
+    Status train_step(TensorView<const activation_type, Model::input_size> input,
+                      TensorView<const activation_type, Model::output_size> target) noexcept {
         if (config_.batch_size == 0U) {
             return Status::InvalidArgument;
         }
@@ -61,10 +64,11 @@ public:
         }
 
         auto prediction = model_->output();
-        TensorView<float, Model::output_size> gradient(output_gradient_);
+        TensorView<accumulator_type, Model::output_size> gradient(output_gradient_);
         last_loss_ = evaluate_loss(prediction, target, gradient);
 
-        status = model_->backward(TensorView<const float, Model::output_size>(output_gradient_));
+        status = model_->backward(
+            TensorView<const accumulator_type, Model::output_size>(output_gradient_));
         if (status != Status::Ok) {
             return status;
         }
@@ -78,17 +82,18 @@ public:
 
     template<typename InputContainer, typename TargetContainer>
     Status train_step(const InputContainer& input, const TargetContainer& target) noexcept {
-        return train_step(TensorView<const float, Model::input_size>(input),
-                          TensorView<const float, Model::output_size>(target));
+        return train_step(TensorView<const activation_type, Model::input_size>(input),
+                          TensorView<const activation_type, Model::output_size>(target));
     }
 
     Status flush() noexcept {
         if (accumulated_samples_ == 0U) {
             return Status::Ok;
         }
-        const float scale = config_.reduction == GradientReduction::Mean
-                                ? 1.0F / static_cast<float>(accumulated_samples_)
-                                : 1.0F;
+        const accumulator_type scale =
+            config_.reduction == GradientReduction::Mean
+                ? accumulator_type{1} / static_cast<accumulator_type>(accumulated_samples_)
+                : accumulator_type{1};
         Status status = optimizer_.step(*model_, scale);
         if (status != Status::Ok) {
             return status;
@@ -117,7 +122,7 @@ public:
         return optimizer_;
     }
 
-    float last_loss() const noexcept {
+    loss_type last_loss() const noexcept {
         return last_loss_;
     }
 
@@ -127,13 +132,13 @@ public:
 
 private:
     template<typename Prediction, typename Target, typename Gradient>
-    float evaluate_loss(const Prediction& prediction,
-                        const Target& target,
-                        Gradient& gradient) noexcept {
+    loss_type evaluate_loss(const Prediction& prediction,
+                            const Target& target,
+                            Gradient& gradient) noexcept {
         if constexpr (requires { Loss::evaluate(prediction, target, gradient); }) {
-            return Loss::evaluate(prediction, target, gradient);
+            return static_cast<loss_type>(Loss::evaluate(prediction, target, gradient));
         } else {
-            return loss_.evaluate(prediction, target, gradient);
+            return static_cast<loss_type>(loss_.evaluate(prediction, target, gradient));
         }
     }
 
@@ -142,10 +147,9 @@ private:
     Loss loss_{};
     Optimizer optimizer_{};
     TrainerConfig config_{};
-    std::array<float, Model::output_size> output_gradient_{};
+    std::array<accumulator_type, Model::output_size> output_gradient_{};
     std::size_t accumulated_samples_ = 0;
-    float last_loss_ = 0.0F;
+    loss_type last_loss_{};
 };
 
 } // namespace edge
-

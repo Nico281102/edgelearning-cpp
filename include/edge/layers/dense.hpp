@@ -5,6 +5,7 @@
 #include <edge/activations.hpp>
 #include <edge/initializers.hpp>
 #include <edge/precision.hpp>
+#include <edge/tensor.hpp>
 
 namespace edge {
 
@@ -45,9 +46,85 @@ struct DenseInstance {
         activation::storage == ActivationStorage::OutputAndPreActivation;
     static constexpr std::size_t preactivation_count =
         stores_preactivation ? out_features : 0U;
+    static constexpr std::size_t cache_count = preactivation_count;
+    static constexpr std::size_t workspace_count = 0;
+
+    template<typename Types>
+    static void initialize(TensorView<typename Types::ParameterT, parameter_count> params,
+                           DeterministicRng& rng,
+                           const InitConfig& config) noexcept {
+        using ParameterT = typename Types::ParameterT;
+        using Initializer = typename DenseSpec::initializer;
+        ParameterT* weights = params.data();
+        ParameterT* bias = weights + weight_count;
+        Initializer::template fill<ParameterT, in_features, out_features>(weights, rng, config);
+        for (std::size_t i = 0; i < bias_count; ++i) {
+            bias[i] = static_cast<ParameterT>(config.bias);
+        }
+    }
+
+    template<typename Types>
+    static void forward(TensorView<const typename Types::ActivationT, in_features> input,
+                        TensorView<typename Types::ActivationT, out_features> output,
+                        TensorView<const typename Types::ParameterT, parameter_count> params,
+                        TensorView<typename Types::ActivationT, cache_count> cache,
+                        TensorView<typename Types::AccumulatorT, workspace_count>) noexcept {
+        using ActivationT = typename Types::ActivationT;
+        using AccumulatorT = typename Types::AccumulatorT;
+        const auto* weights = params.data();
+        const auto* bias = params.data() + weight_count;
+
+        for (std::size_t out = 0; out < out_features; ++out) {
+            AccumulatorT z = static_cast<AccumulatorT>(bias[out]);
+            const std::size_t row = out * in_features;
+            for (std::size_t in = 0; in < in_features; ++in) {
+                z += static_cast<AccumulatorT>(weights[row + in]) *
+                     static_cast<AccumulatorT>(input[in]);
+            }
+            if constexpr (stores_preactivation) {
+                cache[out] = static_cast<ActivationT>(z);
+            }
+            output[out] = static_cast<ActivationT>(activation::template forward<AccumulatorT>(z));
+        }
+    }
+
+    template<typename Types>
+    static void backward(TensorView<const typename Types::ActivationT, in_features> input,
+                         TensorView<const typename Types::ActivationT, out_features> output,
+                         TensorView<const typename Types::AccumulatorT, out_features> upstream,
+                         TensorView<typename Types::AccumulatorT, in_features> downstream,
+                         TensorView<const typename Types::ParameterT, parameter_count> params,
+                         TensorView<typename Types::GradientT, parameter_count> gradients,
+                         TensorView<const typename Types::ActivationT, cache_count> cache,
+                         TensorView<typename Types::AccumulatorT, workspace_count>) noexcept {
+        using AccumulatorT = typename Types::AccumulatorT;
+        const auto* weights = params.data();
+        auto* grad_weights = gradients.data();
+        auto* grad_bias = gradients.data() + weight_count;
+
+        for (std::size_t i = 0; i < in_features; ++i) {
+            downstream[i] = AccumulatorT{0};
+        }
+
+        for (std::size_t out = 0; out < out_features; ++out) {
+            const AccumulatorT z =
+                stores_preactivation ? static_cast<AccumulatorT>(cache[out]) : AccumulatorT{0};
+            const AccumulatorT a = static_cast<AccumulatorT>(output[out]);
+            const AccumulatorT deriv = activation_derivative<activation, AccumulatorT>(z, a);
+            const AccumulatorT delta = upstream[out] * deriv;
+            grad_bias[out] = static_cast<typename Types::GradientT>(
+                static_cast<AccumulatorT>(grad_bias[out]) + delta);
+            const std::size_t row = out * in_features;
+            for (std::size_t in = 0; in < in_features; ++in) {
+                grad_weights[row + in] = static_cast<typename Types::GradientT>(
+                    static_cast<AccumulatorT>(grad_weights[row + in]) +
+                    delta * static_cast<AccumulatorT>(input[in]));
+                downstream[in] += static_cast<AccumulatorT>(weights[row + in]) * delta;
+            }
+        }
+    }
 };
 
 } // namespace detail
 
 } // namespace edge
-

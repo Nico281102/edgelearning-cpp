@@ -35,43 +35,43 @@ private:
 };
 
 struct XavierUniform {
-    template<std::size_t In, std::size_t Out>
-    static void fill(float* weights, DeterministicRng& rng, const InitConfig& config) noexcept {
+    template<typename T, std::size_t In, std::size_t Out>
+    static void fill(T* weights, DeterministicRng& rng, const InitConfig& config) noexcept {
         const float limit = config.gain * std::sqrt(6.0F / static_cast<float>(In + Out));
         for (std::size_t i = 0; i < In * Out; ++i) {
-            weights[i] = rng.uniform(-limit, limit);
+            weights[i] = static_cast<T>(rng.uniform(-limit, limit));
         }
     }
 };
 
 struct KaimingUniform {
-    template<std::size_t In, std::size_t Out>
-    static void fill(float* weights, DeterministicRng& rng, const InitConfig& config) noexcept {
+    template<typename T, std::size_t In, std::size_t Out>
+    static void fill(T* weights, DeterministicRng& rng, const InitConfig& config) noexcept {
         const float limit = config.gain * std::sqrt(6.0F / static_cast<float>(In));
         for (std::size_t i = 0; i < In * Out; ++i) {
-            weights[i] = rng.uniform(-limit, limit);
+            weights[i] = static_cast<T>(rng.uniform(-limit, limit));
         }
     }
 };
 
 struct Orthogonal {
-    template<std::size_t In, std::size_t Out>
-    static void fill(float* weights, DeterministicRng&, const InitConfig& config) noexcept {
+    template<typename T, std::size_t In, std::size_t Out>
+    static void fill(T* weights, DeterministicRng&, const InitConfig& config) noexcept {
         for (std::size_t i = 0; i < In * Out; ++i) {
-            weights[i] = 0.0F;
+            weights[i] = T{0};
         }
         const std::size_t diagonal = In < Out ? In : Out;
         for (std::size_t i = 0; i < diagonal; ++i) {
-            weights[i * In + i] = config.gain;
+            weights[i * In + i] = static_cast<T>(config.gain);
         }
     }
 };
 
 struct Constant {
-    template<std::size_t In, std::size_t Out>
-    static void fill(float* weights, DeterministicRng&, const InitConfig& config) noexcept {
+    template<typename T, std::size_t In, std::size_t Out>
+    static void fill(T* weights, DeterministicRng&, const InitConfig& config) noexcept {
         for (std::size_t i = 0; i < In * Out; ++i) {
-            weights[i] = config.constant;
+            weights[i] = static_cast<T>(config.constant);
         }
     }
 };
@@ -79,4 +79,3 @@ struct Constant {
 struct DefaultInitializer : XavierUniform {};
 
 } // namespace edge
-

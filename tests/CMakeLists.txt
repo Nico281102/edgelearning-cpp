@@ -10,6 +10,8 @@ set(EDGE_TESTS
     test_optimizer
     test_serialization
     test_compile_time_contracts
+    test_precision_policy
+    test_custom_layer
 )
 
 foreach(test_name IN LISTS EDGE_TESTS)
@@ -17,4 +19,3 @@ foreach(test_name IN LISTS EDGE_TESTS)
     target_link_libraries(${test_name} PRIVATE edge::edgelearning)
     add_test(NAME ${test_name} COMMAND ${test_name})
 endforeach()
-
