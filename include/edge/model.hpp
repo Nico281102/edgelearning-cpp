@@ -128,8 +128,9 @@ struct LayerChain<CurrentFeatures, Layer, Rest...> {
         local_max > tail::max_features ? local_max : tail::max_features;
 };
 
-template<typename PrecisionT>
+template<typename BackendPolicyT, typename PrecisionT>
 struct ModelTypes {
+    using BackendT = BackendPolicyT;
     using ParameterT = typename PrecisionT::ParameterT;
     using ActivationT = typename PrecisionT::ActivationT;
     using GradientT = typename PrecisionT::GradientT;
@@ -151,7 +152,7 @@ class ModelImpl<BackendPolicyT, PrecisionT, InputLayer, TypeList<Layers...>> {
 public:
     using backend = BackendPolicyT;
     using precision = PrecisionT;
-    using types = ModelTypes<PrecisionT>;
+    using types = ModelTypes<BackendPolicyT, PrecisionT>;
     using parameter_type = typename types::ParameterT;
     using activation_type = typename types::ActivationT;
     using gradient_type = typename types::GradientT;

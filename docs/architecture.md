@@ -9,7 +9,7 @@ using Model = edge::Model<
     edge::Dense<1>>;
 ```
 
-The model infers each layer input dimension from the previous layer. v0.1 supports Dense layers and vector-shaped custom layers. Custom layers satisfy the layer concepts in `include/edge/layers/layer_concepts.hpp` and provide compile-time shape and memory traits.
+The model infers each layer input dimension from the previous layer. v0.1 supports Dense layers, direct Conv2D layers, and vector-shaped custom layers. Custom layers satisfy the layer concepts in `include/edge/layers/layer_concepts.hpp` and provide compile-time shape and memory traits.
 
 Backend selection is a model-level policy:
 
@@ -21,7 +21,7 @@ Activation policies are semantic policies, not hardware policies. A user writes 
 
 Precision is a model-level policy. `edge::precision::FP32` is the default, and user policies can provide `ParameterT`, `ActivationT`, `GradientT`, `AccumulatorT`, `OptimizerStateT`, and `LossT`. These aliases feed both the layer signatures and the compile-time memory planner.
 
-The v0.1 M55 backend is a clean tag and fallback point. It intentionally does not include vendor headers or post-baseline optimized code.
+The M55 backend is a clean policy and fallback point. Host builds use the generic path. Cortex-M55/MVE float builds can use original EdgeLearning++ FP32 Dense hooks, while unsupported operations fall back to generic kernels.
 
 ## Project Layout
 
@@ -45,7 +45,7 @@ This can still be improved. A future cleanup could split the public API into cle
 | Layer or extension | Supported in v0.1 | Notes |
 |---|---:|---|
 | Dense | Yes | Fully implemented |
-| Conv2D | No | Planned extension |
+| Conv2D | Yes | Direct CHW convolution with stride and padding |
 | Dropout | No | Planned extension |
 | LayerNorm | No | Planned extension |
 | Custom layer | Yes | Vector-shaped custom layers |

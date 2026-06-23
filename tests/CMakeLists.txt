@@ -12,6 +12,10 @@ set(EDGE_TESTS
     test_compile_time_contracts
     test_precision_policy
     test_custom_layer
+    test_conv2d
+    test_conv2d_finite_difference
+    test_conv2d_mnist_shape
+    test_backend_m55
 )
 
 foreach(test_name IN LISTS EDGE_TESTS)

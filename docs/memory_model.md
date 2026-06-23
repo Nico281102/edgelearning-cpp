@@ -12,7 +12,7 @@ The compile-time memory breakdown is:
 - `total_bytes`: bytes through the last section, including inter-section alignment padding
 - `required_memory`: aligned arena size
 
-Metadata such as shapes, layer count, offsets, and policies is represented in types and constants, not stored in the arena.
+Metadata such as shapes, layer count, Conv2D output geometry, offsets, and policies is represented in types and constants, not stored in the arena.
 
 The planner also accounts for the model precision policy. For example, if `ParameterT` is `double`, `parameter_bytes` is `parameter_count * sizeof(double)`. If a policy keeps activations as `float` but accumulates in a wider type, `activation_bytes` and `workspace_bytes` are computed independently and aligned independently.
 

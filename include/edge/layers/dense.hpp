@@ -1,8 +1,11 @@
 #pragma once
 
 #include <cstddef>
+#include <type_traits>
 
 #include <edge/activations.hpp>
+#include <edge/backend.hpp>
+#include <edge/backends/m55.hpp>
 #include <edge/initializers.hpp>
 #include <edge/precision.hpp>
 #include <edge/tensor.hpp>
@@ -71,6 +74,16 @@ struct DenseInstance {
                         TensorView<typename Types::AccumulatorT, workspace_count>) noexcept {
         using ActivationT = typename Types::ActivationT;
         using AccumulatorT = typename Types::AccumulatorT;
+        if constexpr (std::is_same_v<typename Types::BackendT, Backend::M55> &&
+                      std::is_same_v<typename Types::ParameterT, float> &&
+                      std::is_same_v<ActivationT, float> &&
+                      std::is_same_v<AccumulatorT, float>) {
+            if (m55_dense_forward<in_features, out_features, cache_count, activation>(
+                    input, output, params, cache)) {
+                return;
+            }
+        }
+
         const auto* weights = params.data();
         const auto* bias = params.data() + weight_count;
 
@@ -98,6 +111,17 @@ struct DenseInstance {
                          TensorView<const typename Types::ActivationT, cache_count> cache,
                          TensorView<typename Types::AccumulatorT, workspace_count>) noexcept {
         using AccumulatorT = typename Types::AccumulatorT;
+        if constexpr (std::is_same_v<typename Types::BackendT, Backend::M55> &&
+                      std::is_same_v<typename Types::ParameterT, float> &&
+                      std::is_same_v<typename Types::ActivationT, float> &&
+                      std::is_same_v<typename Types::GradientT, float> &&
+                      std::is_same_v<AccumulatorT, float>) {
+            if (m55_dense_backward<in_features, out_features, cache_count, activation>(
+                    input, output, upstream, downstream, params, gradients, cache)) {
+                return;
+            }
+        }
+
         const auto* weights = params.data();
         auto* grad_weights = gradients.data();
         auto* grad_bias = gradients.data() + weight_count;

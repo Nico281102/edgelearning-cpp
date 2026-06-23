@@ -5,6 +5,7 @@ set(EDGE_EXAMPLES
     custom_activation
     custom_precision
     custom_layer
+    conv2d_mnist_shape
 )
 
 foreach(example_name IN LISTS EDGE_EXAMPLES)

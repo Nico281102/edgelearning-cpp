@@ -6,7 +6,7 @@ This C++20 version is a new implementation inspired by that C design, built to m
 
 The framework is sample-wise by design: it processes one sample at a time, accumulates gradients, and applies an optimizer step according to the configured batch policy. This keeps activation memory bounded by one sample rather than by the whole batch, following the same broad motivation as memory-efficient large-batch and edge-training work such as Piao et al. (2023) and Re-Forward-style memory-efficient backpropagation for edge reinforcement learning.
 
-The v0.1 implementation fully supports Dense layers, vector-shaped custom layers, custom activations, custom losses, custom initializers, and model-level precision policies on the generic scalar backend. It does not include PPO, reinforcement learning applications, CarRacing, Pendulum, STM32N6 application code, STAI integration, host-MCU protocols, private datasets, generated models, or post-baseline optimized kernels. The old C baseline is referenced for methodology and regression measurements only; its source is not vendored in this repository.
+The v0.1 implementation fully supports Dense layers, direct Conv2D layers, vector-shaped custom layers, custom activations, custom losses, custom initializers, and model-level precision policies on the generic scalar backend. It does not include PPO, reinforcement learning applications, CarRacing, Pendulum, STM32N6 application code, STAI integration, host-MCU protocols, private datasets, generated models, or post-baseline optimized kernels. The old C baseline is referenced for methodology and regression measurements only; its source is not vendored in this repository.
 
 ## Build
 
@@ -57,7 +57,7 @@ using M = edge::Model<
     edge::Dense<1>>;
 ```
 
-`Backend::M55` is a tag placeholder in v0.1 and falls back to the generic implementation. Vendor STM32 headers are not included by public generic headers.
+`Backend::M55` is available as a model-level policy. On host builds it falls back to the generic implementation. On Cortex-M55/MVE float builds, EdgeLearning++ exposes original FP32 Dense hooks for the hot forward/backward loops; Conv2D currently uses the generic direct implementation. Vendor STM32 headers are not included by public generic headers.
 
 Precision is also a model-level policy. The default is `edge::precision::FP32`, but a project can define its own policy:
 
@@ -95,7 +95,7 @@ See `examples/custom_precision.cpp` for a compilable example.
 | Component | v0.1 status | Notes |
 |---|---:|---|
 | Dense layer | Yes | Forward, backward, gradient accumulation, initialization, serialization |
-| Conv2D layer | No | Future layer type |
+| Conv2D layer | Yes | Direct CHW convolution, stride/padding, forward/backward, generic CPU reference |
 | Dropout layer | No | Future layer type |
 | LayerNorm layer | No | Future layer type |
 | Custom layer | Yes | Vector-shaped layers with compile-time feature, parameter, cache, and workspace counts |
@@ -242,6 +242,27 @@ using M = edge::Model<edge::Input<4>, TrainableScale, edge::Dense<1>>;
 ```
 
 `TensorView` is passed by value because it is a small typed view, similar to `std::span<T, N>`. Data that the layer must not modify is exposed through `TensorView<const T, N>`. Backend code can still use `view.data()` when a contiguous pointer is needed for an optimized kernel. See `examples/custom_layer.cpp` for a full implementation.
+
+## Conv2D
+
+Conv2D is implemented as a direct portable kernel, so it works on any CPU supported by the C++ compiler. It is intentionally a correctness/reference implementation first; target backends can later replace the inner loops with CMSIS-NN, MVE, im2col+GEMM, or another specialized kernel without changing the model API.
+
+The layout is channel-first flattened `CHW`. Parameters are laid out as filters `[OutC][InC][KH][KW]`, followed by one bias per output channel:
+
+```cpp
+using MnistShapeModel = edge::Model<
+    edge::Input<28 * 28>,
+    edge::Conv2D<
+        1, 28, 28,     // input C,H,W
+        4, 3, 3,       // output channels, kernel H,W
+        edge::ReLU,
+        edge::DefaultInitializer,
+        1, 1,          // stride H,W
+        1, 1>,         // padding H,W
+    edge::Dense<10>>;
+```
+
+See `examples/conv2d_mnist_shape.cpp` and `tests/test_conv2d_mnist_shape.cpp` for a host-side MNIST-shaped smoke test that does not depend on downloading the MNIST dataset.
 
 ## Benchmarks
 

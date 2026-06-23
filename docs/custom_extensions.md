@@ -108,6 +108,20 @@ struct MyLayer {
 
 Forward writes the layer output. Backward receives `dLoss/dOutput`, accumulates parameter gradients, and writes `dLoss/dInput`. Use `TensorView<const T, N>` for read-only inputs and `TensorView<T, N>` for outputs. The view is passed by value because it is only a typed pointer plus compile-time extent.
 
+## Generic Conv2D Layer
+
+`edge::Conv2D` is implemented with the same typed layer contract and can be used as the generic Conv2D example. The public shape is explicit:
+
+```cpp
+using Model = edge::Model<
+    edge::Input<28 * 28>,
+    edge::Conv2D<1, 28, 28, 4, 3, 3, edge::ReLU,
+                 edge::DefaultInitializer, 1, 1, 1, 1>,
+    edge::Dense<10>>;
+```
+
+Input and output tensors are flattened in `CHW` order. The implementation is direct convolution, not im2col, so it is simple and portable on any host or embedded CPU. Backend-specific code can later optimize the same semantic operation.
+
 ## Future Layers
 
-Future shape-rich layers such as Conv2D should expose output shape, parameter count, activation storage needs, and backend dispatch hooks at compile time. v0.1 custom layers are vector-shaped.
+Future shape-rich layers should expose output shape, parameter count, activation storage needs, and backend dispatch hooks at compile time. v0.1 custom layers are vector-shaped.

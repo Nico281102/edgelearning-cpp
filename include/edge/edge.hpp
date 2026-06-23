@@ -3,8 +3,10 @@
 #include <edge/activations.hpp>
 #include <edge/arena.hpp>
 #include <edge/backend.hpp>
+#include <edge/backends/m55.hpp>
 #include <edge/config.hpp>
 #include <edge/initializers.hpp>
+#include <edge/layers/conv2d.hpp>
 #include <edge/layers/dense.hpp>
 #include <edge/layers/layer_concepts.hpp>
 #include <edge/losses.hpp>
@@ -18,4 +20,3 @@
 #include <edge/status.hpp>
 #include <edge/tensor.hpp>
 #include <edge/trainer.hpp>
-
