@@ -2,7 +2,7 @@
 
 Baseline C commit: `0085814908ca1b57ece4fe367361d084fd74aa3e`.
 
-C++ commit used: `08be02d (dirty)`.
+C++ commit used: `4cb3cc5`.
 
 This repository does not vendor or republish the old C source. The old C baseline is intended to be cloned or checked out locally outside `edgelearning-cpp` for side-by-side measurement using the same topology, seed, synthetic dataset, optimizer, and batch policy.
 
@@ -20,13 +20,17 @@ This repository does not vendor or republish the old C source. The old C baselin
 - Iterations: 1000
 - Optimizer: Adam, learning rate 0.01
 - Batch reduction: Mean, batch size 8
-- C++ train_step mean: 628.875 ns
+- C++ train_step mean: 952.958 ns
 - Parameter bytes: 3332
 - Gradient bytes: 3332
 - Optimizer bytes: 6664
 - Activation bytes: 228
 - Workspace bytes: 256
 - Total planned bytes: 13812
+
+## Code Size
+
+Code-size measurements are available in `code_size_report.md`. That report compares the linked C++ minimal training binary against the old C baseline when `EDGE_C_BASELINE_DIR` was provided.
 
 ## Old C Baseline Local Measurements
 
