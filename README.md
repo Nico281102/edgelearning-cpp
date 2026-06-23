@@ -287,6 +287,15 @@ cmake --build build --parallel
 
 The regression benchmark generates `benchmarks/results/host_regression_report.md`. It records methodology for comparing against the old C baseline at commit `0085814908ca1b57ece4fe367361d084fd74aa3e` without vendoring or republishing that C source.
 
+Code size is measured with a separate target. Set `EDGE_C_BASELINE_DIR` to a local checkout of the old C repository at the baseline commit:
+
+```sh
+EDGE_C_BASELINE_DIR=/path/to/EdgeLearning-at-0085814908ca1b57ece4fe367361d084fd74aa3e \
+cmake --build build --target benchmark_code_size
+```
+
+This writes `benchmarks/results/code_size_report.md` and `.csv`. The host report is useful for relative C vs C++ tracking. Firmware size should be measured again with the embedded toolchain, for example `arm-none-eabi-size`, because host Mach-O/ELF metadata is not the MCU image.
+
 ## STM32 Toolchain Notes
 
 The core is C++20 and avoids exceptions, RTTI, heap allocation, virtual functions, and `std::function`. For STM32CubeIDE or `arm-none-eabi-g++`, use flags equivalent to:

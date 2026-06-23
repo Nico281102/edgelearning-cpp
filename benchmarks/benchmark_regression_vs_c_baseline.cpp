@@ -143,6 +143,21 @@ int main() {
     report << "- Activation bytes: " << Model::activation_bytes << "\n";
     report << "- Workspace bytes: " << Model::workspace_bytes << "\n";
     report << "- Total planned bytes: " << Model::total_bytes << "\n\n";
+    const std::filesystem::path code_size_report =
+        std::filesystem::path(EDGE_BENCHMARK_RESULT_DIR) / "code_size_report.md";
+    report << "## Code Size\n\n";
+    if (std::filesystem::exists(code_size_report)) {
+        report << "Code-size measurements are available in `"
+               << code_size_report.filename().string()
+               << "`. That report compares the linked C++ minimal training binary against the "
+                  "old C baseline when `EDGE_C_BASELINE_DIR` was provided.\n\n";
+    } else {
+        report << "No code-size report was found yet. Build `code_size_cpp_regression`, then run:\n\n";
+        report << "```sh\n";
+        report << "EDGE_C_BASELINE_DIR=/path/to/EdgeLearning-at-0085814908ca1b57ece4fe367361d084fd74aa3e \\\n";
+        report << "cmake --build build --target benchmark_code_size\n";
+        report << "```\n\n";
+    }
     const std::filesystem::path c_log = baseline_log_path();
     if (std::filesystem::exists(c_log)) {
         report << "## Old C Baseline Local Measurements\n\n";
