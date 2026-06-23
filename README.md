@@ -178,6 +178,8 @@ The planner is compile-time because the model topology and precision policy are 
 
 This is strong for embedded and RTOS targets because the framework does not allocate from the heap at runtime. If the external arena is too small, typed arena APIs fail at compile time; if the storage is not correctly aligned, construction reports `Status::UnalignedArena`. The shared RTOS heap is not touched by the training path.
 
+For the full C++20 planner formula, static assertion examples, and the commit history of this mechanism, see `docs/memory_model.md`.
+
 ## Training
 
 ```cpp
