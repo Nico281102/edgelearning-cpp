@@ -1,6 +1,24 @@
 # Memory Model
 
-EdgeLearning++ uses one contiguous arena in v0.1. A default `Model` owns an internal static arena sized by `Model::required_memory`.
+EdgeLearning++ uses one contiguous arena in v0.1. A default `Model` owns an internal arena sized by `Model::required_memory`.
+
+The internal arena is a member of the `Model` object. Its storage therefore follows the object:
+
+```cpp
+Model local_model;        // internal arena is on the current stack
+static Model static_model; // internal arena is in static storage, normally .bss
+```
+
+On embedded and RTOS targets, avoid placing large models on task stacks. Prefer `static Model model;` for simple firmware, or an explicitly declared static external arena when placement matters:
+
+```cpp
+alignas(Model::alignment)
+static std::array<std::byte, Model::required_memory> arena;
+
+Model model{edge::external_arena(arena)};
+```
+
+The second form keeps the large buffer in static storage even if the `Model` handle itself is local. It also makes linker placement straightforward with a target-specific section attribute.
 
 The compile-time memory breakdown is:
 
@@ -26,6 +44,6 @@ std::byte (&)[N]
 
 The constructor statically rejects `N < Model::required_memory`. Alignment is checked at runtime because variable alignment is not encoded in those types. Pass `alignas(Model::alignment)` storage.
 
-This avoids the common embedded failure mode where a model appears to construct correctly and later crashes because a runtime heap allocation fails or a shared RTOS heap is fragmented. The training path binds a statically sized arena once, checks status, and then runs without heap allocation. A `void* + size_t` API would not have the same compile-time property; if added later, it must return `Status` and be documented as runtime-checked only.
+This avoids common embedded failure modes: stack overflow from large local objects, runtime heap allocation failure, and shared RTOS heap fragmentation. The training path binds a statically sized arena once, checks status, and then runs without heap allocation. A `void* + size_t` API would not have the same compile-time property; if added later, it must return `Status` and be documented as runtime-checked only.
 
 A future multi-region planner can split parameters, activations, workspace, and optimizer state across memory regions. In v0.1, users who need DTCM or another region should place the entire arena there.

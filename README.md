@@ -118,11 +118,29 @@ See `examples/custom_precision.cpp` for a compilable example.
 
 ## Memory Planning
 
-The default model owns one static arena:
+The default model owns one internal arena sized by `Model::required_memory`:
 
 ```cpp
 Model model;
 ```
+
+That arena is a member of the `Model` object, so its storage class follows the object:
+
+```cpp
+void task_entry() {
+    Model model;        // arena is on this task/function stack
+}
+
+static Model model;     // arena is in static storage, normally .bss
+```
+
+For embedded firmware, prefer static storage for non-trivial models:
+
+```cpp
+static Model model;
+```
+
+This avoids consuming task stack with activations, gradients, optimizer state, and workspace. If two static models are declared, they are two distinct objects with two distinct internal arenas.
 
 The model exposes:
 
@@ -145,6 +163,8 @@ static std::array<std::byte, Model::required_memory> arena;
 
 Model model{edge::external_arena(arena)};
 ```
+
+This is the recommended form when firmware needs explicit placement in a linker-controlled memory region, such as DTCM or a dedicated SRAM bank. The `Model` object may be local or static; the large arena remains in the static storage object supplied by the user.
 
 `std::span<std::byte, N>` and `std::byte (&)[N]` are also supported. A future `void* + size_t` API, if added, must return `Status` and be documented as runtime-checked only.
 
