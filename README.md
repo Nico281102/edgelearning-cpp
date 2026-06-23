@@ -8,6 +8,18 @@ The framework is sample-wise by design: it processes one sample at a time, accum
 
 The v0.1 implementation fully supports Dense layers, direct Conv2D layers, vector-shaped custom layers, custom activations, custom losses, custom initializers, and model-level precision policies on the generic scalar backend. It does not include PPO, reinforcement learning applications, CarRacing, Pendulum, STM32N6 application code, STAI integration, host-MCU protocols, private datasets, generated models, or post-baseline optimized kernels. The old C baseline is referenced for methodology and regression measurements only; its source is not vendored in this repository.
 
+## Why C++
+
+The C baseline was the right starting point for an embedded runtime: it made memory ownership, arena sizing, deterministic execution, and low-level performance explicit. EdgeLearning++ keeps those constraints, but uses C++20 where the language gives a concrete technical advantage rather than cosmetic abstraction.
+
+The main reason is genericity. Model topology, layer shapes, activation policies, precision policy, optimizer state, and arena requirements can be expressed as types and constants. For example, a model can switch from FP32 to a custom precision policy without changing layer code, a Dense layer can use a custom activation, and a project can add a custom vector layer by implementing `initialize`, `forward`, and `backward` with typed `TensorView`s. Conv2D follows the same idea: the input geometry, kernel geometry, stride, padding, parameter count, output size, and activation cache are compile-time facts. See `Easy Utilization`, `Memory Planning`, `Custom Layer`, `Conv2D`, and `docs/architecture.md` for the concrete APIs.
+
+The second reason is low runtime overhead. Most structural decisions are resolved at compile time: layer order, feature counts, parameter offsets, cache size, workspace size, backend policy, and precision types. The runtime path does not need virtual dispatch, heap allocation, runtime shape descriptors, or a dynamic graph interpreter. The compiler sees the full model type and can inline and simplify aggressively.
+
+The third reason is API quality. The public API can stay compact and expressive while still being strict. A user writes `edge::Model<edge::Input<8>, edge::Dense<32, edge::ReLU>, edge::Dense<1>>`, and the compiler rejects inconsistent shapes, insufficient static arenas, or missing custom-layer contracts. Typed views such as `TensorView<const T, N>` make read-only and mutable buffers explicit without falling back to `void* + size_t`.
+
+The fourth reason is performance. C++ does not automatically make the code faster than C, and claims must be measured. The point is that template-based static polymorphism can produce C-like code with little abstraction cost, while still allowing specialization by backend and type. In some cases it can be faster than a more runtime-driven C design because the compiler sees more constants and can remove dispatch, fold offsets, inline activation policies, and specialize hot paths. The benchmark methodology is kept separate from the old C source; only measurements and methodology should be published here.
+
 ## Build
 
 ```sh
