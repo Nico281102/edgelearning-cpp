@@ -1,8 +1,12 @@
 # EdgeLearning++
 
-EdgeLearning++ (`edgelearning-cpp`) is a clean C++20 redesign of the pre-internship EdgeLearning C core for static-memory embedded and host targets. It uses compile-time topology, shape inference, backend tags, activation policies, memory planning, and optimizer selection so common model errors fail at compile time.
+EdgeLearning++ (`edgelearning-cpp`) started from an embedded systems project where the first runtime was written in C for deterministic, static-memory neural-network training on constrained targets. The C implementation made the core ideas concrete: sample-wise execution, explicit memory ownership, flat parameter layout, and a small training path that could run without a host framework.
 
-The v0.1 implementation is Dense-only and fully supports FP32 on the generic scalar backend. It does not include PPO, reinforcement learning applications, CarRacing, Pendulum, STM32N6 application code, STAI integration, host-MCU protocols, private datasets, generated models, or post-baseline optimized kernels.
+This C++20 version is a new implementation inspired by that C design, built to make the framework more generic, more type-safe, and easier to extend. Modern C++ templates let the model topology, layer shapes, activation policies, optimizer state, and memory requirements become compile-time facts instead of runtime descriptors. The redesign was also an opportunity to learn and iterate faster with modern AI coding tools, while keeping the embedded constraints explicit.
+
+The framework is sample-wise by design: it processes one sample at a time, accumulates gradients, and applies an optimizer step according to the configured batch policy. This keeps activation memory bounded by one sample rather than by the whole batch, following the same broad motivation as memory-efficient large-batch and edge-training work such as Piao et al. (2023) and Re-Forward-style memory-efficient backpropagation for edge reinforcement learning.
+
+The v0.1 implementation is Dense-only and fully supports FP32 on the generic scalar backend. It does not include PPO, reinforcement learning applications, CarRacing, Pendulum, STM32N6 application code, STAI integration, host-MCU protocols, private datasets, generated models, or post-baseline optimized kernels. The old C baseline is referenced for methodology and regression measurements only; its source is not vendored in this repository.
 
 ## Build
 
@@ -14,9 +18,11 @@ ctest --test-dir build --output-on-failure
 
 The CMake target `edge::edgelearning` is header-only. For GNU/Clang builds, CMake applies `-fno-exceptions` and `-fno-rtti`. On AppleClang installations where libc++ headers live only in the macOS SDK, CMake adds the SDK `usr/include/c++/v1` path when detected.
 
-## Define A Model
+## Easy Utilization
 
 ```cpp
+#include <array>
+
 #include <edge/edge.hpp>
 
 using Model = edge::Model<
@@ -27,6 +33,18 @@ using Model = edge::Model<
 
 static_assert(Model::parameter_bytes > 0);
 static_assert(Model::required_memory > 0);
+
+int main() {
+    edge::Trainer<Model, edge::MSE, edge::Adam> trainer(
+        edge::AdamConfig{.learning_rate = 1.0e-3F});
+
+    trainer.model().initialize(edge::InitConfig{.seed = 42U});
+
+    std::array<float, 8> input{0.0F, 1.0F, 0.5F, -0.5F, 0.25F, 0.75F, -1.0F, 0.1F};
+    std::array<float, 1> target{0.25F};
+
+    return edge::is_ok(trainer.train_step(input, target)) ? 0 : 1;
+}
 ```
 
 The input dimension of each Dense layer is inferred from the previous layer. Backend selection is model-level:
@@ -40,6 +58,19 @@ using M = edge::Model<
 ```
 
 `Backend::M55` is a tag placeholder in v0.1 and falls back to the generic implementation. Vendor STM32 headers are not included by public generic headers.
+
+## Current Support
+
+| Component | v0.1 status | Notes |
+|---|---:|---|
+| Dense layer | Yes | Forward, backward, gradient accumulation, initialization, serialization |
+| Conv2D layer | No | Future layer type |
+| Dropout layer | No | Future layer type |
+| LayerNorm layer | No | Future layer type |
+| Custom layer | Extension point only | Layer concepts exist, but `Model` currently instantiates Dense only |
+| Custom activation | Yes | Generic backend supports user activation policies |
+| Custom loss | Yes | Loss computes `value` and `dLoss/dOutput` through the training loss API |
+| Custom initializer | Yes | User initializers can fill Dense weights |
 
 ## Memory Planning
 
@@ -146,3 +177,27 @@ arm-none-eabi-g++ -std=c++20 -ffreestanding -fno-exceptions -fno-rtti
 
 Include `edgelearning-cpp/include` in the CubeIDE project include paths. Firmware execution tests are outside v0.1.
 
+## References
+
+```bibtex
+@article{Piao_2023,
+   title={Enabling Large Batch Size Training for DNN Models Beyond the Memory Limit While Maintaining Performance},
+   volume={11},
+   ISSN={2169-3536},
+   url={http://dx.doi.org/10.1109/ACCESS.2023.3312572},
+   DOI={10.1109/access.2023.3312572},
+   journal={IEEE Access},
+   publisher={Institute of Electrical and Electronics Engineers (IEEE)},
+   author={Piao, Xinyu and Synn, Doangjoo and Park, Jooyoung and Kim, Jong-Kook},
+   year={2023},
+   pages={102981--102990}
+}
+
+@inproceedings{pispisa_reforward_2026,
+  author    = {Pispisa, Gaetano and De Vita, Fabrizio and Bruneo, Dario and Giacalone, Davide and Merlino, Giovanni and Longo, Francesco},
+  title     = {Re-Forward: Memory-efficient Backpropagation for Reinforcement Learning at the Edge},
+  booktitle = {Workshop paper},
+  year      = {2026},
+  note      = {Bibliographic entry to be replaced with the official proceedings version when available}
+}
+```
