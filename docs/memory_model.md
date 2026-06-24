@@ -34,7 +34,18 @@ The compile-time memory breakdown is:
 
 Metadata such as shapes, layer count, Conv2D output geometry, offsets, and policies is represented in types and constants, not stored in the arena.
 
-## Compile-Time Planner
+## Static Memory Planning
+
+The technique used here is best described as static memory planning or compile-time arena sizing. It is not a C++ standard library component by itself; it is a design pattern built from C++20 language features:
+
+- template parameters carry model structure and layer sizes in the type system
+- `static constexpr` members expose counts and byte sizes as compile-time constants
+- `sizeof` and `alignof` convert precision policy types into byte and alignment requirements
+- `alignas` lets user storage request the alignment required by the model
+- `std::array<std::byte, N>` creates fixed-size storage where `N` must be known at compile time
+- `static_assert` turns invalid configurations into compile errors
+
+The `static_assert` examples in this document are only documentation and user checks. They are not required in normal application code. The framework already uses the same compile-time constants internally, and external arenas are checked by the `Model` constructor when their size is part of the type.
 
 The planner works because the C++ API describes the network as a type:
 
@@ -45,7 +56,35 @@ using Model = edge::Model<
     edge::Dense<10>>;
 ```
 
-When this alias is instantiated, the compiler sees the full topology. Each layer specification creates a typed layer instance for the input size produced by the previous layer. That instance exposes constants such as `out_features`, `parameter_count`, `cache_count`, and `workspace_count`. The model recursively accumulates those constants across the chain.
+When this alias is instantiated, the compiler sees the full topology. `using Model = ...` creates a type alias, not an object. No model memory is allocated by the alias itself; it simply names a concrete model type.
+
+Each layer specification creates a typed layer instance for the input size produced by the previous layer. That instance exposes constants such as `out_features`, `parameter_count`, `cache_count`, and `workspace_count`. The model recursively accumulates those constants across the chain.
+
+The important C++ pieces are:
+
+```cpp
+template<std::size_t InFeatures, typename DenseSpec>
+struct DenseInstance {
+    static constexpr std::size_t in_features = InFeatures;
+    static constexpr std::size_t out_features = DenseSpec::out_features;
+    static constexpr std::size_t parameter_count =
+        in_features * out_features + out_features;
+};
+```
+
+`template<std::size_t InFeatures, ...>` means `InFeatures` is a value in the type system, not a runtime function argument. `static constexpr` means the value belongs to the type and can be evaluated at compile time. So `DenseInstance<8, Dense<32>>::parameter_count` is a compile-time fact.
+
+The model chain then folds those facts:
+
+```cpp
+using instance = typename MakeLayerInstance<CurrentFeatures, Layer>::type;
+using tail = LayerChain<instance::out_features, Rest...>;
+
+static constexpr std::size_t parameter_count =
+    instance::parameter_count + tail::parameter_count;
+```
+
+`typename` is needed because `MakeLayerInstance<...>::type` is a nested type selected by a template. `using tail = ...` names the rest of the network. The recursive definition means the compiler walks the model at compile time: current layer first, then the remaining layers.
 
 Precision is part of the same calculation. A policy such as `edge::precision::FP32`, or a user-defined precision policy, supplies the actual C++ types for parameters, activations, gradients, accumulators, optimizer state, and loss values. The planner uses `sizeof(T)` and `alignof(T)` for each of those types, then computes aligned offsets:
 
@@ -74,6 +113,8 @@ workspace_offset = align_up(activation_offset + activation_bytes, alignof(accumu
 required_memory  = align_up(workspace_offset + workspace_bytes, Model::alignment);
 ```
 
+`sizeof(T)` returns how many bytes one object of type `T` occupies. `alignof(T)` returns the address alignment that type requires. `align_up(...)` inserts padding between arena sections so each typed pointer is correctly aligned.
+
 The important point is that no runtime descriptor is needed to discover how much memory the model needs. The runtime constructor only binds pointers into the already-sized arena and checks the address alignment.
 
 This also means external arenas can be statically checked when their size is part of the type:
@@ -86,6 +127,8 @@ Model model{edge::external_arena(arena)};
 static_assert(decltype(edge::external_arena(arena))::size == Model::required_memory);
 ```
 
+The key is the `N` in `std::array<std::byte, N>`. Because `N` is part of the type, `external_arena(arena)` returns `ExternalArena<N>`, and the model constructor can compare `N` against `Model::required_memory` with `static_assert`.
+
 If the buffer is too small, compilation fails:
 
 ```cpp
@@ -97,6 +140,17 @@ static std::array<std::byte, Model::required_memory - 1> too_small{};
 ```
 
 Alignment is still checked at construction time because `std::array<std::byte, N>`, `std::span<std::byte, N>`, and C array references encode the byte count, but not a target-specific alignment guarantee for the object address. For embedded firmware, declare external storage with `alignas(Model::alignment)`.
+
+The full flow is:
+
+1. The user writes a model type with `edge::Input`, layer specs, optional backend policy, and optional precision policy.
+2. Each layer spec becomes a layer instance for the current input size.
+3. Each instance exposes compile-time traits: output size, parameter count, cache count, and workspace count.
+4. `LayerChain` accumulates those traits across the network.
+5. `ModelImpl` converts counts into bytes using the precision policy types.
+6. `ModelImpl` computes aligned section offsets and `Model::required_memory`.
+7. The internal arena uses `std::array<std::byte, Model::required_memory>`.
+8. External arenas use `std::array`, fixed-extent `std::span`, or C array references so the constructor can reject undersized buffers at compile time.
 
 This compile-time planner was introduced with the initial EdgeLearning++ C++20 runtime on 2026-06-23 in commit `533ce92`. It was extended on 2026-06-23 in commit `2fb0842` so precision policies and custom layers feed the same planner. The embedded storage guidance for static internal arenas and linker-placeable external arenas was documented on 2026-06-23 in commit `6d5b137`.
 

@@ -21,7 +21,7 @@ Activation policies are semantic policies, not hardware policies. A user writes 
 
 Precision is a model-level policy. `edge::precision::FP32` is the default, and user policies can provide `ParameterT`, `ActivationT`, `GradientT`, `AccumulatorT`, `OptimizerStateT`, and `LossT`. These aliases feed both the layer signatures and the compile-time memory planner.
 
-The arena requirement is also part of the model type. `Model::required_memory` is a `static constexpr` value derived from topology, layer memory traits, precision types, and alignment rules. This was present in the initial C++20 runtime and later extended to cover custom layers and precision policies; see `docs/memory_model.md` for the concrete formula and examples.
+The arena requirement is also part of the model type. The design is a form of static memory planning, more specifically compile-time arena sizing. `Model::required_memory` is a `static constexpr` value derived from topology, layer memory traits, precision types, and alignment rules. This was present in the initial C++20 runtime and later extended to cover custom layers and precision policies; see `docs/memory_model.md` for the concrete formula, C++ keyword explanations, and examples.
 
 The M55 backend is a clean policy and fallback point. Host builds use the generic path. Cortex-M55/MVE float builds can use original EdgeLearning++ FP32 Dense hooks, while unsupported operations fall back to generic kernels.
 

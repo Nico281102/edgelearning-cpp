@@ -43,9 +43,6 @@ using Model = edge::Model<
     edge::Dense<16, edge::ReLU>,
     edge::Dense<1>>;
 
-static_assert(Model::parameter_bytes > 0);
-static_assert(Model::required_memory > 0);
-
 int main() {
     edge::Trainer<Model, edge::MSE, edge::Adam> trainer(
         edge::AdamConfig{.learning_rate = 1.0e-3F});
