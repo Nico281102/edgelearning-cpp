@@ -8,6 +8,8 @@ The framework is sample-wise by design: it processes one sample at a time, accum
 
 The v0.1 implementation fully supports Dense layers, direct Conv2D layers, vector-shaped custom layers, custom activations, custom losses, custom initializers, and model-level precision policies on the generic scalar backend. It does not include PPO, reinforcement learning applications, CarRacing, Pendulum, STM32N6 application code, STAI integration, host-MCU protocols, private datasets, generated models, or post-baseline optimized kernels. The old C baseline is referenced for methodology and regression measurements only; its source is not vendored in this repository.
 
+Current custom-layer limitations and future work are documented in `docs/limitations.md`. In short, v0.1 custom layers are vector-shaped; future shape-rich layers should carry compile-time tensor shape/layout metadata for normalization, recurrent layers, gates, GRU, attention, and richer backend dispatch.
+
 ## Why C++
 
 The C baseline was the right starting point for an embedded runtime: it made memory ownership, arena sizing, deterministic execution, and low-level performance explicit. EdgeLearning++ keeps those constraints, but uses C++20 where the language gives a concrete technical advantage rather than cosmetic abstraction.
@@ -112,6 +114,8 @@ See `examples/custom_precision.cpp` for a compilable example.
 | Custom loss | Yes | Loss computes `value` and `dLoss/dOutput` through the training loss API |
 | Custom initializer | Yes | User initializers can fill Dense weights with the model parameter type |
 | Custom precision policy | Yes | Model-level type bundle for parameters, activations, gradients, accumulators, optimizer state, and loss |
+
+See `docs/limitations.md` for the current limits of the custom-layer interface and the planned path toward shape-rich custom layers.
 
 ## Memory Planning
 
@@ -301,10 +305,17 @@ See `examples/conv2d_mnist_shape.cpp` and `tests/test_conv2d_mnist_shape.cpp` fo
 cmake -S . -B build -DEDGE_BUILD_BENCHMARKS=ON
 cmake --build build --parallel
 ./build/benchmarks/benchmark_edgelearning_cpp
+./build/benchmarks/benchmark_mixed_precision
 ./build/benchmarks/benchmark_regression_vs_c_baseline
 ```
 
 The regression benchmark generates `benchmarks/results/host_regression_report.md`. It records methodology for comparing against the old C baseline at commit `0085814908ca1b57ece4fe367361d084fd74aa3e` without vendoring or republishing that C source.
+
+The mixed precision benchmark compares the FP32 baseline with `edge::precision::MixedFP16`, a policy that keeps FP32 master parameters, gradients, accumulators, optimizer state, and loss values while using FP16 activation storage when the compiler provides `_Float16`. The current host measurement was run on a MacBook M2 with a deterministic synthetic regression task:
+
+![Mixed precision convergence](benchmarks/results/mixed_precision_convergence.svg)
+
+Detailed measurements are recorded in `benchmarks/results/mixed_precision_report.md`. Treat these as host measurements: they show convergence behavior, activation-memory impact, and scalar CPU timing on MacBook M2, not a universal claim about MCU or accelerator performance.
 
 Code size is measured with a separate target. Set `EDGE_C_BASELINE_DIR` to a local checkout of the old C repository at the baseline commit:
 

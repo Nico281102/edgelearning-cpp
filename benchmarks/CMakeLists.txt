@@ -4,6 +4,12 @@ target_link_libraries(benchmark_edgelearning_cpp PRIVATE edge::edgelearning)
 add_executable(benchmark_batch_sweep benchmark_batch_sweep.cpp)
 target_link_libraries(benchmark_batch_sweep PRIVATE edge::edgelearning)
 
+add_executable(benchmark_mixed_precision benchmark_mixed_precision.cpp)
+target_link_libraries(benchmark_mixed_precision PRIVATE edge::edgelearning)
+target_compile_definitions(benchmark_mixed_precision PRIVATE
+    EDGE_BENCHMARK_RESULT_DIR="${CMAKE_CURRENT_SOURCE_DIR}/results"
+)
+
 add_executable(benchmark_regression_vs_c_baseline benchmark_regression_vs_c_baseline.cpp)
 target_link_libraries(benchmark_regression_vs_c_baseline PRIVATE edge::edgelearning)
 

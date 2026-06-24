@@ -314,4 +314,4 @@ Input and output tensors are flattened in `CHW` order. The implementation is dir
 
 ## Future Layers
 
-Future shape-rich layers should expose output shape, parameter count, activation storage needs, and backend dispatch hooks at compile time. v0.1 custom layers are vector-shaped.
+v0.1 custom layers are vector-shaped: they expose `in_features`, `out_features`, parameter count, cache count, and workspace count, but they do not expose a general shape/layout vocabulary for user-defined tensors. See `docs/limitations.md` for the current limitations and the proposed future direction for shape-rich layers such as normalization, Conv2D-like custom layers, RNN, GRU, gates, and attention.

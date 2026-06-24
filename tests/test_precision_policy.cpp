@@ -21,6 +21,7 @@ struct DoublePrecision {
 
 int main() {
     static_assert(edge::PrecisionPolicy<DoublePrecision>);
+    static_assert(edge::PrecisionPolicy<edge::precision::MixedFP16>);
 
     using Model = edge::Model<
         edge::Backend::Generic,
@@ -83,4 +84,28 @@ int main() {
     EDGE_EXPECT_NEAR(trained_params[0], 0.5, 1.0e-12F);
     EDGE_EXPECT_NEAR(trained_params[1], 0.0, 1.0e-12F);
     EDGE_EXPECT_NEAR(trained_params[2], 0.5, 1.0e-12F);
+
+    using MixedModel = edge::Model<
+        edge::Backend::Generic,
+        edge::precision::MixedFP16,
+        edge::Input<2>,
+        edge::Dense<1, edge::Linear>>;
+    static_assert(std::is_same_v<MixedModel::parameter_type, float>);
+    static_assert(std::is_same_v<MixedModel::gradient_type, float>);
+    static_assert(std::is_same_v<MixedModel::accumulator_type, float>);
+    static_assert(MixedModel::activation_bytes ==
+                  MixedModel::activation_count * sizeof(MixedModel::activation_type));
+
+    MixedModel mixed;
+    EDGE_EXPECT_EQ(mixed.status(), edge::Status::Ok);
+    mixed.parameter_data()[0] = 1.0F;
+    mixed.parameter_data()[1] = -2.0F;
+    mixed.parameter_data()[2] = 0.25F;
+    const std::array<MixedModel::activation_type, 2> mixed_input{
+        static_cast<MixedModel::activation_type>(0.5F),
+        static_cast<MixedModel::activation_type>(-0.25F)};
+    const std::array<MixedModel::accumulator_type, 1> mixed_upstream{1.0F};
+    EDGE_EXPECT_EQ(mixed.forward(mixed_input), edge::Status::Ok);
+    EDGE_EXPECT_EQ(mixed.zero_grad(), edge::Status::Ok);
+    EDGE_EXPECT_EQ(mixed.backward(mixed_upstream), edge::Status::Ok);
 }
