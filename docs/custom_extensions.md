@@ -157,6 +157,93 @@ static void forward(edge::TensorView<const typename Types::ActivationT, in_featu
 
 The optimized hook can live in a backend header, for example `include/edge/backends/m55.hpp`. The current Dense/M55 path follows this shape: the hook returns `true` when the target-specific implementation is available and `false` when the build should fall back to the generic path. That lets host builds compile and test the same model type without requiring Cortex-M55/MVE headers or instructions.
 
+Here is a trimmed example for a fused Dense+ReLU forward path. In production, if the public semantics are still "Dense followed by ReLU", prefer specializing `edge::Dense<Out, edge::ReLU>` internally. A visible `FusedReLUDense` type is useful when the fusion is a deliberate layer abstraction exposed to users.
+
+The backend hook is target-specific and can live in `include/edge/backends/m55.hpp`:
+
+```cpp
+template<std::size_t InFeatures, std::size_t OutFeatures>
+bool m55_fused_relu_dense_forward(
+    edge::TensorView<const float, InFeatures> input,
+    edge::TensorView<float, OutFeatures> output,
+    edge::TensorView<const float, InFeatures * OutFeatures + OutFeatures> params) noexcept {
+#if EDGE_DETAIL_HAS_M55_MVE
+    // Target implementation: MVE/CMSIS-NN/etc.
+    // Computes output = relu(weights * input + bias).
+    return true;
+#else
+    (void)input;
+    (void)output;
+    (void)params;
+    return false;
+#endif
+}
+```
+
+The layer definition keeps the same typed contract and only selects the fused path when the backend and precision are compatible:
+
+```cpp
+template<std::size_t OutFeatures>
+struct FusedReLUDense {
+    template<std::size_t InFeatures>
+    struct Instance {
+        static constexpr std::size_t in_features = InFeatures;
+        static constexpr std::size_t out_features = OutFeatures;
+        static constexpr std::size_t weight_count = in_features * out_features;
+        static constexpr std::size_t bias_count = out_features;
+        static constexpr std::size_t parameter_count = weight_count + bias_count;
+        static constexpr std::size_t cache_count = 0;
+        static constexpr std::size_t workspace_count = 0;
+
+        template<typename Types>
+        static void forward(
+            edge::TensorView<const typename Types::ActivationT, in_features> input,
+            edge::TensorView<typename Types::ActivationT, out_features> output,
+            edge::TensorView<const typename Types::ParameterT, parameter_count> params,
+            edge::TensorView<typename Types::ActivationT, cache_count>,
+            edge::TensorView<typename Types::AccumulatorT, workspace_count>) noexcept {
+            using ActivationT = typename Types::ActivationT;
+            using AccumulatorT = typename Types::AccumulatorT;
+
+            if constexpr (std::is_same_v<typename Types::BackendT, edge::Backend::M55> &&
+                          std::is_same_v<typename Types::ParameterT, float> &&
+                          std::is_same_v<ActivationT, float> &&
+                          std::is_same_v<AccumulatorT, float>) {
+                if (m55_fused_relu_dense_forward<in_features, out_features>(
+                        input, output, params)) {
+                    return;
+                }
+            }
+
+            const auto* weights = params.data();
+            const auto* bias = params.data() + weight_count;
+            for (std::size_t out = 0; out < out_features; ++out) {
+                AccumulatorT z = static_cast<AccumulatorT>(bias[out]);
+                for (std::size_t in = 0; in < in_features; ++in) {
+                    z += static_cast<AccumulatorT>(weights[out * in_features + in]) *
+                         static_cast<AccumulatorT>(input[in]);
+                }
+                output[out] = static_cast<ActivationT>(z > AccumulatorT{0} ? z : AccumulatorT{0});
+            }
+        }
+
+        // initialize() and backward() are still required by the custom layer
+        // contract. Backward can use output[out] > 0 to apply the ReLU
+        // derivative, then accumulate gradients and downstream as usual.
+    };
+};
+```
+
+Used from a model:
+
+```cpp
+using Model = edge::Model<
+    edge::Backend::M55,
+    edge::Input<8>,
+    FusedReLUDense<16>,
+    edge::Dense<1>>;
+```
+
 Backward uses the same pattern:
 
 ```cpp
