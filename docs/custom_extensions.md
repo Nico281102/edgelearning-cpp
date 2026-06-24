@@ -108,6 +108,109 @@ struct MyLayer {
 
 Forward writes the layer output. Backward receives `dLoss/dOutput`, accumulates parameter gradients, and writes `dLoss/dInput`. Use `TensorView<const T, N>` for read-only inputs and `TensorView<T, N>` for outputs. The view is passed by value because it is only a typed pointer plus compile-time extent.
 
+## Backend-Specific Layer Paths
+
+Backend specialization is selected through the model type, not through runtime virtual classes:
+
+```cpp
+using Model = edge::Model<
+    edge::Backend::M55,
+    edge::Input<8>,
+    edge::Dense<16, edge::ReLU>,
+    edge::Dense<1>>;
+```
+
+The layer receives that policy through the `Types` template parameter:
+
+```cpp
+template<typename Types>
+static void forward(...);
+```
+
+`Types::BackendT` is the selected backend. `Types::ParameterT`, `Types::ActivationT`, `Types::GradientT`, and `Types::AccumulatorT` are the selected precision types. A backend-specific fast path should check all of the assumptions that the optimized kernel requires:
+
+```cpp
+template<typename Types>
+static void forward(edge::TensorView<const typename Types::ActivationT, in_features> input,
+                    edge::TensorView<typename Types::ActivationT, out_features> output,
+                    edge::TensorView<const typename Types::ParameterT, parameter_count> params,
+                    edge::TensorView<typename Types::ActivationT, cache_count> cache,
+                    edge::TensorView<typename Types::AccumulatorT, workspace_count> workspace) noexcept {
+    using ActivationT = typename Types::ActivationT;
+    using AccumulatorT = typename Types::AccumulatorT;
+
+    if constexpr (std::is_same_v<typename Types::BackendT, edge::Backend::M55> &&
+                  std::is_same_v<typename Types::ParameterT, float> &&
+                  std::is_same_v<ActivationT, float> &&
+                  std::is_same_v<AccumulatorT, float>) {
+        if (m55_my_layer_forward<in_features, out_features>(
+                input, output, params, cache)) {
+            return;
+        }
+    }
+
+    generic_my_layer_forward(input, output, params, cache, workspace);
+}
+```
+
+`if constexpr` is important: it is a compile-time branch. When the model backend is not `M55`, the M55 branch is discarded during compilation. The binary does not need a runtime backend switch for that layer path.
+
+The optimized hook can live in a backend header, for example `include/edge/backends/m55.hpp`. The current Dense/M55 path follows this shape: the hook returns `true` when the target-specific implementation is available and `false` when the build should fall back to the generic path. That lets host builds compile and test the same model type without requiring Cortex-M55/MVE headers or instructions.
+
+Backward uses the same pattern:
+
+```cpp
+if constexpr (std::is_same_v<typename Types::BackendT, edge::Backend::M55> &&
+              std::is_same_v<typename Types::ParameterT, float> &&
+              std::is_same_v<typename Types::ActivationT, float> &&
+              std::is_same_v<typename Types::GradientT, float> &&
+              std::is_same_v<typename Types::AccumulatorT, float>) {
+    if (m55_my_layer_backward(input, output, upstream, downstream,
+                              params, gradients, cache)) {
+        return;
+    }
+}
+
+generic_my_layer_backward(input, output, upstream, downstream,
+                          params, gradients, cache, workspace);
+```
+
+The recommended rule is: keep the public layer semantic, and specialize the implementation inside `forward` and `backward`. For example, prefer `Dense` with an M55 fast path over a separate `M55Dense` layer in the user-facing model. The model then stays portable:
+
+```cpp
+using GenericModel = edge::Model<edge::Backend::Generic, edge::Input<8>, edge::Dense<16>>;
+using M55Model = edge::Model<edge::Backend::M55, edge::Input<8>, edge::Dense<16>>;
+```
+
+Both types describe the same network. Only the backend policy changes.
+
+Adding a new backend policy currently requires registering it in `include/edge/backend.hpp`. In practice that means adding the backend tag to `edge::Backend` and adding the concept trait specialization:
+
+```cpp
+namespace edge {
+
+struct Backend {
+    struct Generic { /* ... */ };
+    struct M55 { /* ... */ };
+
+    struct MyTarget {
+        static constexpr bool is_backend_policy = true;
+        static constexpr const char* name = "MyTarget";
+        static constexpr bool falls_back_to_generic = true;
+    };
+};
+
+namespace detail {
+
+template<>
+struct is_backend_policy<Backend::MyTarget> : std::true_type {};
+
+} // namespace detail
+} // namespace edge
+```
+
+Then layer implementations can branch on `Types::BackendT`. This registration point is intentionally small; it keeps backend selection compile-time and prevents accidental runtime backend strings or unvalidated backend objects from entering the model type.
+
 ## Generic Conv2D Layer
 
 `edge::Conv2D` is implemented with the same typed layer contract and can be used as the generic Conv2D example. The public shape is explicit:
