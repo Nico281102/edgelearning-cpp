@@ -112,6 +112,13 @@ state before the measured run. The reported cycle counts include only the hot
 training work of the measured run: minibatch gradient reset, forward/backward
 sample passes, and Adam updates. Setup, warm-up, convergence traces,
 import/export, serial printing, and numerical comparisons are outside DWT.
+Each seed also runs a separate equivalent profiling pass with the same initial
+parameters and dataset, so the primary `cycles` field used for speedup is not
+polluted by internal probes. C++ and RLTools variants split `zero_grad`,
+optional `input_copy`, `forward`, `loss`, `backward`, and `adam_update`. The
+legacy C API exposes forward/loss/backward through one `el_network_train_step`
+call, so that path is reported as `sample_train_step` plus `zero_grad` and
+`adam_update`.
 
 The firmware also emits a convergence trace for seed 0. This is an untimed
 diagnostic pass that reports minibatch MSE after each Adam update and does not
@@ -153,20 +160,20 @@ each variant image.
 
 The 2026-06-26 input-3 ten-seed sweep shows the expected small-network RLTools
 profile on the firmware path: RLTools generic is faster than legacy C on `8x8`
-and `16x8`, close to parity on `16x16`, and slower for wider networks. The C++
-direct legacy-C backend remains close to the legacy C baseline, while the native
-C++ M55 backend is faster than legacy C across the measured sweep.
+and `16x8`, then slower from `16x16` upward. The C++ direct legacy-C backend
+remains close to the legacy C baseline on smaller and mid-size cases, while the
+native C++ M55 backend is faster than legacy C across the measured sweep.
 
 Runtime ratios below are variant cycles divided by legacy C cycles:
 
 ```text
 hidden   direct-C-backend   cpp-m55   cpp-generic   rltools-generic
-8x8              0.905       0.433        0.414             0.553
-16x8             0.977       0.631        0.643             0.685
-16x16            0.990       0.705        0.817             0.958
-32x16            1.004       0.878        1.028             1.650
-32x32            1.021       0.977        1.255             2.055
-64x32            1.094       0.863        1.203             3.354
+8x8              0.950       0.457        0.440             0.621
+16x8             0.976       0.631        0.645             0.855
+16x16            0.991       0.705        0.823             1.194
+32x16            0.984       0.859        1.008             2.077
+32x32            1.230       0.975        1.256             2.953
+64x32            1.183       0.877        1.328             3.474
 ```
 
 Model footprint is reported in the generated tables as C arena/control bytes,
@@ -201,9 +208,14 @@ The default plot paths are:
 ```text
 firmware/el_cvscpp_ablation/results/stm32n6_speedup_<date>.csv
 firmware/el_cvscpp_ablation/results/stm32n6_speedup_<date>.svg
+firmware/el_cvscpp_ablation/results/stm32n6_training_component_breakdown_<date>.csv
+firmware/el_cvscpp_ablation/results/stm32n6_training_component_breakdown_<date>.svg
 firmware/el_cvscpp_ablation/results/stm32n6_convergence_<date>.csv
 firmware/el_cvscpp_ablation/results/stm32n6_convergence_<date>_32x32.svg
 ```
+
+The plotter also adds a generated-plots section to the matching sweep Markdown
+report when it exists.
 
 Generate the ELF component-breakdown graph with:
 

@@ -458,14 +458,31 @@ constexpr std::size_t kRltoolsModelObjectBytes = 0;
 
 struct RunStats {
     std::uint32_t cycles = 0;
+    std::uint32_t profile_cycles = 0;
     int status = 0;
+    struct Profile {
+        std::uint64_t zero_grad = 0;
+        std::uint64_t input_copy = 0;
+        std::uint64_t forward = 0;
+        std::uint64_t loss = 0;
+        std::uint64_t backward = 0;
+        std::uint64_t sample_train_step = 0;
+        std::uint64_t adam_update = 0;
+
+        std::uint64_t component_sum() const noexcept {
+            return zero_grad + input_copy + forward + loss + backward +
+                   sample_train_step + adam_update;
+        }
+    } profile{};
 };
 
 struct RunAggregate {
     std::uint64_t cycles_total = 0;
+    std::uint64_t profile_cycles_total = 0;
     std::uint32_t cycles_min = static_cast<std::uint32_t>(~0UL);
     std::uint32_t cycles_max = 0;
     int status = 0;
+    RunStats::Profile profile_total{};
 };
 
 struct RegressionDataset {
@@ -590,6 +607,10 @@ std::uint32_t dwt_read() {
     return DWT->CYCCNT;
 }
 
+void profile_add(std::uint64_t& bucket, std::uint32_t begin) {
+    bucket += static_cast<std::uint32_t>(dwt_read() - begin);
+}
+
 template<typename Model>
 Model& cpp_model_instance() {
     static Model model;
@@ -630,36 +651,58 @@ int prepare_cpp_static_model(const std::array<float, Model::parameter_count>& in
 }
 
 template<typename Model, bool Trace = false>
-int train_cpp_static_batch(const RegressionDataset& dataset, const TraceMeta* trace = nullptr) {
+int train_cpp_static_batch(const RegressionDataset& dataset,
+                           const TraceMeta* trace = nullptr,
+                           RunStats::Profile* profile = nullptr) {
     Model& model = cpp_model_instance<Model>();
     static std::array<float, Model::output_size> output_gradient{};
 
     for (std::size_t epoch = 0; epoch < kEpochs; ++epoch) {
         for (std::size_t batch = 0; batch < kBatchesPerEpoch; ++batch) {
             [[maybe_unused]] float batch_loss = 0.0F;
+            std::uint32_t profile_begin = dwt_read();
             if (model.zero_grad() != edge::Status::Ok) {
                 return -1;
+            }
+            if (profile != nullptr) {
+                profile_add(profile->zero_grad, profile_begin);
             }
             const std::size_t begin = batch * kBatchSize;
             for (std::size_t i = 0; i < kBatchSize; ++i) {
                 const std::size_t sample = begin + i;
+                profile_begin = dwt_read();
                 if (model.forward(dataset.inputs[sample]) != edge::Status::Ok) {
                     return -2;
                 }
+                if (profile != nullptr) {
+                    profile_add(profile->forward, profile_begin);
+                }
                 edge::TensorView<float, Model::output_size> gradient_view(output_gradient);
+                profile_begin = dwt_read();
                 [[maybe_unused]] const float loss = edge::MSE::evaluate(
                     model.output(),
                     edge::TensorView<const float, Model::output_size>(dataset.targets[sample]),
                     gradient_view);
+                if (profile != nullptr) {
+                    profile_add(profile->loss, profile_begin);
+                }
                 if constexpr (Trace) {
                     batch_loss += loss;
                 }
+                profile_begin = dwt_read();
                 if (model.backward(output_gradient) != edge::Status::Ok) {
                     return -3;
                 }
+                if (profile != nullptr) {
+                    profile_add(profile->backward, profile_begin);
+                }
             }
+            profile_begin = dwt_read();
             if (cpp_adam_instance<Model>().step(model, 1.0F) != edge::Status::Ok) {
                 return -4;
+            }
+            if (profile != nullptr) {
+                profile_add(profile->adam_update, profile_begin);
             }
             if constexpr (Trace) {
                 if (trace != nullptr) {
@@ -674,7 +717,8 @@ int train_cpp_static_batch(const RegressionDataset& dataset, const TraceMeta* tr
 
 template<typename Model, bool Trace = false>
 int train_cpp_direct_c_backend_static_batch(const RegressionDataset& dataset,
-                                            const TraceMeta* trace = nullptr) {
+                                            const TraceMeta* trace = nullptr,
+                                            RunStats::Profile* profile = nullptr) {
     Model& model = cpp_model_instance<Model>();
     static std::array<float, Model::output_size> output_gradient{};
 
@@ -703,31 +747,51 @@ int train_cpp_direct_c_backend_static_batch(const RegressionDataset& dataset,
     for (std::size_t epoch = 0; epoch < kEpochs; ++epoch) {
         for (std::size_t batch = 0; batch < kBatchesPerEpoch; ++batch) {
             [[maybe_unused]] float batch_loss = 0.0F;
+            std::uint32_t profile_begin = dwt_read();
             if (model.zero_grad() != edge::Status::Ok) {
                 return -1;
+            }
+            if (profile != nullptr) {
+                profile_add(profile->zero_grad, profile_begin);
             }
             const std::size_t begin = batch * kBatchSize;
             for (std::size_t i = 0; i < kBatchSize; ++i) {
                 const std::size_t sample = begin + i;
+                profile_begin = dwt_read();
                 if (model.forward(dataset.inputs[sample]) != edge::Status::Ok) {
                     return -2;
                 }
+                if (profile != nullptr) {
+                    profile_add(profile->forward, profile_begin);
+                }
                 edge::TensorView<float, Model::output_size> gradient_view(output_gradient);
+                profile_begin = dwt_read();
                 [[maybe_unused]] const float loss = edge::MSE::evaluate(
                     model.output(),
                     edge::TensorView<const float, Model::output_size>(dataset.targets[sample]),
                     gradient_view);
+                if (profile != nullptr) {
+                    profile_add(profile->loss, profile_begin);
+                }
                 if constexpr (Trace) {
                     batch_loss += loss;
                 }
+                profile_begin = dwt_read();
                 if (model.backward(output_gradient) != edge::Status::Ok) {
                     return -3;
+                }
+                if (profile != nullptr) {
+                    profile_add(profile->backward, profile_begin);
                 }
             }
             std::uint32_t& step = cpp_direct_c_adam_step<Model>();
             ++step;
+            profile_begin = dwt_read();
             el_backend_adam_update_ex(
                 &params_t, &gradients_t, &m_t, &v_t, kLearningRate, step, &adam_config);
+            if (profile != nullptr) {
+                profile_add(profile->adam_update, profile_begin);
+            }
             if constexpr (Trace) {
                 if (trace != nullptr) {
                     const std::size_t trace_step = epoch * kBatchesPerEpoch + batch + 1U;
@@ -797,17 +861,24 @@ int prepare_rltools_static_model(const std::array<float, kRltoolsParameterCount>
 }
 
 template<bool Trace = false>
-int train_rltools_static_batch(const RegressionDataset& dataset, const TraceMeta* trace = nullptr) {
+int train_rltools_static_batch(const RegressionDataset& dataset,
+                               const TraceMeta* trace = nullptr,
+                               RunStats::Profile* profile = nullptr) {
     RltoolsRuntime& runtime = rltools_runtime();
     RltoolsModelGradient& model = rltools_model_view(runtime);
 
     for (std::size_t epoch = 0; epoch < kEpochs; ++epoch) {
         for (std::size_t batch = 0; batch < kBatchesPerEpoch; ++batch) {
             [[maybe_unused]] float batch_loss = 0.0F;
+            std::uint32_t profile_begin = dwt_read();
             rlt::zero_gradient(runtime.device, model);
+            if (profile != nullptr) {
+                profile_add(profile->zero_grad, profile_begin);
+            }
             const std::size_t begin = batch * kBatchSize;
             for (std::size_t i = 0; i < kBatchSize; ++i) {
                 const std::size_t sample = begin + i;
+                profile_begin = dwt_read();
                 for (std::size_t feature = 0; feature < kInputFeatures; ++feature) {
                     rlt::set(runtime.device,
                              runtime.input,
@@ -816,13 +887,21 @@ int train_rltools_static_batch(const RegressionDataset& dataset, const TraceMeta
                              feature);
                 }
                 rlt::set(runtime.device, runtime.target, dataset.targets[sample][0], 0, 0);
+                if (profile != nullptr) {
+                    profile_add(profile->input_copy, profile_begin);
+                }
 
+                profile_begin = dwt_read();
                 rlt::forward(runtime.device,
                              model,
                              runtime.input,
                              runtime.buffers,
                              runtime.rng);
                 auto output = rlt::output(runtime.device, model);
+                if (profile != nullptr) {
+                    profile_add(profile->forward, profile_begin);
+                }
+                profile_begin = dwt_read();
                 if constexpr (Trace) {
                     batch_loss +=
                         rlt::nn::loss_functions::mse::evaluate(
@@ -830,13 +909,24 @@ int train_rltools_static_batch(const RegressionDataset& dataset, const TraceMeta
                 }
                 rlt::nn::loss_functions::mse::gradient(
                     runtime.device, output, runtime.target, runtime.output_gradient);
+                if (profile != nullptr) {
+                    profile_add(profile->loss, profile_begin);
+                }
+                profile_begin = dwt_read();
                 rlt::backward(runtime.device,
                               model,
                               runtime.input,
                               runtime.output_gradient,
                               runtime.buffers);
+                if (profile != nullptr) {
+                    profile_add(profile->backward, profile_begin);
+                }
             }
+            profile_begin = dwt_read();
             rlt::step(runtime.device, runtime.optimizer, model);
+            if (profile != nullptr) {
+                profile_add(profile->adam_update, profile_begin);
+            }
             if constexpr (Trace) {
                 if (trace != nullptr) {
                     const std::size_t step = epoch * kBatchesPerEpoch + batch + 1U;
@@ -977,14 +1067,19 @@ int prepare_legacy_c_static_model(const std::array<float, ParamCount>& initial_p
 
 template<bool Trace = false>
 int train_legacy_c_static_batch(const RegressionDataset& dataset,
-                                const TraceMeta* trace = nullptr) {
+                                const TraceMeta* trace = nullptr,
+                                RunStats::Profile* profile = nullptr) {
     LegacyCRuntime& runtime = legacy_c_runtime();
     const el_adam_config_t adam_config = legacy_adam_config();
 
     for (std::size_t epoch = 0; epoch < kEpochs; ++epoch) {
         for (std::size_t batch = 0; batch < kBatchesPerEpoch; ++batch) {
             [[maybe_unused]] float batch_loss = 0.0F;
+            std::uint32_t profile_begin = dwt_read();
             el_network_zero_grad(&runtime.net);
+            if (profile != nullptr) {
+                profile_add(profile->zero_grad, profile_begin);
+            }
             const std::size_t begin = batch * kBatchSize;
             for (std::size_t i = 0; i < kBatchSize; ++i) {
                 const std::size_t sample = begin + i;
@@ -998,13 +1093,21 @@ int train_legacy_c_static_batch(const RegressionDataset& dataset,
                     .rows = 1U,
                     .cols = 1U,
                 };
+                profile_begin = dwt_read();
                 [[maybe_unused]] const float loss = el_network_train_step(
                     &runtime.net, &sample_input, &sample_target, EL_LOSS_MSE);
+                if (profile != nullptr) {
+                    profile_add(profile->sample_train_step, profile_begin);
+                }
                 if constexpr (Trace) {
                     batch_loss += loss;
                 }
             }
+            profile_begin = dwt_read();
             el_network_update_with_adam_config(&runtime.net, kLearningRate, &adam_config);
+            if (profile != nullptr) {
+                profile_add(profile->adam_update, profile_begin);
+            }
             if constexpr (Trace) {
                 if (trace != nullptr) {
                     const std::size_t step = epoch * kBatchesPerEpoch + batch + 1U;
@@ -1035,6 +1138,14 @@ RunStats timed(Fn&& fn) {
 
 void aggregate_update(RunAggregate& aggregate, RunStats stats) {
     aggregate.cycles_total += stats.cycles;
+    aggregate.profile_cycles_total += stats.profile_cycles;
+    aggregate.profile_total.zero_grad += stats.profile.zero_grad;
+    aggregate.profile_total.input_copy += stats.profile.input_copy;
+    aggregate.profile_total.forward += stats.profile.forward;
+    aggregate.profile_total.loss += stats.profile.loss;
+    aggregate.profile_total.backward += stats.profile.backward;
+    aggregate.profile_total.sample_train_step += stats.profile.sample_train_step;
+    aggregate.profile_total.adam_update += stats.profile.adam_update;
     if (stats.cycles < aggregate.cycles_min) {
         aggregate.cycles_min = stats.cycles;
     }
@@ -1044,6 +1155,11 @@ void aggregate_update(RunAggregate& aggregate, RunStats stats) {
     if (stats.status != 0 && aggregate.status == 0) {
         aggregate.status = stats.status;
     }
+}
+
+std::uint64_t profile_gap(std::uint64_t cycles, const RunStats::Profile& profile) {
+    const std::uint64_t component_sum = profile.component_sum();
+    return cycles > component_sum ? cycles - component_sum : 0U;
 }
 
 template<std::size_t N>
@@ -1082,7 +1198,10 @@ void emit_result(const char* family,
                  std::size_t object_bytes) {
     uart_printf("RESULT family=%s variant=%s seed=%lu config=%u-%ux%u-1 batch=%u "
                 "rollout=%u epochs=%u optimizer_steps=%u sample_passes=%u warmups=%u "
-                "params=%u cycles=%lu status=%d arena_bytes=%u object_bytes=%u\r\n",
+                "params=%u cycles=%lu prof_cycles=%lu status=%d arena_bytes=%u object_bytes=%u "
+                "prof_zero=%lu prof_input_copy=%lu prof_forward=%lu prof_loss=%lu "
+                "prof_backward=%lu prof_sample_train_step=%lu prof_adam_update=%lu "
+                "prof_component_sum=%lu prof_gap=%lu\r\n",
                 family,
                 variant,
                 static_cast<unsigned long>(seed),
@@ -1097,9 +1216,19 @@ void emit_result(const char* family,
                 static_cast<unsigned>(kWarmupRuns),
                 static_cast<unsigned>(M55Model::parameter_count),
                 static_cast<unsigned long>(stats.cycles),
+                static_cast<unsigned long>(stats.profile_cycles),
                 stats.status,
                 static_cast<unsigned>(arena_bytes),
-                static_cast<unsigned>(object_bytes));
+                static_cast<unsigned>(object_bytes),
+                static_cast<unsigned long>(stats.profile.zero_grad),
+                static_cast<unsigned long>(stats.profile.input_copy),
+                static_cast<unsigned long>(stats.profile.forward),
+                static_cast<unsigned long>(stats.profile.loss),
+                static_cast<unsigned long>(stats.profile.backward),
+                static_cast<unsigned long>(stats.profile.sample_train_step),
+                static_cast<unsigned long>(stats.profile.adam_update),
+                static_cast<unsigned long>(stats.profile.component_sum()),
+                static_cast<unsigned long>(profile_gap(stats.profile_cycles, stats.profile)));
 }
 
 void emit_summary(const char* family,
@@ -1108,10 +1237,22 @@ void emit_summary(const char* family,
                   std::size_t arena_bytes,
                   std::size_t object_bytes) {
     const std::uint64_t avg = aggregate.cycles_total / kSeedCount;
+    const std::uint64_t profile_avg_cycles = aggregate.profile_cycles_total / kSeedCount;
+    RunStats::Profile profile_avg{};
+    profile_avg.zero_grad = aggregate.profile_total.zero_grad / kSeedCount;
+    profile_avg.input_copy = aggregate.profile_total.input_copy / kSeedCount;
+    profile_avg.forward = aggregate.profile_total.forward / kSeedCount;
+    profile_avg.loss = aggregate.profile_total.loss / kSeedCount;
+    profile_avg.backward = aggregate.profile_total.backward / kSeedCount;
+    profile_avg.sample_train_step = aggregate.profile_total.sample_train_step / kSeedCount;
+    profile_avg.adam_update = aggregate.profile_total.adam_update / kSeedCount;
     uart_printf("SUMMARY family=%s variant=%s config=%u-%ux%u-1 seeds=%u batch=%u "
                 "rollout=%u epochs=%u optimizer_steps=%u sample_passes=%u warmups=%u params=%u "
-                "cycles_avg=%lu cycles_min=%lu cycles_max=%lu status=%d "
-                "arena_bytes=%u object_bytes=%u\r\n",
+                "cycles_avg=%lu cycles_min=%lu cycles_max=%lu prof_cycles_avg=%lu status=%d "
+                "arena_bytes=%u object_bytes=%u "
+                "prof_zero_avg=%lu prof_input_copy_avg=%lu prof_forward_avg=%lu "
+                "prof_loss_avg=%lu prof_backward_avg=%lu prof_sample_train_step_avg=%lu "
+                "prof_adam_update_avg=%lu prof_component_sum_avg=%lu prof_gap_avg=%lu\r\n",
                 family,
                 variant,
                 static_cast<unsigned>(kInputFeatures),
@@ -1128,9 +1269,19 @@ void emit_summary(const char* family,
                 static_cast<unsigned long>(avg),
                 static_cast<unsigned long>(aggregate.cycles_min),
                 static_cast<unsigned long>(aggregate.cycles_max),
+                static_cast<unsigned long>(profile_avg_cycles),
                 aggregate.status,
                 static_cast<unsigned>(arena_bytes),
-                static_cast<unsigned>(object_bytes));
+                static_cast<unsigned>(object_bytes),
+                static_cast<unsigned long>(profile_avg.zero_grad),
+                static_cast<unsigned long>(profile_avg.input_copy),
+                static_cast<unsigned long>(profile_avg.forward),
+                static_cast<unsigned long>(profile_avg.loss),
+                static_cast<unsigned long>(profile_avg.backward),
+                static_cast<unsigned long>(profile_avg.sample_train_step),
+                static_cast<unsigned long>(profile_avg.adam_update),
+                static_cast<unsigned long>(profile_avg.component_sum()),
+                static_cast<unsigned long>(profile_gap(profile_avg_cycles, profile_avg)));
 }
 
 void emit_begin() {
@@ -1143,7 +1294,8 @@ void emit_begin() {
                 "cpp_generic_required_memory=%u cpp_generic_model_object=%u "
                 "rltools_static_state=%u rltools_model_object=%u "
                 "optimizer=adam lr_e-9=%ld beta1_e-9=%ld beta2_e-9=%ld eps_e-12=%ld "
-                "timing=ppo_like_sample_passes mve=%d opt=Ofast\r\n",
+                "timing=ppo_like_sample_passes profile_schema=train_loop_components_v1 "
+                "mve=%d opt=Ofast\r\n",
                 kVariantName,
                 static_cast<unsigned>(kInputFeatures),
                 static_cast<unsigned>(kHidden1),
@@ -1198,6 +1350,19 @@ RunStats run_legacy_c_once(const std::array<float, ParamCount>& initial_params,
     if (stats.status == 0) {
         stats.status = export_legacy_c_static_params(trained_params);
     }
+    if (stats.status == 0) {
+        RunStats::Profile profile{};
+        const int profile_prepare_status = prepare_legacy_c_static_model(initial_params);
+        const RunStats profile_stats = profile_prepare_status == 0
+            ? timed([&]() { return train_legacy_c_static_batch<false>(dataset, nullptr, &profile); })
+            : RunStats{.cycles = 0, .status = profile_prepare_status};
+        if (profile_stats.status != 0) {
+            stats.status = -11;
+        } else {
+            stats.profile_cycles = profile_stats.cycles;
+            stats.profile = profile;
+        }
+    }
     if (stats.status == 0 && seed == kConvergenceTraceSeed) {
         const TraceMeta trace{"baseline_c_m55", "legacy_c", seed};
         const int trace_prepare_status = prepare_legacy_c_static_model(initial_params);
@@ -1234,6 +1399,22 @@ RunStats run_cpp_direct_c_backend_once(const std::array<float, Model::parameter_
         : RunStats{.cycles = 0, .status = prepare_status};
     if (stats.status == 0) {
         stats.status = export_cpp_static_params<Model>(trained_params);
+    }
+    if (stats.status == 0) {
+        RunStats::Profile profile{};
+        const int profile_prepare_status = prepare_cpp_static_model<Model>(initial_params);
+        const RunStats profile_stats = profile_prepare_status == 0
+            ? timed([&]() {
+                  return train_cpp_direct_c_backend_static_batch<Model, false>(
+                      dataset, nullptr, &profile);
+              })
+            : RunStats{.cycles = 0, .status = profile_prepare_status};
+        if (profile_stats.status != 0) {
+            stats.status = -11;
+        } else {
+            stats.profile_cycles = profile_stats.cycles;
+            stats.profile = profile;
+        }
     }
     if (stats.status == 0 && seed == kConvergenceTraceSeed) {
         const TraceMeta trace{"same_c_backend", "cpp_direct_c_backend", seed};
@@ -1273,6 +1454,19 @@ RunStats run_cpp_native_once(const std::array<float, Model::parameter_count>& in
     if (stats.status == 0) {
         stats.status = export_cpp_static_params<Model>(trained_params);
     }
+    if (stats.status == 0) {
+        RunStats::Profile profile{};
+        const int profile_prepare_status = prepare_cpp_static_model<Model>(initial_params);
+        const RunStats profile_stats = profile_prepare_status == 0
+            ? timed([&]() { return train_cpp_static_batch<Model, false>(dataset, nullptr, &profile); })
+            : RunStats{.cycles = 0, .status = profile_prepare_status};
+        if (profile_stats.status != 0) {
+            stats.status = -11;
+        } else {
+            stats.profile_cycles = profile_stats.cycles;
+            stats.profile = profile;
+        }
+    }
     if (stats.status == 0 && seed == kConvergenceTraceSeed) {
         const TraceMeta trace{family, variant, seed};
         const int trace_prepare_status = prepare_cpp_static_model<Model>(initial_params);
@@ -1308,6 +1502,19 @@ RunStats run_rltools_generic_once(const std::array<float, kRltoolsParameterCount
         : RunStats{.cycles = 0, .status = prepare_status};
     if (stats.status == 0) {
         stats.status = export_rltools_static_params(trained_params);
+    }
+    if (stats.status == 0) {
+        RunStats::Profile profile{};
+        const int profile_prepare_status = prepare_rltools_static_model(initial_params);
+        const RunStats profile_stats = profile_prepare_status == 0
+            ? timed([&]() { return train_rltools_static_batch<false>(dataset, nullptr, &profile); })
+            : RunStats{.cycles = 0, .status = profile_prepare_status};
+        if (profile_stats.status != 0) {
+            stats.status = -11;
+        } else {
+            stats.profile_cycles = profile_stats.cycles;
+            stats.profile = profile;
+        }
     }
     if (stats.status == 0 && seed == kConvergenceTraceSeed) {
         const TraceMeta trace{"rltools_cpp_generic", "rltools_generic", seed};

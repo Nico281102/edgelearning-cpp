@@ -27,6 +27,23 @@ COLORS = {
     "cpp_generic": "#b24a1f",
     "rltools_generic": "#7a3db8",
 }
+COMPONENTS = (
+    ("zero", "zero grad", "#4f6f8f"),
+    ("input_copy", "input copy", "#7c5aa6"),
+    ("forward", "forward", "#2f7f5f"),
+    ("loss", "loss/grad", "#d08a2f"),
+    ("backward", "backward", "#b64b4b"),
+    ("sample_train_step", "C train step", "#6f6f6f"),
+    ("adam_update", "Adam update", "#2f64b0"),
+    ("gap", "other/gap", "#c9c9c9"),
+)
+SHORT_LABELS = {
+    "legacy_c": "C",
+    "cpp_direct_c_backend": "Direct",
+    "cpp_m55": "M55",
+    "cpp_generic": "Generic",
+    "rltools_generic": "RLTools",
+}
 
 
 def parse_args() -> argparse.Namespace:
@@ -237,6 +254,186 @@ def write_speedup_svg(path: Path, rows: list[dict[str, object]]) -> None:
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
+def write_runtime_breakdown_csv(path: Path, rows: list[dict[str, str]]) -> list[dict[str, object]]:
+    out: list[dict[str, object]] = []
+    for row in rows:
+        config = row["config"]
+        params = to_int(row.get("params"))
+        for variant in VARIANTS:
+            total = to_int(row.get(f"{variant}_profile_cycles_avg"))
+            if total == 0:
+                total = to_int(row.get(f"{variant}_cycles_avg"))
+            for order, (component, label, _) in enumerate(COMPONENTS):
+                cycles = to_int(row.get(f"{variant}_profile_{component}_avg"))
+                out.append(
+                    {
+                        "config": config,
+                        "params": params,
+                        "variant": variant,
+                        "component": component,
+                        "component_label": label,
+                        "component_order": order,
+                        "cycles_avg": cycles,
+                        "variant_cycles_avg": total,
+                        "percent_of_variant": (cycles / total * 100.0) if total else 0.0,
+                    }
+                )
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8", newline="") as f:
+        writer = csv.DictWriter(
+            f,
+            fieldnames=[
+                "config",
+                "params",
+                "variant",
+                "component",
+                "component_label",
+                "component_order",
+                "cycles_avg",
+                "variant_cycles_avg",
+                "percent_of_variant",
+            ],
+        )
+        writer.writeheader()
+        writer.writerows(out)
+    return out
+
+
+def write_runtime_breakdown_svg(path: Path, rows: list[dict[str, object]]) -> None:
+    configs: list[str] = []
+    for row in rows:
+        config = str(row["config"])
+        if config not in configs:
+            configs.append(config)
+
+    totals: dict[tuple[str, str], float] = {}
+    for row in rows:
+        key = (str(row["config"]), str(row["variant"]))
+        totals[key] = max(totals.get(key, 0.0), float(row["variant_cycles_avg"]))
+
+    bar_w = 17
+    bar_gap = 5
+    group_gap = 34
+    left, right, top, bottom = 90, 285, 70, 122
+    group_w = len(VARIANTS) * bar_w + (len(VARIANTS) - 1) * bar_gap
+    plot_w = len(configs) * group_w + (len(configs) - 1) * group_gap
+    width, height = left + plot_w + right, 680
+    plot_h = height - top - bottom
+    y_max = max(totals.values(), default=1.0)
+    y_max = max(1.0, math.ceil(y_max / 10_000_000.0) * 10_000_000.0)
+
+    def sx(config_index: int, variant_index: int) -> float:
+        return left + config_index * (group_w + group_gap) + variant_index * (bar_w + bar_gap)
+
+    def sy(value: float) -> float:
+        return top + (1.0 - value / y_max) * plot_h
+
+    by_key_component: dict[tuple[str, str, str], float] = {}
+    for row in rows:
+        by_key_component[(str(row["config"]), str(row["variant"]), str(row["component"]))] = float(row["cycles_avg"])
+
+    lines = svg_header(width, height)
+    lines.append('<text class="title" x="90" y="34">Training-loop component breakdown</text>')
+    lines.append(
+        '<text class="label" x="90" y="54">Average DWT cycles per measured run; setup, warm-up, trace, export, and serial I/O excluded.</text>'
+    )
+    lines.append(f'<line class="axis" x1="{left}" y1="{top + plot_h}" x2="{left + plot_w}" y2="{top + plot_h}"/>')
+    lines.append(f'<line class="axis" x1="{left}" y1="{top}" x2="{left}" y2="{top + plot_h}"/>')
+    for i in range(6):
+        value = y_max * i / 5
+        y = sy(value)
+        lines.append(f'<line class="grid" x1="{left}" y1="{y:.1f}" x2="{left + plot_w}" y2="{y:.1f}"/>')
+        lines.append(f'<text class="tick" x="{left - 10}" y="{y + 4:.1f}" text-anchor="end">{value / 1_000_000:.0f}M</text>')
+    for ci, config in enumerate(configs):
+        group_x = left + ci * (group_w + group_gap)
+        group_center = group_x + group_w / 2
+        lines.append(
+            f'<text class="label" x="{group_center:.1f}" y="{top + plot_h + 76}" '
+            f'text-anchor="middle">{html.escape(config)}</text>'
+        )
+        for vi, variant in enumerate(VARIANTS):
+            x = sx(ci, vi)
+            accum = 0.0
+            for component, label, color in COMPONENTS:
+                cycles = by_key_component.get((config, variant, component), 0.0)
+                if cycles <= 0:
+                    continue
+                y_top = sy(accum + cycles)
+                y_bottom = sy(accum)
+                segment_h = max(0.6, y_bottom - y_top)
+                title = (
+                    f"{config} {LABELS[variant]} {label}: {cycles:,.0f} cycles; "
+                    f"total: {totals.get((config, variant), 0.0):,.0f}"
+                )
+                lines.append(
+                    f'<rect x="{x:.1f}" y="{y_top:.1f}" width="{bar_w}" '
+                    f'height="{segment_h:.1f}" fill="{color}"><title>{html.escape(title)}</title></rect>'
+                )
+                accum += cycles
+            total = totals.get((config, variant), 0.0)
+            if total > 0:
+                lines.append(
+                    f'<rect x="{x:.1f}" y="{sy(total):.1f}" width="{bar_w}" '
+                    f'height="{sy(0.0) - sy(total):.1f}" fill="none" stroke="#222" stroke-width=".45" opacity=".55"/>'
+                )
+            label_x = x + bar_w / 2
+            label_y = top + plot_h + 22
+            lines.append(
+                f'<text class="tick" x="{label_x:.1f}" y="{label_y}" text-anchor="end" '
+                f'transform="rotate(-45 {label_x:.1f} {label_y})">{html.escape(SHORT_LABELS[variant])}</text>'
+            )
+    lines.append(
+        f'<text class="label" transform="translate(24 {top + plot_h / 2:.1f}) rotate(-90)" text-anchor="middle">cycles per measured run</text>'
+    )
+    legend_x = left + plot_w + 44
+    legend_y = top + 8
+    lines.append(f'<text class="legend" x="{legend_x}" y="{legend_y - 16}">Components</text>')
+    for i, (_, label, color) in enumerate(COMPONENTS):
+        y = legend_y + i * 21
+        lines.append(f'<rect x="{legend_x}" y="{y - 12}" width="16" height="16" fill="{color}"/>')
+        lines.append(f'<text class="legend" x="{legend_x + 24}" y="{y + 1}">{html.escape(label)}</text>')
+    variant_y = legend_y + len(COMPONENTS) * 21 + 42
+    lines.append(f'<text class="legend" x="{legend_x}" y="{variant_y - 16}">Variant order</text>')
+    for i, variant in enumerate(VARIANTS):
+        y = variant_y + i * 19
+        lines.append(f'<text class="legend" x="{legend_x}" y="{y}">{html.escape(SHORT_LABELS[variant])}: {html.escape(LABELS[variant])}</text>')
+    lines.append("</svg>")
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def update_markdown_plots(summary_csv: Path,
+                          speedup_svg: Path,
+                          convergence_svg: Path,
+                          runtime_breakdown_svg: Path) -> None:
+    md_path = summary_csv.with_suffix(".md")
+    if not md_path.exists():
+        return
+    start = "<!-- plots:start -->"
+    end = "<!-- plots:end -->"
+    section = "\n".join(
+        [
+            start,
+            "## Generated plots",
+            "",
+            f"![Speedup over legacy C]({speedup_svg.name})",
+            "",
+            f"![Training-loop component breakdown]({runtime_breakdown_svg.name})",
+            "",
+            f"![Convergence trace]({convergence_svg.name})",
+            end,
+            "",
+        ]
+    )
+    text = md_path.read_text(encoding="utf-8")
+    if start in text and end in text:
+        before = text.split(start, 1)[0].rstrip()
+        after = text.split(end, 1)[1].lstrip()
+        text = before + "\n\n" + section + ("\n" + after if after else "")
+    else:
+        text = text.rstrip() + "\n\n" + section
+    md_path.write_text(text, encoding="utf-8")
+
+
 def write_convergence_svg(path: Path, rows: list[dict[str, object]], config: str) -> None:
     selected = [row for row in rows if row["config"] == config and float(row["minibatch_mse"]) > 0]
     if not selected:
@@ -312,15 +509,22 @@ def main() -> int:
     convergence_svg = args.output_dir / (
         f"stm32n6_convergence_{args.date}{output_tag}_{args.convergence_config.replace('x', 'x')}.svg"
     )
+    runtime_breakdown_csv = args.output_dir / f"stm32n6_training_component_breakdown_{args.date}{output_tag}.csv"
+    runtime_breakdown_svg = args.output_dir / f"stm32n6_training_component_breakdown_{args.date}{output_tag}.svg"
 
     speedup_rows = write_speedup_csv(speedup_csv, summary_rows)
     write_speedup_svg(speedup_svg, speedup_rows)
+    runtime_breakdown_rows = write_runtime_breakdown_csv(runtime_breakdown_csv, summary_rows)
+    write_runtime_breakdown_svg(runtime_breakdown_svg, runtime_breakdown_rows)
     trace_rows = read_trace_rows(summary_rows)
     write_convergence_csv(convergence_csv, trace_rows)
     write_convergence_svg(convergence_svg, trace_rows, args.convergence_config)
+    update_markdown_plots(summary_csv, speedup_svg, convergence_svg, runtime_breakdown_svg)
 
     print(speedup_csv)
     print(speedup_svg)
+    print(runtime_breakdown_csv)
+    print(runtime_breakdown_svg)
     print(convergence_csv)
     print(convergence_svg)
     return 0

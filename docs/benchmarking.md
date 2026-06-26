@@ -74,26 +74,31 @@ The current firmware sweep uses:
 The timing window excludes setup, warm-up, convergence tracing, parameter
 import/export, serial printing, and numerical comparisons. Only the hot
 training work is measured: minibatch gradient reset, forward/backward sample
-passes, and Adam updates.
+passes, and Adam updates. Firmware runs also emit component profiling counters
+from a separate equivalent profiling pass with the same initial parameters and
+dataset, so the primary speedup timings are not polluted by internal probes. C++
+and RLTools variants split `zero_grad`, optional `input_copy`, `forward`, `loss`,
+`backward`, and `adam_update`; legacy C reports its API-level
+`sample_train_step` for the combined forward/loss/backward work.
 
 The 2026-06-26 input-3 ten-seed run is consistent with the expected RLTools
 behavior for small static networks on this firmware path: RLTools is faster than
-legacy C on `8x8` and `16x8`, close to parity on `16x16`, and slower for wider
-networks. The C++ direct-legacy-backend variant stays close to the legacy C
-baseline, which is the control case. The native C++ M55 backend is faster than
-legacy C across the measured sweep.
+legacy C on `8x8` and `16x8`, then slower from `16x16` upward. The C++ direct
+legacy-C-backend variant stays close to the legacy C baseline on the smaller
+and mid-size cases, then exposes adapter/layout overhead on the larger cases.
+The native C++ M55 backend is faster than legacy C across the measured sweep.
 
 Cycle ratios below are variant cycles divided by legacy C cycles; values below
 `1.0` are faster than legacy C.
 
 | Hidden | Direct C backend | C++ M55 | C++ Generic | RLTools Generic |
 |---|---:|---:|---:|---:|
-| `8x8` | 0.905 | 0.433 | 0.414 | 0.553 |
-| `16x8` | 0.977 | 0.631 | 0.643 | 0.685 |
-| `16x16` | 0.990 | 0.705 | 0.817 | 0.958 |
-| `32x16` | 1.004 | 0.878 | 1.028 | 1.650 |
-| `32x32` | 1.021 | 0.977 | 1.255 | 2.055 |
-| `64x32` | 1.094 | 0.863 | 1.203 | 3.354 |
+| `8x8` | 0.950 | 0.457 | 0.440 | 0.621 |
+| `16x8` | 0.976 | 0.631 | 0.645 | 0.855 |
+| `16x16` | 0.991 | 0.705 | 0.823 | 1.194 |
+| `32x16` | 0.984 | 0.859 | 1.008 | 2.077 |
+| `32x32` | 1.230 | 0.975 | 1.256 | 2.953 |
+| `64x32` | 1.183 | 0.877 | 1.328 | 3.474 |
 
 Model footprint is measured separately from runtime. For C, the model-state
 number is the static arena plus control state. For C++ variants, the report
@@ -105,21 +110,19 @@ static rollout buffers.
 
 | Variant | Model-state bytes across sweep | ELF `dec` bytes across sweep |
 |---|---:|---:|
-| Legacy C M55 | 3,296-40,160 | 79,636-134,572 |
-| C++ direct legacy-C backend | 2,080-38,944 | 75,500-130,428 |
-| C++ native M55 | 2,080-38,944 | 70,596-126,060 |
-| C++ generic | 1,976-38,840 | 71,140-128,004 |
-| RLTools generic | 1,948-38,684 | 77,564-132,644 |
+| Legacy C M55 | 3,296-40,160 | 80,884-135,820 |
+| C++ direct legacy-C backend | 2,080-38,944 | 78,140-132,988 |
+| C++ native M55 | 2,080-38,944 | 72,492-127,916 |
+| C++ generic | 1,976-38,840 | 74,996-132,964 |
+| RLTools generic | 1,948-38,684 | 76,868-134,292 |
 
 Generated artifacts for this run are under
 `firmware/el_cvscpp_ablation/results/`, including the ten-seed sweep table, the
-per-variant ELF/model-size table, the speedup/convergence CSV/SVG files, and
-the ELF component-breakdown CSV/SVG. The component-breakdown plot uses the
-firmware ELF `text`, `data`, and `bss` sections. It is a footprint breakdown,
-not a runtime phase breakdown; phase-level timing would require additional DWT
-instrumentation inside the firmware training loop. The legacy C source and
-RLTools source are referenced through local paths and are not vendored into this
-repository.
+per-variant ELF/model-size table, the speedup/convergence CSV/SVG files, the
+training-loop component-breakdown CSV/SVG, and the ELF component-breakdown
+CSV/SVG. The ELF component-breakdown plot uses the firmware ELF `text`, `data`,
+and `bss` sections. The legacy C source and RLTools source are referenced
+through local paths and are not vendored into this repository.
 
 For fair comparisons, use the same compiler family, optimization flags, topology, flat parameter layout, initial weights, synthetic samples, optimizer, batch policy, and iteration count.
 

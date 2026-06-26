@@ -12,6 +12,17 @@ from pathlib import Path
 
 DEFAULT_CONFIGS = ("8x8", "16x8", "16x16", "32x16", "32x32", "64x32")
 VARIANTS = ("legacy_c", "cpp_direct_c_backend", "cpp_m55", "cpp_generic", "rltools_generic")
+PROFILE_COMPONENTS = (
+    "zero",
+    "input_copy",
+    "forward",
+    "loss",
+    "backward",
+    "sample_train_step",
+    "adam_update",
+    "component_sum",
+    "gap",
+)
 COMPARES = {
     "legacy_c_vs_cpp_direct_c_backend": "compare_direct_ok",
     "legacy_c_vs_cpp_m55": "compare_m55_ok",
@@ -147,6 +158,15 @@ def ratio(numerator: int, denominator: int) -> float:
     return numerator / denominator
 
 
+def profile_values(prefix: str, summary: dict[str, str]) -> dict[str, int]:
+    values = {
+        f"{prefix}_profile_{component}_avg": to_int(summary.get(f"prof_{component}_avg"))
+        for component in PROFILE_COMPONENTS
+    }
+    values[f"{prefix}_profile_cycles_avg"] = to_int(summary.get("prof_cycles_avg"))
+    return values
+
+
 def all_ok(values: list[int]) -> int:
     return 1 if values and all(value == 1 for value in values) else 0
 
@@ -200,6 +220,7 @@ def build_row(project_root: Path,
         "seeds": seeds,
         "params": to_int(begin.get("params"), to_int(legacy.get("params"))),
         "timing": begin.get("timing", ""),
+        "profile_schema": begin.get("profile_schema", ""),
         "optimizer": begin.get("optimizer", ""),
         "batch": to_int(begin.get("batch"), to_int(legacy.get("batch"))),
         "rollout": to_int(begin.get("rollout"), to_int(legacy.get("rollout"))),
@@ -267,6 +288,11 @@ def build_row(project_root: Path,
         "elf_path": str(elf_path),
         "elf_file_bytes": elf_path.stat().st_size if elf_path.exists() else 0,
     }
+    row.update(profile_values("legacy_c", legacy))
+    row.update(profile_values("cpp_direct_c_backend", direct))
+    row.update(profile_values("cpp_m55", m55))
+    row.update(profile_values("cpp_generic", generic))
+    row.update(profile_values("rltools_generic", rltools))
     row.update(size_values)
     return row
 
@@ -283,6 +309,7 @@ def write_csv(path: Path, rows: list[dict[str, object]]) -> None:
         "seeds",
         "params",
         "timing",
+        "profile_schema",
         "optimizer",
         "batch",
         "rollout",
@@ -310,6 +337,12 @@ def write_csv(path: Path, rows: list[dict[str, object]]) -> None:
         "rltools_generic_cycles_min",
         "rltools_generic_cycles_max",
         "rltools_over_c",
+        *[f"{variant}_profile_cycles_avg" for variant in VARIANTS],
+        *[
+            f"{variant}_profile_{component}_avg"
+            for variant in VARIANTS
+            for component in PROFILE_COMPONENTS
+        ],
         "legacy_c_arena_bytes",
         "legacy_c_control_bytes",
         "cpp_direct_required_memory",
@@ -352,14 +385,16 @@ def write_markdown(path: Path, rows: list[dict[str, object]], input_features: in
     )
     with path.open("w", encoding="utf-8") as f:
         f.write(f"# STM32N6 EL_C_vsCpp Sweep - {dt.date.today().isoformat()} - 10 seeds\n\n")
-        f.write("Board target: STM32N6 Cortex-M55 with MVE.  \n")
-        f.write(f"Task: deterministic linear regression, input {input_features}, output 1, batch 256.  \n")
-        f.write("Protocol: Adam, rollout 1024, 2 epochs, 8 optimizer steps, 2048 sample-passes per measured run.  \n")
-        f.write("Warm-up: 2 full training runs per variant/seed, with model and optimizer reset before the measured run.  \n")
-        f.write("Timing: pre-generated rollout hot path only; setup, import/export, reset, sample generation, warm-up, traces, and comparisons are outside DWT.  \n")
-        f.write("Convergence trace: seed 0, minibatch MSE after each Adam update, emitted by an untimed diagnostic pass.  \n")
+        f.write("Board target: STM32N6 Cortex-M55 with MVE.\n")
+        f.write(f"Task: deterministic linear regression, input {input_features}, output 1, batch 256.\n")
+        f.write("Protocol: Adam, rollout 1024, 2 epochs, 8 optimizer steps, 2048 sample-passes per measured run.\n")
+        f.write("Warm-up: 2 full training runs per variant/seed, with model and optimizer reset before the measured run.\n")
+        f.write("Timing: pre-generated rollout hot path only; setup, import/export, reset, sample generation, warm-up, traces, and comparisons are outside DWT.\n")
+        f.write("Profiling: training-loop component counters are collected in a separate equivalent pass with the same initial parameters and dataset, then averaged over seeds.\n")
+        f.write("Legacy C exposes `sample_train_step` as one combined forward/loss/backward component because those operations are encapsulated by the C API.\n")
+        f.write("Convergence trace: seed 0, minibatch MSE after each Adam update, emitted by an untimed diagnostic pass.\n")
         f.write("Build: static C arena and static C++ model, all firmware objects compiled with `-Ofast`.\n\n")
-        f.write(f"All runs completed with `DONE status=0`: `{int(all_done)}`.  \n")
+        f.write(f"All runs completed with `DONE status=0`: `{int(all_done)}`.\n")
         f.write(f"All numerical comparisons passed for every seed: `{int(all_compares)}`.\n\n")
         f.write(
             "| Config | Input | Seeds | Warm-ups | Params | C M55 avg | Direct C-backend avg | Direct/C | "
