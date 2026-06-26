@@ -11,7 +11,7 @@
 <line class="grid" x1="82" y1="345.2" x2="865" y2="345.2"/>
 <text class="tick" x="72" y="349.2" text-anchor="end">1.02x</text>
 <line class="grid" x1="82" y1="250.8" x2="865" y2="250.8"/>
-<text class="tick" x="72" y="254.8" text-anchor="end">1.53x</text>
+<text class="tick" x="72" y="254.8" text-anchor="end">1.52x</text>
 <line class="grid" x1="82" y1="156.4" x2="865" y2="156.4"/>
 <text class="tick" x="72" y="160.4" text-anchor="end">2.03x</text>
 <line class="grid" x1="82" y1="62.0" x2="865" y2="62.0"/>
@@ -34,41 +34,41 @@
 <line class="grid" x1="865.0" y1="62" x2="865.0" y2="534"/>
 <text class="tick" x="865.0" y="554" text-anchor="middle">64x32</text>
 <text class="tick" x="865.0" y="570" text-anchor="middle">2369</text>
-<polyline points="82.0,348.3 115.3,348.3 165.3,348.3 276.4,348.3 465.2,348.3 865.0,348.3" fill="none" stroke="#2f2f2f" stroke-width="2.4"/>
-<circle cx="82.0" cy="348.3" r="3.2" fill="#2f2f2f"/>
-<circle cx="115.3" cy="348.3" r="3.2" fill="#2f2f2f"/>
-<circle cx="165.3" cy="348.3" r="3.2" fill="#2f2f2f"/>
-<circle cx="276.4" cy="348.3" r="3.2" fill="#2f2f2f"/>
-<circle cx="465.2" cy="348.3" r="3.2" fill="#2f2f2f"/>
-<circle cx="865.0" cy="348.3" r="3.2" fill="#2f2f2f"/>
-<polyline points="82.0,338.8 115.3,343.7 165.3,346.7 276.4,349.2 465.2,383.3 865.0,377.7" fill="none" stroke="#177245" stroke-width="2.4"/>
-<circle cx="82.0" cy="338.8" r="3.2" fill="#177245"/>
-<circle cx="115.3" cy="343.7" r="3.2" fill="#177245"/>
-<circle cx="165.3" cy="346.7" r="3.2" fill="#177245"/>
-<circle cx="276.4" cy="349.2" r="3.2" fill="#177245"/>
-<circle cx="465.2" cy="383.3" r="3.2" fill="#177245"/>
-<circle cx="865.0" cy="377.7" r="3.2" fill="#177245"/>
-<polyline points="82.0,127.4 115.3,239.9 165.3,270.6 276.4,322.5 465.2,343.6 865.0,322.1" fill="none" stroke="#1f62b2" stroke-width="2.4"/>
-<circle cx="82.0" cy="127.4" r="3.2" fill="#1f62b2"/>
-<circle cx="115.3" cy="239.9" r="3.2" fill="#1f62b2"/>
-<circle cx="165.3" cy="270.6" r="3.2" fill="#1f62b2"/>
-<circle cx="276.4" cy="322.5" r="3.2" fill="#1f62b2"/>
-<circle cx="465.2" cy="343.6" r="3.2" fill="#1f62b2"/>
-<circle cx="865.0" cy="322.1" r="3.2" fill="#1f62b2"/>
-<polyline points="82.0,112.6 115.3,246.5 165.3,308.1 276.4,353.8 465.2,386.2 865.0,392.3" fill="none" stroke="#b24a1f" stroke-width="2.4"/>
+<polyline points="82.0,348.1 115.3,348.1 165.3,348.1 276.4,348.1 465.2,348.1 865.0,348.1" fill="none" stroke="#2f2f2f" stroke-width="2.4"/>
+<circle cx="82.0" cy="348.1" r="3.2" fill="#2f2f2f"/>
+<circle cx="115.3" cy="348.1" r="3.2" fill="#2f2f2f"/>
+<circle cx="165.3" cy="348.1" r="3.2" fill="#2f2f2f"/>
+<circle cx="276.4" cy="348.1" r="3.2" fill="#2f2f2f"/>
+<circle cx="465.2" cy="348.1" r="3.2" fill="#2f2f2f"/>
+<circle cx="865.0" cy="348.1" r="3.2" fill="#2f2f2f"/>
+<polyline points="82.0,337.6 115.3,343.4 165.3,346.4 276.4,348.9 465.2,382.7 865.0,357.2" fill="none" stroke="#177245" stroke-width="2.4"/>
+<circle cx="82.0" cy="337.6" r="3.2" fill="#177245"/>
+<circle cx="115.3" cy="343.4" r="3.2" fill="#177245"/>
+<circle cx="165.3" cy="346.4" r="3.2" fill="#177245"/>
+<circle cx="276.4" cy="348.9" r="3.2" fill="#177245"/>
+<circle cx="465.2" cy="382.7" r="3.2" fill="#177245"/>
+<circle cx="865.0" cy="357.2" r="3.2" fill="#177245"/>
+<polyline points="82.0,126.3 115.3,239.3 165.3,270.1 276.4,322.3 465.2,343.3 865.0,311.1" fill="none" stroke="#1f62b2" stroke-width="2.4"/>
+<circle cx="82.0" cy="126.3" r="3.2" fill="#1f62b2"/>
+<circle cx="115.3" cy="239.3" r="3.2" fill="#1f62b2"/>
+<circle cx="165.3" cy="270.1" r="3.2" fill="#1f62b2"/>
+<circle cx="276.4" cy="322.3" r="3.2" fill="#1f62b2"/>
+<circle cx="465.2" cy="343.3" r="3.2" fill="#1f62b2"/>
+<circle cx="865.0" cy="311.1" r="3.2" fill="#1f62b2"/>
+<polyline points="82.0,112.6 115.3,245.4 165.3,308.0 276.4,353.8 465.2,386.3 865.0,384.3" fill="none" stroke="#b24a1f" stroke-width="2.4"/>
 <circle cx="82.0" cy="112.6" r="3.2" fill="#b24a1f"/>
-<circle cx="115.3" cy="246.5" r="3.2" fill="#b24a1f"/>
-<circle cx="165.3" cy="308.1" r="3.2" fill="#b24a1f"/>
+<circle cx="115.3" cy="245.4" r="3.2" fill="#b24a1f"/>
+<circle cx="165.3" cy="308.0" r="3.2" fill="#b24a1f"/>
 <circle cx="276.4" cy="353.8" r="3.2" fill="#b24a1f"/>
-<circle cx="465.2" cy="386.2" r="3.2" fill="#b24a1f"/>
-<circle cx="865.0" cy="392.3" r="3.2" fill="#b24a1f"/>
-<polyline points="82.0,235.1 115.3,317.6 165.3,378.6 276.4,446.5 465.2,471.1 865.0,480.6" fill="none" stroke="#7a3db8" stroke-width="2.4"/>
-<circle cx="82.0" cy="235.1" r="3.2" fill="#7a3db8"/>
-<circle cx="115.3" cy="317.6" r="3.2" fill="#7a3db8"/>
-<circle cx="165.3" cy="378.6" r="3.2" fill="#7a3db8"/>
-<circle cx="276.4" cy="446.5" r="3.2" fill="#7a3db8"/>
-<circle cx="465.2" cy="471.1" r="3.2" fill="#7a3db8"/>
-<circle cx="865.0" cy="480.6" r="3.2" fill="#7a3db8"/>
+<circle cx="465.2" cy="386.3" r="3.2" fill="#b24a1f"/>
+<circle cx="865.0" cy="384.3" r="3.2" fill="#b24a1f"/>
+<polyline points="82.0,232.4 115.3,316.4 165.3,378.3 276.4,446.4 465.2,471.0 865.0,476.9" fill="none" stroke="#7a3db8" stroke-width="2.4"/>
+<circle cx="82.0" cy="232.4" r="3.2" fill="#7a3db8"/>
+<circle cx="115.3" cy="316.4" r="3.2" fill="#7a3db8"/>
+<circle cx="165.3" cy="378.3" r="3.2" fill="#7a3db8"/>
+<circle cx="276.4" cy="446.4" r="3.2" fill="#7a3db8"/>
+<circle cx="465.2" cy="471.0" r="3.2" fill="#7a3db8"/>
+<circle cx="865.0" cy="476.9" r="3.2" fill="#7a3db8"/>
 <text class="label" x="473.5" y="602" text-anchor="middle">Network config and parameter count</text>
 <text class="label" transform="translate(22 298.0) rotate(-90)" text-anchor="middle">legacy C cycles / variant cycles</text>
 <line x1="899" y1="70" x2="923" y2="70" stroke="#2f2f2f" stroke-width="2.4"/>

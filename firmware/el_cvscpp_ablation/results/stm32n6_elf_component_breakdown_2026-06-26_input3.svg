@@ -23,19 +23,19 @@
 <rect x="82.0" y="279.1" width="16" height="100.5" fill="#4f9f68"><title>8x8 C M55 bss: 31,404 bytes; ELF dec: 80,884; model state: 3,296</title></rect>
 <rect class="baroutline" x="82.0" y="279.1" width="16" height="258.9"/>
 <text class="tick" x="90.0" y="558" text-anchor="end" transform="rotate(-45 90.0 558)">C</text>
-<rect x="103.0" y="384.9" width="16" height="153.1" fill="#356bb0"><title>8x8 C++ direct C backend text: 47,836 bytes; ELF dec: 78,140; model state: 2,080</title></rect>
-<rect x="103.0" y="384.6" width="16" height="0.5" fill="#e0a22e"><title>8x8 C++ direct C backend data: 92 bytes; ELF dec: 78,140; model state: 2,080</title></rect>
-<rect x="103.0" y="287.9" width="16" height="96.7" fill="#4f9f68"><title>8x8 C++ direct C backend bss: 30,212 bytes; ELF dec: 78,140; model state: 2,080</title></rect>
-<rect class="baroutline" x="103.0" y="287.9" width="16" height="250.1"/>
+<rect x="103.0" y="385.0" width="16" height="153.0" fill="#356bb0"><title>8x8 C++ direct C backend text: 47,804 bytes; ELF dec: 78,108; model state: 2,080</title></rect>
+<rect x="103.0" y="384.7" width="16" height="0.5" fill="#e0a22e"><title>8x8 C++ direct C backend data: 92 bytes; ELF dec: 78,108; model state: 2,080</title></rect>
+<rect x="103.0" y="288.0" width="16" height="96.7" fill="#4f9f68"><title>8x8 C++ direct C backend bss: 30,212 bytes; ELF dec: 78,108; model state: 2,080</title></rect>
+<rect class="baroutline" x="103.0" y="288.0" width="16" height="250.0"/>
 <text class="tick" x="111.0" y="558" text-anchor="end" transform="rotate(-45 111.0 558)">Direct</text>
 <rect x="124.0" y="402.9" width="16" height="135.1" fill="#356bb0"><title>8x8 C++ M55 text: 42,204 bytes; ELF dec: 72,492; model state: 2,080</title></rect>
 <rect x="124.0" y="402.5" width="16" height="0.5" fill="#e0a22e"><title>8x8 C++ M55 data: 112 bytes; ELF dec: 72,492; model state: 2,080</title></rect>
 <rect x="124.0" y="306.0" width="16" height="96.6" fill="#4f9f68"><title>8x8 C++ M55 bss: 30,176 bytes; ELF dec: 72,492; model state: 2,080</title></rect>
 <rect class="baroutline" x="124.0" y="306.0" width="16" height="232.0"/>
 <text class="tick" x="132.0" y="558" text-anchor="end" transform="rotate(-45 132.0 558)">M55</text>
-<rect x="145.0" y="394.6" width="16" height="143.4" fill="#356bb0"><title>8x8 C++ generic text: 44,812 bytes; ELF dec: 74,996; model state: 1,976</title></rect>
-<rect x="145.0" y="394.2" width="16" height="0.5" fill="#e0a22e"><title>8x8 C++ generic data: 112 bytes; ELF dec: 74,996; model state: 1,976</title></rect>
-<rect x="145.0" y="297.9" width="16" height="96.3" fill="#4f9f68"><title>8x8 C++ generic bss: 30,072 bytes; ELF dec: 74,996; model state: 1,976</title></rect>
+<rect x="145.0" y="394.5" width="16" height="143.5" fill="#356bb0"><title>8x8 C++ generic text: 44,828 bytes; ELF dec: 75,012; model state: 1,976</title></rect>
+<rect x="145.0" y="394.1" width="16" height="0.5" fill="#e0a22e"><title>8x8 C++ generic data: 112 bytes; ELF dec: 75,012; model state: 1,976</title></rect>
+<rect x="145.0" y="297.9" width="16" height="96.3" fill="#4f9f68"><title>8x8 C++ generic bss: 30,072 bytes; ELF dec: 75,012; model state: 1,976</title></rect>
 <rect class="baroutline" x="145.0" y="297.9" width="16" height="240.1"/>
 <text class="tick" x="153.0" y="558" text-anchor="end" transform="rotate(-45 153.0 558)">Generic</text>
 <rect x="166.0" y="388.9" width="16" height="149.1" fill="#356bb0"><title>8x8 RLTools generic text: 46,588 bytes; ELF dec: 76,868; model state: 1,948</title></rect>
@@ -49,20 +49,20 @@
 <rect x="216.0" y="271.4" width="16" height="108.2" fill="#4f9f68"><title>16x8 C M55 bss: 33,804 bytes; ELF dec: 83,292; model state: 4,928</title></rect>
 <rect class="baroutline" x="216.0" y="271.4" width="16" height="266.6"/>
 <text class="tick" x="224.0" y="558" text-anchor="end" transform="rotate(-45 224.0 558)">C</text>
-<rect x="237.0" y="385.2" width="16" height="152.8" fill="#356bb0"><title>16x8 C++ direct C backend text: 47,748 bytes; ELF dec: 80,452; model state: 3,712</title></rect>
-<rect x="237.0" y="384.9" width="16" height="0.5" fill="#e0a22e"><title>16x8 C++ direct C backend data: 92 bytes; ELF dec: 80,452; model state: 3,712</title></rect>
-<rect x="237.0" y="280.5" width="16" height="104.4" fill="#4f9f68"><title>16x8 C++ direct C backend bss: 32,612 bytes; ELF dec: 80,452; model state: 3,712</title></rect>
-<rect class="baroutline" x="237.0" y="280.5" width="16" height="257.5"/>
+<rect x="237.0" y="384.8" width="16" height="153.2" fill="#356bb0"><title>16x8 C++ direct C backend text: 47,860 bytes; ELF dec: 80,532; model state: 3,680</title></rect>
+<rect x="237.0" y="384.5" width="16" height="0.5" fill="#e0a22e"><title>16x8 C++ direct C backend data: 92 bytes; ELF dec: 80,532; model state: 3,680</title></rect>
+<rect x="237.0" y="280.2" width="16" height="104.3" fill="#4f9f68"><title>16x8 C++ direct C backend bss: 32,580 bytes; ELF dec: 80,532; model state: 3,680</title></rect>
+<rect class="baroutline" x="237.0" y="280.2" width="16" height="257.8"/>
 <text class="tick" x="245.0" y="558" text-anchor="end" transform="rotate(-45 245.0 558)">Direct</text>
-<rect x="258.0" y="403.5" width="16" height="134.5" fill="#356bb0"><title>16x8 C++ M55 text: 42,004 bytes; ELF dec: 74,692; model state: 3,712</title></rect>
-<rect x="258.0" y="403.2" width="16" height="0.5" fill="#e0a22e"><title>16x8 C++ M55 data: 112 bytes; ELF dec: 74,692; model state: 3,712</title></rect>
-<rect x="258.0" y="298.9" width="16" height="104.3" fill="#4f9f68"><title>16x8 C++ M55 bss: 32,576 bytes; ELF dec: 74,692; model state: 3,712</title></rect>
-<rect class="baroutline" x="258.0" y="298.9" width="16" height="239.1"/>
+<rect x="258.0" y="403.5" width="16" height="134.5" fill="#356bb0"><title>16x8 C++ M55 text: 42,004 bytes; ELF dec: 74,660; model state: 3,680</title></rect>
+<rect x="258.0" y="403.2" width="16" height="0.5" fill="#e0a22e"><title>16x8 C++ M55 data: 112 bytes; ELF dec: 74,660; model state: 3,680</title></rect>
+<rect x="258.0" y="299.0" width="16" height="104.2" fill="#4f9f68"><title>16x8 C++ M55 bss: 32,544 bytes; ELF dec: 74,660; model state: 3,680</title></rect>
+<rect class="baroutline" x="258.0" y="299.0" width="16" height="239.0"/>
 <text class="tick" x="266.0" y="558" text-anchor="end" transform="rotate(-45 266.0 558)">M55</text>
-<rect x="279.0" y="398.5" width="16" height="139.5" fill="#356bb0"><title>16x8 C++ generic text: 43,580 bytes; ELF dec: 76,164; model state: 3,608</title></rect>
-<rect x="279.0" y="398.1" width="16" height="0.5" fill="#e0a22e"><title>16x8 C++ generic data: 112 bytes; ELF dec: 76,164; model state: 3,608</title></rect>
-<rect x="279.0" y="294.2" width="16" height="103.9" fill="#4f9f68"><title>16x8 C++ generic bss: 32,472 bytes; ELF dec: 76,164; model state: 3,608</title></rect>
-<rect class="baroutline" x="279.0" y="294.2" width="16" height="243.8"/>
+<rect x="279.0" y="398.5" width="16" height="139.5" fill="#356bb0"><title>16x8 C++ generic text: 43,596 bytes; ELF dec: 76,148; model state: 3,576</title></rect>
+<rect x="279.0" y="398.1" width="16" height="0.5" fill="#e0a22e"><title>16x8 C++ generic data: 112 bytes; ELF dec: 76,148; model state: 3,576</title></rect>
+<rect x="279.0" y="294.3" width="16" height="103.8" fill="#4f9f68"><title>16x8 C++ generic bss: 32,440 bytes; ELF dec: 76,148; model state: 3,576</title></rect>
+<rect class="baroutline" x="279.0" y="294.3" width="16" height="243.7"/>
 <text class="tick" x="287.0" y="558" text-anchor="end" transform="rotate(-45 287.0 558)">Generic</text>
 <rect x="300.0" y="386.9" width="16" height="151.1" fill="#356bb0"><title>16x8 RLTools generic text: 47,212 bytes; ELF dec: 79,924; model state: 3,548</title></rect>
 <rect x="300.0" y="386.6" width="16" height="0.5" fill="#e0a22e"><title>16x8 RLTools generic data: 92 bytes; ELF dec: 79,924; model state: 3,548</title></rect>
@@ -75,20 +75,20 @@
 <rect x="350.0" y="260.2" width="16" height="119.4" fill="#4f9f68"><title>16x16 C M55 bss: 37,292 bytes; ELF dec: 86,788; model state: 7,264</title></rect>
 <rect class="baroutline" x="350.0" y="260.2" width="16" height="277.8"/>
 <text class="tick" x="358.0" y="558" text-anchor="end" transform="rotate(-45 358.0 558)">C</text>
-<rect x="371.0" y="384.8" width="16" height="153.2" fill="#356bb0"><title>16x16 C++ direct C backend text: 47,868 bytes; ELF dec: 84,060; model state: 6,048</title></rect>
-<rect x="371.0" y="384.5" width="16" height="0.5" fill="#e0a22e"><title>16x16 C++ direct C backend data: 92 bytes; ELF dec: 84,060; model state: 6,048</title></rect>
-<rect x="371.0" y="268.9" width="16" height="115.6" fill="#4f9f68"><title>16x16 C++ direct C backend bss: 36,100 bytes; ELF dec: 84,060; model state: 6,048</title></rect>
-<rect class="baroutline" x="371.0" y="268.9" width="16" height="269.1"/>
+<rect x="371.0" y="384.9" width="16" height="153.1" fill="#356bb0"><title>16x16 C++ direct C backend text: 47,828 bytes; ELF dec: 84,020; model state: 6,048</title></rect>
+<rect x="371.0" y="384.6" width="16" height="0.5" fill="#e0a22e"><title>16x16 C++ direct C backend data: 92 bytes; ELF dec: 84,020; model state: 6,048</title></rect>
+<rect x="371.0" y="269.1" width="16" height="115.6" fill="#4f9f68"><title>16x16 C++ direct C backend bss: 36,100 bytes; ELF dec: 84,020; model state: 6,048</title></rect>
+<rect class="baroutline" x="371.0" y="269.1" width="16" height="268.9"/>
 <text class="tick" x="379.0" y="558" text-anchor="end" transform="rotate(-45 379.0 558)">Direct</text>
 <rect x="392.0" y="404.6" width="16" height="133.4" fill="#356bb0"><title>16x16 C++ M55 text: 41,684 bytes; ELF dec: 77,860; model state: 6,048</title></rect>
 <rect x="392.0" y="404.2" width="16" height="0.5" fill="#e0a22e"><title>16x16 C++ M55 data: 112 bytes; ELF dec: 77,860; model state: 6,048</title></rect>
 <rect x="392.0" y="288.8" width="16" height="115.4" fill="#4f9f68"><title>16x16 C++ M55 bss: 36,064 bytes; ELF dec: 77,860; model state: 6,048</title></rect>
 <rect class="baroutline" x="392.0" y="288.8" width="16" height="249.2"/>
 <text class="tick" x="400.0" y="558" text-anchor="end" transform="rotate(-45 400.0 558)">M55</text>
-<rect x="413.0" y="391.8" width="16" height="146.2" fill="#356bb0"><title>16x16 C++ generic text: 45,684 bytes; ELF dec: 81,756; model state: 5,944</title></rect>
-<rect x="413.0" y="391.4" width="16" height="0.5" fill="#e0a22e"><title>16x16 C++ generic data: 112 bytes; ELF dec: 81,756; model state: 5,944</title></rect>
-<rect x="413.0" y="276.3" width="16" height="115.1" fill="#4f9f68"><title>16x16 C++ generic bss: 35,960 bytes; ELF dec: 81,756; model state: 5,944</title></rect>
-<rect class="baroutline" x="413.0" y="276.3" width="16" height="261.7"/>
+<rect x="413.0" y="391.8" width="16" height="146.2" fill="#356bb0"><title>16x16 C++ generic text: 45,660 bytes; ELF dec: 81,732; model state: 5,944</title></rect>
+<rect x="413.0" y="391.5" width="16" height="0.5" fill="#e0a22e"><title>16x16 C++ generic data: 112 bytes; ELF dec: 81,732; model state: 5,944</title></rect>
+<rect x="413.0" y="276.4" width="16" height="115.1" fill="#4f9f68"><title>16x16 C++ generic bss: 35,960 bytes; ELF dec: 81,732; model state: 5,944</title></rect>
+<rect class="baroutline" x="413.0" y="276.4" width="16" height="261.6"/>
 <text class="tick" x="421.0" y="558" text-anchor="end" transform="rotate(-45 421.0 558)">Generic</text>
 <rect x="434.0" y="384.4" width="16" height="153.6" fill="#356bb0"><title>16x16 RLTools generic text: 47,972 bytes; ELF dec: 84,204; model state: 5,916</title></rect>
 <rect x="434.0" y="384.1" width="16" height="0.5" fill="#e0a22e"><title>16x16 RLTools generic data: 92 bytes; ELF dec: 84,204; model state: 5,916</title></rect>
@@ -101,20 +101,20 @@
 <rect x="484.0" y="235.0" width="16" height="144.6" fill="#4f9f68"><title>32x16 C M55 bss: 45,164 bytes; ELF dec: 94,660; model state: 12,576</title></rect>
 <rect class="baroutline" x="484.0" y="235.0" width="16" height="303.0"/>
 <text class="tick" x="492.0" y="558" text-anchor="end" transform="rotate(-45 492.0 558)">C</text>
-<rect x="505.0" y="385.1" width="16" height="152.9" fill="#356bb0"><title>32x16 C++ direct C backend text: 47,780 bytes; ELF dec: 91,844; model state: 11,360</title></rect>
-<rect x="505.0" y="384.8" width="16" height="0.5" fill="#e0a22e"><title>32x16 C++ direct C backend data: 92 bytes; ELF dec: 91,844; model state: 11,360</title></rect>
-<rect x="505.0" y="244.0" width="16" height="140.8" fill="#4f9f68"><title>32x16 C++ direct C backend bss: 43,972 bytes; ELF dec: 91,844; model state: 11,360</title></rect>
-<rect class="baroutline" x="505.0" y="244.0" width="16" height="294.0"/>
+<rect x="505.0" y="384.8" width="16" height="153.2" fill="#356bb0"><title>32x16 C++ direct C backend text: 47,876 bytes; ELF dec: 91,876; model state: 11,296</title></rect>
+<rect x="505.0" y="384.5" width="16" height="0.5" fill="#e0a22e"><title>32x16 C++ direct C backend data: 92 bytes; ELF dec: 91,876; model state: 11,296</title></rect>
+<rect x="505.0" y="243.9" width="16" height="140.5" fill="#4f9f68"><title>32x16 C++ direct C backend bss: 43,908 bytes; ELF dec: 91,876; model state: 11,296</title></rect>
+<rect class="baroutline" x="505.0" y="243.9" width="16" height="294.1"/>
 <text class="tick" x="513.0" y="558" text-anchor="end" transform="rotate(-45 513.0 558)">Direct</text>
-<rect x="526.0" y="405.6" width="16" height="132.4" fill="#356bb0"><title>32x16 C++ M55 text: 41,372 bytes; ELF dec: 85,420; model state: 11,360</title></rect>
-<rect x="526.0" y="405.2" width="16" height="0.5" fill="#e0a22e"><title>32x16 C++ M55 data: 112 bytes; ELF dec: 85,420; model state: 11,360</title></rect>
-<rect x="526.0" y="264.6" width="16" height="140.6" fill="#4f9f68"><title>32x16 C++ M55 bss: 43,936 bytes; ELF dec: 85,420; model state: 11,360</title></rect>
-<rect class="baroutline" x="526.0" y="264.6" width="16" height="273.4"/>
+<rect x="526.0" y="405.6" width="16" height="132.4" fill="#356bb0"><title>32x16 C++ M55 text: 41,372 bytes; ELF dec: 85,356; model state: 11,296</title></rect>
+<rect x="526.0" y="405.2" width="16" height="0.5" fill="#e0a22e"><title>32x16 C++ M55 data: 112 bytes; ELF dec: 85,356; model state: 11,296</title></rect>
+<rect x="526.0" y="264.8" width="16" height="140.4" fill="#4f9f68"><title>32x16 C++ M55 bss: 43,872 bytes; ELF dec: 85,356; model state: 11,296</title></rect>
+<rect class="baroutline" x="526.0" y="264.8" width="16" height="273.2"/>
 <text class="tick" x="534.0" y="558" text-anchor="end" transform="rotate(-45 534.0 558)">M55</text>
-<rect x="547.0" y="390.1" width="16" height="147.9" fill="#356bb0"><title>32x16 C++ generic text: 46,220 bytes; ELF dec: 90,164; model state: 11,256</title></rect>
-<rect x="547.0" y="389.7" width="16" height="0.5" fill="#e0a22e"><title>32x16 C++ generic data: 112 bytes; ELF dec: 90,164; model state: 11,256</title></rect>
-<rect x="547.0" y="249.4" width="16" height="140.3" fill="#4f9f68"><title>32x16 C++ generic bss: 43,832 bytes; ELF dec: 90,164; model state: 11,256</title></rect>
-<rect class="baroutline" x="547.0" y="249.4" width="16" height="288.6"/>
+<rect x="547.0" y="390.2" width="16" height="147.8" fill="#356bb0"><title>32x16 C++ generic text: 46,172 bytes; ELF dec: 90,052; model state: 11,192</title></rect>
+<rect x="547.0" y="389.8" width="16" height="0.5" fill="#e0a22e"><title>32x16 C++ generic data: 112 bytes; ELF dec: 90,052; model state: 11,192</title></rect>
+<rect x="547.0" y="249.7" width="16" height="140.1" fill="#4f9f68"><title>32x16 C++ generic bss: 43,768 bytes; ELF dec: 90,052; model state: 11,192</title></rect>
+<rect class="baroutline" x="547.0" y="249.7" width="16" height="288.3"/>
 <text class="tick" x="555.0" y="558" text-anchor="end" transform="rotate(-45 555.0 558)">Generic</text>
 <rect x="568.0" y="387.3" width="16" height="150.7" fill="#356bb0"><title>32x16 RLTools generic text: 47,068 bytes; ELF dec: 91,236; model state: 11,164</title></rect>
 <rect x="568.0" y="387.0" width="16" height="0.5" fill="#e0a22e"><title>32x16 RLTools generic data: 92 bytes; ELF dec: 91,236; model state: 11,164</title></rect>
@@ -127,20 +127,20 @@
 <rect x="618.0" y="193.0" width="16" height="186.6" fill="#4f9f68"><title>32x32 C M55 bss: 58,284 bytes; ELF dec: 107,788; model state: 21,344</title></rect>
 <rect class="baroutline" x="618.0" y="193.0" width="16" height="345.0"/>
 <text class="tick" x="626.0" y="558" text-anchor="end" transform="rotate(-45 626.0 558)">C</text>
-<rect x="639.0" y="384.7" width="16" height="153.3" fill="#356bb0"><title>32x32 C++ direct C backend text: 47,900 bytes; ELF dec: 105,084; model state: 20,128</title></rect>
-<rect x="639.0" y="384.4" width="16" height="0.5" fill="#e0a22e"><title>32x32 C++ direct C backend data: 92 bytes; ELF dec: 105,084; model state: 20,128</title></rect>
-<rect x="639.0" y="201.6" width="16" height="182.7" fill="#4f9f68"><title>32x32 C++ direct C backend bss: 57,092 bytes; ELF dec: 105,084; model state: 20,128</title></rect>
-<rect class="baroutline" x="639.0" y="201.6" width="16" height="336.4"/>
+<rect x="639.0" y="384.8" width="16" height="153.2" fill="#356bb0"><title>32x32 C++ direct C backend text: 47,852 bytes; ELF dec: 105,036; model state: 20,128</title></rect>
+<rect x="639.0" y="384.5" width="16" height="0.5" fill="#e0a22e"><title>32x32 C++ direct C backend data: 92 bytes; ELF dec: 105,036; model state: 20,128</title></rect>
+<rect x="639.0" y="201.8" width="16" height="182.7" fill="#4f9f68"><title>32x32 C++ direct C backend bss: 57,092 bytes; ELF dec: 105,036; model state: 20,128</title></rect>
+<rect class="baroutline" x="639.0" y="201.8" width="16" height="336.2"/>
 <text class="tick" x="647.0" y="558" text-anchor="end" transform="rotate(-45 647.0 558)">Direct</text>
 <rect x="660.0" y="404.6" width="16" height="133.4" fill="#356bb0"><title>32x32 C++ M55 text: 41,660 bytes; ELF dec: 98,828; model state: 20,128</title></rect>
 <rect x="660.0" y="404.3" width="16" height="0.5" fill="#e0a22e"><title>32x32 C++ M55 data: 112 bytes; ELF dec: 98,828; model state: 20,128</title></rect>
 <rect x="660.0" y="221.7" width="16" height="182.6" fill="#4f9f68"><title>32x32 C++ M55 bss: 57,056 bytes; ELF dec: 98,828; model state: 20,128</title></rect>
 <rect class="baroutline" x="660.0" y="221.7" width="16" height="316.3"/>
 <text class="tick" x="668.0" y="558" text-anchor="end" transform="rotate(-45 668.0 558)">M55</text>
-<rect x="681.0" y="391.2" width="16" height="146.8" fill="#356bb0"><title>32x32 C++ generic text: 45,852 bytes; ELF dec: 102,916; model state: 20,024</title></rect>
-<rect x="681.0" y="390.9" width="16" height="0.5" fill="#e0a22e"><title>32x32 C++ generic data: 112 bytes; ELF dec: 102,916; model state: 20,024</title></rect>
-<rect x="681.0" y="208.6" width="16" height="182.3" fill="#4f9f68"><title>32x32 C++ generic bss: 56,952 bytes; ELF dec: 102,916; model state: 20,024</title></rect>
-<rect class="baroutline" x="681.0" y="208.6" width="16" height="329.4"/>
+<rect x="681.0" y="391.1" width="16" height="146.9" fill="#356bb0"><title>32x32 C++ generic text: 45,908 bytes; ELF dec: 102,972; model state: 20,024</title></rect>
+<rect x="681.0" y="390.7" width="16" height="0.5" fill="#e0a22e"><title>32x32 C++ generic data: 112 bytes; ELF dec: 102,972; model state: 20,024</title></rect>
+<rect x="681.0" y="208.4" width="16" height="182.3" fill="#4f9f68"><title>32x32 C++ generic bss: 56,952 bytes; ELF dec: 102,972; model state: 20,024</title></rect>
+<rect class="baroutline" x="681.0" y="208.4" width="16" height="329.6"/>
 <text class="tick" x="689.0" y="558" text-anchor="end" transform="rotate(-45 689.0 558)">Generic</text>
 <rect x="702.0" y="391.1" width="16" height="146.9" fill="#356bb0"><title>32x32 RLTools generic text: 45,884 bytes; ELF dec: 103,236; model state: 19,996</title></rect>
 <rect x="702.0" y="390.8" width="16" height="0.5" fill="#e0a22e"><title>32x32 RLTools generic data: 92 bytes; ELF dec: 103,236; model state: 19,996</title></rect>
@@ -153,20 +153,20 @@
 <rect x="752.0" y="103.2" width="16" height="276.3" fill="#4f9f68"><title>64x32 C M55 bss: 86,316 bytes; ELF dec: 135,820; model state: 40,160</title></rect>
 <rect class="baroutline" x="752.0" y="103.2" width="16" height="434.8"/>
 <text class="tick" x="760.0" y="558" text-anchor="end" transform="rotate(-45 760.0 558)">C</text>
-<rect x="773.0" y="385.1" width="16" height="152.9" fill="#356bb0"><title>64x32 C++ direct C backend text: 47,772 bytes; ELF dec: 132,988; model state: 38,944</title></rect>
-<rect x="773.0" y="384.8" width="16" height="0.5" fill="#e0a22e"><title>64x32 C++ direct C backend data: 92 bytes; ELF dec: 132,988; model state: 38,944</title></rect>
-<rect x="773.0" y="112.3" width="16" height="272.5" fill="#4f9f68"><title>64x32 C++ direct C backend bss: 85,124 bytes; ELF dec: 132,988; model state: 38,944</title></rect>
-<rect class="baroutline" x="773.0" y="112.3" width="16" height="425.7"/>
+<rect x="773.0" y="385.1" width="16" height="152.9" fill="#356bb0"><title>64x32 C++ direct C backend text: 47,764 bytes; ELF dec: 132,852; model state: 38,816</title></rect>
+<rect x="773.0" y="384.8" width="16" height="0.5" fill="#e0a22e"><title>64x32 C++ direct C backend data: 92 bytes; ELF dec: 132,852; model state: 38,816</title></rect>
+<rect x="773.0" y="112.7" width="16" height="272.1" fill="#4f9f68"><title>64x32 C++ direct C backend bss: 84,996 bytes; ELF dec: 132,852; model state: 38,816</title></rect>
+<rect class="baroutline" x="773.0" y="112.7" width="16" height="425.3"/>
 <text class="tick" x="781.0" y="558" text-anchor="end" transform="rotate(-45 781.0 558)">Direct</text>
-<rect x="794.0" y="401.3" width="16" height="136.7" fill="#356bb0"><title>64x32 C++ M55 text: 42,716 bytes; ELF dec: 127,916; model state: 38,944</title></rect>
-<rect x="794.0" y="400.9" width="16" height="0.5" fill="#e0a22e"><title>64x32 C++ M55 data: 112 bytes; ELF dec: 127,916; model state: 38,944</title></rect>
-<rect x="794.0" y="128.5" width="16" height="272.4" fill="#4f9f68"><title>64x32 C++ M55 bss: 85,088 bytes; ELF dec: 127,916; model state: 38,944</title></rect>
-<rect class="baroutline" x="794.0" y="128.5" width="16" height="409.5"/>
+<rect x="794.0" y="401.3" width="16" height="136.7" fill="#356bb0"><title>64x32 C++ M55 text: 42,716 bytes; ELF dec: 127,788; model state: 38,816</title></rect>
+<rect x="794.0" y="400.9" width="16" height="0.5" fill="#e0a22e"><title>64x32 C++ M55 data: 112 bytes; ELF dec: 127,788; model state: 38,816</title></rect>
+<rect x="794.0" y="129.0" width="16" height="272.0" fill="#4f9f68"><title>64x32 C++ M55 bss: 84,960 bytes; ELF dec: 127,788; model state: 38,816</title></rect>
+<rect class="baroutline" x="794.0" y="129.0" width="16" height="409.0"/>
 <text class="tick" x="802.0" y="558" text-anchor="end" transform="rotate(-45 802.0 558)">M55</text>
-<rect x="815.0" y="384.8" width="16" height="153.2" fill="#356bb0"><title>64x32 C++ generic text: 47,868 bytes; ELF dec: 132,964; model state: 38,840</title></rect>
-<rect x="815.0" y="384.4" width="16" height="0.5" fill="#e0a22e"><title>64x32 C++ generic data: 112 bytes; ELF dec: 132,964; model state: 38,840</title></rect>
-<rect x="815.0" y="112.4" width="16" height="272.0" fill="#4f9f68"><title>64x32 C++ generic bss: 84,984 bytes; ELF dec: 132,964; model state: 38,840</title></rect>
-<rect class="baroutline" x="815.0" y="112.4" width="16" height="425.6"/>
+<rect x="815.0" y="384.8" width="16" height="153.2" fill="#356bb0"><title>64x32 C++ generic text: 47,868 bytes; ELF dec: 132,836; model state: 38,712</title></rect>
+<rect x="815.0" y="384.4" width="16" height="0.5" fill="#e0a22e"><title>64x32 C++ generic data: 112 bytes; ELF dec: 132,836; model state: 38,712</title></rect>
+<rect x="815.0" y="112.8" width="16" height="271.6" fill="#4f9f68"><title>64x32 C++ generic bss: 84,856 bytes; ELF dec: 132,836; model state: 38,712</title></rect>
+<rect class="baroutline" x="815.0" y="112.8" width="16" height="425.2"/>
 <text class="tick" x="823.0" y="558" text-anchor="end" transform="rotate(-45 823.0 558)">Generic</text>
 <rect x="836.0" y="381.9" width="16" height="156.1" fill="#356bb0"><title>64x32 RLTools generic text: 48,780 bytes; ELF dec: 134,292; model state: 38,684</title></rect>
 <rect x="836.0" y="381.6" width="16" height="0.5" fill="#e0a22e"><title>64x32 RLTools generic data: 92 bytes; ELF dec: 134,292; model state: 38,684</title></rect>

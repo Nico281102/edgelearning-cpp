@@ -1,241 +1,241 @@
 config,params,variant,component,component_label,component_order,cycles_avg,variant_cycles_avg,percent_of_variant
-8x8,113,legacy_c,zero,zero grad,0,5034,5032334,0.10003310591069671
-8x8,113,legacy_c,input_copy,input copy,1,0,5032334,0.0
-8x8,113,legacy_c,forward,forward,2,0,5032334,0.0
-8x8,113,legacy_c,loss,loss/grad,3,0,5032334,0.0
-8x8,113,legacy_c,backward,backward,4,0,5032334,0.0
-8x8,113,legacy_c,sample_train_step,C train step,5,4865777,5032334,96.69026340461504
-8x8,113,legacy_c,adam_update,Adam update,6,103930,5032334,2.0652444770160328
-8x8,113,legacy_c,gap,other/gap,7,57593,5032334,1.144459012458235
-8x8,113,cpp_direct_c_backend,zero,zero grad,0,26542,4860791,0.5460428148422757
-8x8,113,cpp_direct_c_backend,input_copy,input copy,1,0,4860791,0.0
-8x8,113,cpp_direct_c_backend,forward,forward,2,2184108,4860791,44.93318062842035
-8x8,113,cpp_direct_c_backend,loss,loss/grad,3,42632,4860791,0.8770588984385463
-8x8,113,cpp_direct_c_backend,backward,backward,4,2446520,4860791,50.33172584462077
-8x8,113,cpp_direct_c_backend,sample_train_step,C train step,5,0,4860791,0.0
-8x8,113,cpp_direct_c_backend,adam_update,Adam update,6,66452,4860791,1.3671025970875934
-8x8,113,cpp_direct_c_backend,gap,other/gap,7,94537,4860791,1.9448892165904685
-8x8,113,cpp_m55,zero,zero grad,0,29605,2406595,1.2301612859662718
-8x8,113,cpp_m55,input_copy,input copy,1,0,2406595,0.0
-8x8,113,cpp_m55,forward,forward,2,1254251,2406595,52.117244488582415
-8x8,113,cpp_m55,loss,loss/grad,3,10362,2406595,0.430566838209171
-8x8,113,cpp_m55,backward,backward,4,973020,2406595,40.43139788788724
-8x8,113,cpp_m55,sample_train_step,C train step,5,0,2406595,0.0
-8x8,113,cpp_m55,adam_update,Adam update,6,67244,2406595,2.7941552276141186
-8x8,113,cpp_m55,gap,other/gap,7,72113,2406595,2.996474271740779
-8x8,113,cpp_generic,zero,zero grad,0,28643,2341233,1.223415183367055
-8x8,113,cpp_generic,input_copy,input copy,1,0,2341233,0.0
-8x8,113,cpp_generic,forward,forward,2,845553,2341233,36.11571338692048
-8x8,113,cpp_generic,loss,loss/grad,3,36534,2341233,1.5604598089980792
-8x8,113,cpp_generic,backward,backward,4,1292533,2341233,55.20736295789441
-8x8,113,cpp_generic,sample_train_step,C train step,5,0,2341233,0.0
-8x8,113,cpp_generic,adam_update,Adam update,6,82652,2341233,3.530276567945181
-8x8,113,cpp_generic,gap,other/gap,7,55318,2341233,2.362772094874795
-8x8,113,rltools_generic,zero,zero grad,0,5935,3232847,0.1835843143829572
-8x8,113,rltools_generic,input_copy,input copy,1,34177,3232847,1.0571796314517823
-8x8,113,rltools_generic,forward,forward,2,1162863,3232847,35.9702454214505
-8x8,113,rltools_generic,loss,loss/grad,3,4173,3232847,0.12908127109015677
-8x8,113,rltools_generic,backward,backward,4,1837904,3232847,56.850942837690745
-8x8,113,rltools_generic,sample_train_step,C train step,5,0,3232847,0.0
-8x8,113,rltools_generic,adam_update,Adam update,6,82964,3232847,2.5662829079136746
-8x8,113,rltools_generic,gap,other/gap,7,104831,3232847,3.2426836160201833
-16x8,209,legacy_c,zero,zero grad,0,6020,6478436,0.09292366243951472
-16x8,209,legacy_c,input_copy,input copy,1,0,6478436,0.0
-16x8,209,legacy_c,forward,forward,2,0,6478436,0.0
-16x8,209,legacy_c,loss,loss/grad,3,0,6478436,0.0
-16x8,209,legacy_c,backward,backward,4,0,6478436,0.0
-16x8,209,legacy_c,sample_train_step,C train step,5,6274897,6478436,96.85820775261189
-16x8,209,legacy_c,adam_update,Adam update,6,149196,6478436,2.302963246067415
-16x8,209,legacy_c,gap,other/gap,7,48323,6478436,0.7459053388811744
-16x8,209,cpp_direct_c_backend,zero,zero grad,0,46962,6379123,0.7361827009762941
-16x8,209,cpp_direct_c_backend,input_copy,input copy,1,0,6379123,0.0
-16x8,209,cpp_direct_c_backend,forward,forward,2,2894301,6379123,45.37145623309035
-16x8,209,cpp_direct_c_backend,loss,loss/grad,3,39691,6379123,0.6222015157882987
-16x8,209,cpp_direct_c_backend,backward,backward,4,3216158,6379123,50.4169303523384
-16x8,209,cpp_direct_c_backend,sample_train_step,C train step,5,0,6379123,0.0
-16x8,209,cpp_direct_c_backend,adam_update,Adam update,6,113875,6379123,1.7851199921995549
-16x8,209,cpp_direct_c_backend,gap,other/gap,7,68136,6379123,1.068109205607103
-16x8,209,cpp_m55,zero,zero grad,0,49462,4203627,1.1766505448746998
-16x8,209,cpp_m55,input_copy,input copy,1,0,4203627,0.0
-16x8,209,cpp_m55,forward,forward,2,2073356,4203627,49.32302509237856
-16x8,209,cpp_m55,loss,loss/grad,3,21834,4203627,0.5194085964335085
-16x8,209,cpp_m55,backward,backward,4,1872854,4203627,44.55328695909508
-16x8,209,cpp_m55,sample_train_step,C train step,5,0,4203627,0.0
-16x8,209,cpp_m55,adam_update,Adam update,6,115752,4203627,2.7536220506719555
-16x8,209,cpp_m55,gap,other/gap,7,70369,4203627,1.674006756546192
-16x8,209,cpp_generic,zero,zero grad,0,47992,4284229,1.1202015578532334
-16x8,209,cpp_generic,input_copy,input copy,1,0,4284229,0.0
-16x8,209,cpp_generic,forward,forward,2,1721317,4284229,40.17798768459856
-16x8,209,cpp_generic,loss,loss/grad,3,30124,4284229,0.7031370171855893
-16x8,209,cpp_generic,backward,backward,4,2307523,4284229,53.860869715414374
-16x8,209,cpp_generic,sample_train_step,C train step,5,0,4284229,0.0
-16x8,209,cpp_generic,adam_update,Adam update,6,108703,4284229,2.537282670930989
-16x8,209,cpp_generic,gap,other/gap,7,68570,4284229,1.6005213540172574
-16x8,209,rltools_generic,zero,zero grad,0,8764,5659112,0.1548652862851981
-16x8,209,rltools_generic,input_copy,input copy,1,39027,5659112,0.6896311647481089
-16x8,209,rltools_generic,forward,forward,2,1581941,5659112,27.95387332853635
-16x8,209,rltools_generic,loss,loss/grad,3,2048,5659112,0.03618942335829367
-16x8,209,rltools_generic,backward,backward,4,3795210,5659112,67.0637018670067
-16x8,209,rltools_generic,sample_train_step,C train step,5,0,5659112,0.0
-16x8,209,rltools_generic,adam_update,Adam update,6,131076,5659112,2.3161937773982912
-16x8,209,rltools_generic,gap,other/gap,7,101046,5659112,1.7855451526670614
-16x16,353,legacy_c,zero,zero grad,0,7672,8272667,0.09273913720931835
-16x16,353,legacy_c,input_copy,input copy,1,0,8272667,0.0
-16x16,353,legacy_c,forward,forward,2,0,8272667,0.0
-16x16,353,legacy_c,loss,loss/grad,3,0,8272667,0.0
-16x16,353,legacy_c,backward,backward,4,0,8272667,0.0
-16x16,353,legacy_c,sample_train_step,C train step,5,7992459,8272667,96.6128456518315
-16x16,353,legacy_c,adam_update,Adam update,6,202110,8272667,2.4431057118580983
-16x16,353,legacy_c,gap,other/gap,7,70426,8272667,0.8513094991010759
-16x16,353,cpp_direct_c_backend,zero,zero grad,0,83922,8232096,1.019448752784224
-16x16,353,cpp_direct_c_backend,input_copy,input copy,1,0,8232096,0.0
-16x16,353,cpp_direct_c_backend,forward,forward,2,3721227,8232096,45.20388246201211
-16x16,353,cpp_direct_c_backend,loss,loss/grad,3,42677,8232096,0.518422039781849
-16x16,353,cpp_direct_c_backend,backward,backward,4,4118639,8232096,50.031474365702245
-16x16,353,cpp_direct_c_backend,sample_train_step,C train step,5,0,8232096,0.0
-16x16,353,cpp_direct_c_backend,adam_update,Adam update,6,168710,8232096,2.049417305143186
-16x16,353,cpp_direct_c_backend,gap,other/gap,7,96921,8232096,1.1773550745763897
-16x16,353,cpp_m55,zero,zero grad,0,89813,5928696,1.5148862414264452
-16x16,353,cpp_m55,input_copy,input copy,1,0,5928696,0.0
-16x16,353,cpp_m55,forward,forward,2,2815389,5928696,47.487491347169765
-16x16,353,cpp_m55,loss,loss/grad,3,29690,5928696,0.500784658211519
-16x16,353,cpp_m55,backward,backward,4,2756650,5928696,46.49673385176099
-16x16,353,cpp_m55,sample_train_step,C train step,5,0,5928696,0.0
-16x16,353,cpp_m55,adam_update,Adam update,6,166227,5928696,2.803770002712232
-16x16,353,cpp_m55,gap,other/gap,7,70927,5928696,1.1963338987190437
-16x16,353,cpp_generic,zero,zero grad,0,90278,6893469,1.3096163919791328
-16x16,353,cpp_generic,input_copy,input copy,1,0,6893469,0.0
-16x16,353,cpp_generic,forward,forward,2,2742698,6893469,39.78690554784536
-16x16,353,cpp_generic,loss,loss/grad,3,39943,6893469,0.5794325034318715
-16x16,353,cpp_generic,backward,backward,4,3789336,6893469,54.969943289800824
-16x16,353,cpp_generic,sample_train_step,C train step,5,0,6893469,0.0
-16x16,353,cpp_generic,adam_update,Adam update,6,182966,6893469,2.654193411183832
-16x16,353,cpp_generic,gap,other/gap,7,48248,6893469,0.69990885575898
-16x16,353,rltools_generic,zero,zero grad,0,14494,9963787,0.14546677884623588
-16x16,353,rltools_generic,input_copy,input copy,1,42622,9963787,0.42776908017001974
-16x16,353,rltools_generic,forward,forward,2,2333224,9963787,23.4170401274134
-16x16,353,rltools_generic,loss,loss/grad,3,2048,9963787,0.020554433771014978
-16x16,353,rltools_generic,backward,backward,4,7275607,9963787,73.02049913351219
-16x16,353,rltools_generic,sample_train_step,C train step,5,0,9963787,0.0
-16x16,353,rltools_generic,adam_update,Adam update,6,192461,9963787,1.9316049209000554
-16x16,353,rltools_generic,gap,other/gap,7,103331,9963787,1.0370655253870842
-32x16,673,legacy_c,zero,zero grad,0,13386,11903645,0.1124529503358005
-32x16,673,legacy_c,input_copy,input copy,1,0,11903645,0.0
-32x16,673,legacy_c,forward,forward,2,0,11903645,0.0
-32x16,673,legacy_c,loss,loss/grad,3,0,11903645,0.0
-32x16,673,legacy_c,backward,backward,4,0,11903645,0.0
-32x16,673,legacy_c,sample_train_step,C train step,5,11489109,11903645,96.51757087849982
-32x16,673,legacy_c,adam_update,Adam update,6,334580,11903645,2.8107357032236764
-32x16,673,legacy_c,gap,other/gap,7,66570,11903645,0.5592404679407021
-32x16,673,cpp_direct_c_backend,zero,zero grad,0,150917,11954472,1.2624313311370003
-32x16,673,cpp_direct_c_backend,input_copy,input copy,1,0,11954472,0.0
-32x16,673,cpp_direct_c_backend,forward,forward,2,5415299,11954472,45.29935742875135
-32x16,673,cpp_direct_c_backend,loss,loss/grad,3,44113,11954472,0.3690083510170922
-32x16,673,cpp_direct_c_backend,backward,backward,4,5980056,11954472,50.02358949855753
-32x16,673,cpp_direct_c_backend,sample_train_step,C train step,5,0,11954472,0.0
-32x16,673,cpp_direct_c_backend,adam_update,Adam update,6,290610,11954472,2.4309731119868783
-32x16,673,cpp_direct_c_backend,gap,other/gap,7,73477,11954472,0.6146402785501526
-32x16,673,cpp_m55,zero,zero grad,0,153966,10492948,1.4673283428069976
-32x16,673,cpp_m55,input_copy,input copy,1,0,10492948,0.0
-32x16,673,cpp_m55,forward,forward,2,4540840,10492948,43.27515965961139
-32x16,673,cpp_m55,loss,loss/grad,3,43890,10492948,0.4182809254367791
-32x16,673,cpp_m55,backward,backward,4,5384853,10492948,51.318780956505265
-32x16,673,cpp_m55,sample_train_step,C train step,5,0,10492948,0.0
-32x16,673,cpp_m55,adam_update,Adam update,6,298380,10492948,2.8436241178360935
-32x16,673,cpp_m55,gap,other/gap,7,71019,10492948,0.6768259978034772
-32x16,673,cpp_generic,zero,zero grad,0,153427,12425290,1.2347961295068366
-32x16,673,cpp_generic,input_copy,input copy,1,0,12425290,0.0
-32x16,673,cpp_generic,forward,forward,2,4323924,12425290,34.79938094000221
-32x16,673,cpp_generic,loss,loss/grad,3,36128,12425290,0.2907618252773175
-32x16,673,cpp_generic,backward,backward,4,7529251,12425290,60.596179244106175
-32x16,673,cpp_generic,sample_train_step,C train step,5,0,12425290,0.0
-32x16,673,cpp_generic,adam_update,Adam update,6,318390,12425290,2.562435162479105
-32x16,673,cpp_generic,gap,other/gap,7,64170,12425290,0.516446698628362
-32x16,673,rltools_generic,zero,zero grad,0,131877,25662706,0.5138857920906704
-32x16,673,rltools_generic,input_copy,input copy,1,43436,25662706,0.16925728720891708
-32x16,673,rltools_generic,forward,forward,2,9115427,25662706,35.52013182086098
-32x16,673,rltools_generic,loss,loss/grad,3,2048,25662706,0.007980452256281937
-32x16,673,rltools_generic,backward,backward,4,15641703,25662706,60.95110546798923
-32x16,673,rltools_generic,sample_train_step,C train step,5,0,25662706,0.0
-32x16,673,rltools_generic,adam_update,Adam update,6,331075,25662706,1.2901016751701866
-32x16,673,rltools_generic,gap,other/gap,7,397140,25662706,1.5475375044237345
-32x32,1217,legacy_c,zero,zero grad,0,21754,17479505,0.12445432522259642
-32x32,1217,legacy_c,input_copy,input copy,1,0,17479505,0.0
-32x32,1217,legacy_c,forward,forward,2,0,17479505,0.0
-32x32,1217,legacy_c,loss,loss/grad,3,0,17479505,0.0
-32x32,1217,legacy_c,backward,backward,4,0,17479505,0.0
-32x32,1217,legacy_c,sample_train_step,C train step,5,16824284,17479505,96.25148995924083
-32x32,1217,legacy_c,adam_update,Adam update,6,570909,17479505,3.266162285488062
-32x32,1217,legacy_c,gap,other/gap,7,62558,17479505,0.3578934300485054
-32x32,1217,cpp_direct_c_backend,zero,zero grad,0,272879,17652386,1.545847683140398
-32x32,1217,cpp_direct_c_backend,input_copy,input copy,1,0,17652386,0.0
-32x32,1217,cpp_direct_c_backend,forward,forward,2,7642370,17652386,43.293694121576536
-32x32,1217,cpp_direct_c_backend,loss,loss/grad,3,50347,17652386,0.28521356829609323
-32x32,1217,cpp_direct_c_backend,backward,backward,4,9086998,17652386,51.47744899754628
-32x32,1217,cpp_direct_c_backend,sample_train_step,C train step,5,0,17652386,0.0
-32x32,1217,cpp_direct_c_backend,adam_update,Adam update,6,496078,17652386,2.810260324015122
-32x32,1217,cpp_direct_c_backend,gap,other/gap,7,103714,17652386,0.5875353054255669
-32x32,1217,cpp_m55,zero,zero grad,0,282902,18024430,1.569547552960066
-32x32,1217,cpp_m55,input_copy,input copy,1,0,18024430,0.0
-32x32,1217,cpp_m55,forward,forward,2,7350068,18024430,40.77836580685214
-32x32,1217,cpp_m55,loss,loss/grad,3,440833,18024430,2.44575279218261
-32x32,1217,cpp_m55,backward,backward,4,9387921,18024430,52.084426525554484
-32x32,1217,cpp_m55,sample_train_step,C train step,5,0,18024430,0.0
-32x32,1217,cpp_m55,adam_update,Adam update,6,479822,18024430,2.6620647643226443
-32x32,1217,cpp_m55,gap,other/gap,7,82884,18024430,0.45984255812805175
-32x32,1217,cpp_generic,zero,zero grad,0,281066,22446833,1.2521410035883458
-32x32,1217,cpp_generic,input_copy,input copy,1,0,22446833,0.0
-32x32,1217,cpp_generic,forward,forward,2,7808372,22446833,34.78607427604598
-32x32,1217,cpp_generic,loss,loss/grad,3,43218,22446833,0.19253495582205293
-32x32,1217,cpp_generic,backward,backward,4,13736803,22446833,61.19706508263326
-32x32,1217,cpp_generic,sample_train_step,C train step,5,0,22446833,0.0
-32x32,1217,cpp_generic,adam_update,Adam update,6,505525,22446833,2.252099438704783
-32x32,1217,cpp_generic,gap,other/gap,7,71849,22446833,0.3200852432055783
-32x32,1217,rltools_generic,zero,zero grad,0,261119,52134747,0.5008540657155198
-32x32,1217,rltools_generic,input_copy,input copy,1,43199,52134747,0.08286028509930239
-32x32,1217,rltools_generic,forward,forward,2,20101839,52134747,38.557469167348216
-32x32,1217,rltools_generic,loss,loss/grad,3,2048,52134747,0.003928282226055494
-32x32,1217,rltools_generic,backward,backward,4,31033898,52134747,59.52632320245076
-32x32,1217,rltools_generic,sample_train_step,C train step,5,0,52134747,0.0
-32x32,1217,rltools_generic,adam_update,Adam update,6,574682,52134747,1.1023013116377067
-32x32,1217,rltools_generic,gap,other/gap,7,117962,52134747,0.22626368552244053
-64x32,2369,legacy_c,zero,zero grad,0,41835,32705168,0.12791556368094487
-64x32,2369,legacy_c,input_copy,input copy,1,0,32705168,0.0
-64x32,2369,legacy_c,forward,forward,2,0,32705168,0.0
-64x32,2369,legacy_c,loss,loss/grad,3,0,32705168,0.0
-64x32,2369,legacy_c,backward,backward,4,0,32705168,0.0
-64x32,2369,legacy_c,sample_train_step,C train step,5,30924253,32705168,94.55463735884187
-64x32,2369,legacy_c,adam_update,Adam update,6,1171648,32705168,3.5824552254249236
-64x32,2369,legacy_c,gap,other/gap,7,567432,32705168,1.7349918520522505
-64x32,2369,cpp_direct_c_backend,zero,zero grad,0,536239,39324955,1.3636099520012166
-64x32,2369,cpp_direct_c_backend,input_copy,input copy,1,0,39324955,0.0
-64x32,2369,cpp_direct_c_backend,forward,forward,2,16536856,39324955,42.05181162953651
-64x32,2369,cpp_direct_c_backend,loss,loss/grad,3,67545,39324955,0.1717611628544775
-64x32,2369,cpp_direct_c_backend,backward,backward,4,19360859,39324955,49.233009929699854
-64x32,2369,cpp_direct_c_backend,sample_train_step,C train step,5,0,39324955,0.0
-64x32,2369,cpp_direct_c_backend,adam_update,Adam update,6,1043378,39324955,2.653221090780651
-64x32,2369,cpp_direct_c_backend,gap,other/gap,7,1780078,39324955,4.526586235127287
-64x32,2369,cpp_m55,zero,zero grad,0,540206,29085884,1.8572789467220594
-64x32,2369,cpp_m55,input_copy,input copy,1,0,29085884,0.0
-64x32,2369,cpp_m55,forward,forward,2,13265841,29085884,45.60920685786961
-64x32,2369,cpp_m55,loss,loss/grad,3,1149979,29085884,3.9537357709327314
-64x32,2369,cpp_m55,backward,backward,4,12997308,29085884,44.68596519191234
-64x32,2369,cpp_m55,sample_train_step,C train step,5,0,29085884,0.0
-64x32,2369,cpp_m55,adam_update,Adam update,6,1060922,29085884,3.647549443572009
-64x32,2369,cpp_m55,gap,other/gap,7,71628,29085884,0.2462637889912509
-64x32,2369,cpp_generic,zero,zero grad,0,546012,39732165,1.3742316835742527
-64x32,2369,cpp_generic,input_copy,input copy,1,0,39732165,0.0
-64x32,2369,cpp_generic,forward,forward,2,15855821,39732165,39.9067631980286
-64x32,2369,cpp_generic,loss,loss/grad,3,191835,39732165,0.4828204050798641
-64x32,2369,cpp_generic,backward,backward,4,22054140,39732165,55.507018054515775
-64x32,2369,cpp_generic,sample_train_step,C train step,5,0,39732165,0.0
-64x32,2369,cpp_generic,adam_update,Adam update,6,1025003,39732165,2.5797813937398075
-64x32,2369,cpp_generic,gap,other/gap,7,59354,39732165,0.14938526506169497
-64x32,2369,rltools_generic,zero,zero grad,0,500819,110574536,0.4529243514076333
-64x32,2369,rltools_generic,input_copy,input copy,1,46280,110574536,0.04185412091622975
-64x32,2369,rltools_generic,forward,forward,2,39513391,110574536,35.73462067252084
-64x32,2369,rltools_generic,loss,loss/grad,3,4096,110574536,0.0037042886619031348
-64x32,2369,rltools_generic,backward,backward,4,69077694,110574536,62.47161100454448
-64x32,2369,rltools_generic,sample_train_step,C train step,5,0,110574536,0.0
-64x32,2369,rltools_generic,adam_update,Adam update,6,1270801,110574536,1.1492709316003822
-64x32,2369,rltools_generic,gap,other/gap,7,161455,110574536,0.146014630348528
+8x8,113,legacy_c,zero,zero grad,0,4311,5045642,0.0854400688752789
+8x8,113,legacy_c,input_copy,input copy,1,0,5045642,0.0
+8x8,113,legacy_c,forward,forward,2,0,5045642,0.0
+8x8,113,legacy_c,loss,loss/grad,3,0,5045642,0.0
+8x8,113,legacy_c,backward,backward,4,0,5045642,0.0
+8x8,113,legacy_c,sample_train_step,C train step,5,4871462,5045642,96.54791203973647
+8x8,113,legacy_c,adam_update,Adam update,6,104352,5045642,2.0681609991354915
+8x8,113,legacy_c,gap,other/gap,7,65517,5045642,1.29848689225276
+8x8,113,cpp_direct_c_backend,zero,zero grad,0,25443,4877439,0.5216467084467894
+8x8,113,cpp_direct_c_backend,input_copy,input copy,1,0,4877439,0.0
+8x8,113,cpp_direct_c_backend,forward,forward,2,2192165,4877439,44.94500084983123
+8x8,113,cpp_direct_c_backend,loss,loss/grad,3,37864,4877439,0.7763090425118592
+8x8,113,cpp_direct_c_backend,backward,backward,4,2483538,4877439,50.91889411635901
+8x8,113,cpp_direct_c_backend,sample_train_step,C train step,5,0,4877439,0.0
+8x8,113,cpp_direct_c_backend,adam_update,Adam update,6,67173,4877439,1.3772186592184956
+8x8,113,cpp_direct_c_backend,gap,other/gap,7,71256,4877439,1.4609306236326072
+8x8,113,cpp_m55,zero,zero grad,0,28750,2409307,1.1932891906261842
+8x8,113,cpp_m55,input_copy,input copy,1,0,2409307,0.0
+8x8,113,cpp_m55,forward,forward,2,1253266,2409307,52.01769637493271
+8x8,113,cpp_m55,loss,loss/grad,3,18263,2409307,0.7580187995967306
+8x8,113,cpp_m55,backward,backward,4,971490,2409307,40.322383158310664
+8x8,113,cpp_m55,sample_train_step,C train step,5,0,2409307,0.0
+8x8,113,cpp_m55,adam_update,Adam update,6,67287,2409307,2.7927947745970108
+8x8,113,cpp_m55,gap,other/gap,7,70251,2409307,2.915817701936698
+8x8,113,cpp_generic,zero,zero grad,0,26328,2335051,1.127512846614485
+8x8,113,cpp_generic,input_copy,input copy,1,0,2335051,0.0
+8x8,113,cpp_generic,forward,forward,2,845119,2335051,36.19274268527754
+8x8,113,cpp_generic,loss,loss/grad,3,35749,2335051,1.5309729851724865
+8x8,113,cpp_generic,backward,backward,4,1294942,2335051,55.45669023931383
+8x8,113,cpp_generic,sample_train_step,C train step,5,0,2335051,0.0
+8x8,113,cpp_generic,adam_update,Adam update,6,78385,2335051,3.3568859952095265
+8x8,113,cpp_generic,gap,other/gap,7,54528,2335051,2.335195248412133
+8x8,113,rltools_generic,zero,zero grad,0,5561,3208545,0.1733184356148971
+8x8,113,rltools_generic,input_copy,input copy,1,34112,3208545,1.0631610278179051
+8x8,113,rltools_generic,forward,forward,2,1159988,3208545,36.15308496530359
+8x8,113,rltools_generic,loss,loss/grad,3,4096,3208545,0.12765911028207488
+8x8,113,rltools_generic,backward,backward,4,1823448,3208545,56.83099348770237
+8x8,113,rltools_generic,sample_train_step,C train step,5,0,3208545,0.0
+8x8,113,rltools_generic,adam_update,Adam update,6,76662,3208545,2.3893073028428775
+8x8,113,rltools_generic,gap,other/gap,7,104678,3208545,3.262475670436288
+16x8,209,legacy_c,zero,zero grad,0,5942,6479183,0.09170909356935897
+16x8,209,legacy_c,input_copy,input copy,1,0,6479183,0.0
+16x8,209,legacy_c,forward,forward,2,0,6479183,0.0
+16x8,209,legacy_c,loss,loss/grad,3,0,6479183,0.0
+16x8,209,legacy_c,backward,backward,4,0,6479183,0.0
+16x8,209,legacy_c,sample_train_step,C train step,5,6280271,6479183,96.92998330190704
+16x8,209,legacy_c,adam_update,Adam update,6,148912,6479183,2.298314463413057
+16x8,209,legacy_c,gap,other/gap,7,44058,6479183,0.6799931411105382
+16x8,209,cpp_direct_c_backend,zero,zero grad,0,46947,6359555,0.7382120289863048
+16x8,209,cpp_direct_c_backend,input_copy,input copy,1,0,6359555,0.0
+16x8,209,cpp_direct_c_backend,forward,forward,2,2893829,6359555,45.503639798696604
+16x8,209,cpp_direct_c_backend,loss,loss/grad,3,29351,6359555,0.4615260029986375
+16x8,209,cpp_direct_c_backend,backward,backward,4,3196961,6359555,50.27019972309383
+16x8,209,cpp_direct_c_backend,sample_train_step,C train step,5,0,6359555,0.0
+16x8,209,cpp_direct_c_backend,adam_update,Adam update,6,111536,6359555,1.7538334050102564
+16x8,209,cpp_direct_c_backend,gap,other/gap,7,80931,6359555,1.2725890412143617
+16x8,209,cpp_m55,zero,zero grad,0,50145,4199056,1.1941969814167757
+16x8,209,cpp_m55,input_copy,input copy,1,0,4199056,0.0
+16x8,209,cpp_m55,forward,forward,2,2072881,4199056,49.36540498626358
+16x8,209,cpp_m55,loss,loss/grad,3,21992,4199056,0.5237367636916488
+16x8,209,cpp_m55,backward,backward,4,1872129,4199056,44.5845209018408
+16x8,209,cpp_m55,sample_train_step,C train step,5,0,4199056,0.0
+16x8,209,cpp_m55,adam_update,Adam update,6,110592,4199056,2.6337348203977275
+16x8,209,cpp_m55,gap,other/gap,7,71317,4199056,1.6984055463894743
+16x8,209,cpp_generic,zero,zero grad,0,48523,4272144,1.1357997295971298
+16x8,209,cpp_generic,input_copy,input copy,1,0,4272144,0.0
+16x8,209,cpp_generic,forward,forward,2,1713803,4272144,40.1157592066185
+16x8,209,cpp_generic,loss,loss/grad,3,29788,4272144,0.6972611410102281
+16x8,209,cpp_generic,backward,backward,4,2303745,4272144,53.92479747873667
+16x8,209,cpp_generic,sample_train_step,C train step,5,0,4272144,0.0
+16x8,209,cpp_generic,adam_update,Adam update,6,107612,4272144,2.518922583133902
+16x8,209,cpp_generic,gap,other/gap,7,68673,4272144,1.607459860903565
+16x8,209,rltools_generic,zero,zero grad,0,8979,5778170,0.1553952202860075
+16x8,209,rltools_generic,input_copy,input copy,1,38701,5778170,0.6697795322740591
+16x8,209,rltools_generic,forward,forward,2,1569725,5778170,27.166473122113054
+16x8,209,rltools_generic,loss,loss/grad,3,2048,5778170,0.035443747760969306
+16x8,209,rltools_generic,backward,backward,4,3782854,5778170,65.46802880496766
+16x8,209,rltools_generic,sample_train_step,C train step,5,0,5778170,0.0
+16x8,209,rltools_generic,adam_update,Adam update,6,128949,5778170,2.2316581201314603
+16x8,209,rltools_generic,gap,other/gap,7,246914,5778170,4.273221452466784
+16x16,353,legacy_c,zero,zero grad,0,7435,8274679,0.0898524281123171
+16x16,353,legacy_c,input_copy,input copy,1,0,8274679,0.0
+16x16,353,legacy_c,forward,forward,2,0,8274679,0.0
+16x16,353,legacy_c,loss,loss/grad,3,0,8274679,0.0
+16x16,353,legacy_c,backward,backward,4,0,8274679,0.0
+16x16,353,legacy_c,sample_train_step,C train step,5,8004042,8274679,96.72933536152883
+16x16,353,legacy_c,adam_update,Adam update,6,199557,8274679,2.4116585066321
+16x16,353,legacy_c,gap,other/gap,7,63645,8274679,0.7691537037267548
+16x16,353,cpp_direct_c_backend,zero,zero grad,0,82606,8464597,0.9758999749190658
+16x16,353,cpp_direct_c_backend,input_copy,input copy,1,0,8464597,0.0
+16x16,353,cpp_direct_c_backend,forward,forward,2,3797780,8464597,44.8666368877337
+16x16,353,cpp_direct_c_backend,loss,loss/grad,3,41128,8464597,0.4858825529437491
+16x16,353,cpp_direct_c_backend,backward,backward,4,4198739,8464597,49.60353103638602
+16x16,353,cpp_direct_c_backend,sample_train_step,C train step,5,0,8464597,0.0
+16x16,353,cpp_direct_c_backend,adam_update,Adam update,6,163985,8464597,1.9373042804046077
+16x16,353,cpp_direct_c_backend,gap,other/gap,7,180359,8464597,2.1307452676128587
+16x16,353,cpp_m55,zero,zero grad,0,89623,5933540,1.5104473889111727
+16x16,353,cpp_m55,input_copy,input copy,1,0,5933540,0.0
+16x16,353,cpp_m55,forward,forward,2,2818629,5933540,47.50332853574763
+16x16,353,cpp_m55,loss,loss/grad,3,33402,5933540,0.5629354483158452
+16x16,353,cpp_m55,backward,backward,4,2756628,5933540,46.45840425782922
+16x16,353,cpp_m55,sample_train_step,C train step,5,0,5933540,0.0
+16x16,353,cpp_m55,adam_update,Adam update,6,165465,5933540,2.788638822692693
+16x16,353,cpp_m55,gap,other/gap,7,69793,5933540,1.1762455465034363
+16x16,353,cpp_generic,zero,zero grad,0,87527,6897125,1.269036011381554
+16x16,353,cpp_generic,input_copy,input copy,1,0,6897125,0.0
+16x16,353,cpp_generic,forward,forward,2,2741979,6897125,39.75539083313699
+16x16,353,cpp_generic,loss,loss/grad,3,40021,6897125,0.5802562661978723
+16x16,353,cpp_generic,backward,backward,4,3796066,6897125,55.03838193450169
+16x16,353,cpp_generic,sample_train_step,C train step,5,0,6897125,0.0
+16x16,353,cpp_generic,adam_update,Adam update,6,182997,6897125,2.6532359497616764
+16x16,353,cpp_generic,gap,other/gap,7,48535,6897125,0.7036990050202077
+16x16,353,rltools_generic,zero,zero grad,0,14502,10138775,0.14303503135240697
+16x16,353,rltools_generic,input_copy,input copy,1,42881,10138775,0.4229406412510387
+16x16,353,rltools_generic,forward,forward,2,2377415,10138775,23.44874010913547
+16x16,353,rltools_generic,loss,loss/grad,3,2048,10138775,0.020199678955297853
+16x16,353,rltools_generic,backward,backward,4,7409486,10138775,73.08068282410844
+16x16,353,rltools_generic,sample_train_step,C train step,5,0,10138775,0.0
+16x16,353,rltools_generic,adam_update,Adam update,6,191631,10138775,1.890080409122404
+16x16,353,rltools_generic,gap,other/gap,7,100812,10138775,0.994321306074945
+32x16,673,legacy_c,zero,zero grad,0,13170,11977598,0.10995526815977627
+32x16,673,legacy_c,input_copy,input copy,1,0,11977598,0.0
+32x16,673,legacy_c,forward,forward,2,0,11977598,0.0
+32x16,673,legacy_c,loss,loss/grad,3,0,11977598,0.0
+32x16,673,legacy_c,backward,backward,4,0,11977598,0.0
+32x16,673,legacy_c,sample_train_step,C train step,5,11578481,11977598,96.66780434608008
+32x16,673,legacy_c,adam_update,Adam update,6,331151,11977598,2.7647529997249864
+32x16,673,legacy_c,gap,other/gap,7,54796,11977598,0.4574873860351633
+32x16,673,cpp_direct_c_backend,zero,zero grad,0,151429,11931379,1.2691659530721469
+32x16,673,cpp_direct_c_backend,input_copy,input copy,1,0,11931379,0.0
+32x16,673,cpp_direct_c_backend,forward,forward,2,5416215,11931379,45.394710871224525
+32x16,673,cpp_direct_c_backend,loss,loss/grad,3,33690,11931379,0.2823646788858187
+32x16,673,cpp_direct_c_backend,backward,backward,4,5957440,11931379,49.93085878840996
+32x16,673,cpp_direct_c_backend,sample_train_step,C train step,5,0,11931379,0.0
+32x16,673,cpp_direct_c_backend,adam_update,Adam update,6,291156,11931379,2.440254391382589
+32x16,673,cpp_direct_c_backend,gap,other/gap,7,81449,11931379,0.6826453170249641
+32x16,673,cpp_m55,zero,zero grad,0,154297,10488648,1.4710856918832627
+32x16,673,cpp_m55,input_copy,input copy,1,0,10488648,0.0
+32x16,673,cpp_m55,forward,forward,2,4540310,10488648,43.28784796667788
+32x16,673,cpp_m55,loss,loss/grad,3,45410,10488648,0.43294426507591827
+32x16,673,cpp_m55,backward,backward,4,5380452,10488648,51.29786031526656
+32x16,673,cpp_m55,sample_train_step,C train step,5,0,10488648,0.0
+32x16,673,cpp_m55,adam_update,Adam update,6,298216,10488648,2.8432263147738395
+32x16,673,cpp_m55,gap,other/gap,7,69963,10488648,0.6670354463225384
+32x16,673,cpp_generic,zero,zero grad,0,152438,12392163,1.2301161629329764
+32x16,673,cpp_generic,input_copy,input copy,1,0,12392163,0.0
+32x16,673,cpp_generic,forward,forward,2,4299339,12392163,34.694015887299095
+32x16,673,cpp_generic,loss,loss/grad,3,42314,12392163,0.34145774228437764
+32x16,673,cpp_generic,backward,backward,4,7533929,12392163,60.795915934934044
+32x16,673,cpp_generic,sample_train_step,C train step,5,0,12392163,0.0
+32x16,673,cpp_generic,adam_update,Adam update,6,300864,12392163,2.427857025444226
+32x16,673,cpp_generic,gap,other/gap,7,63279,12392163,0.5106372471052875
+32x16,673,rltools_generic,zero,zero grad,0,129276,25253581,0.5119115582063392
+32x16,673,rltools_generic,input_copy,input copy,1,43411,25253581,0.17190037325795499
+32x16,673,rltools_generic,forward,forward,2,9091568,25253581,36.00110416023771
+32x16,673,rltools_generic,loss,loss/grad,3,2048,25253581,0.00810974095119421
+32x16,673,rltools_generic,backward,backward,4,15527823,25253581,61.48760843066178
+32x16,673,rltools_generic,sample_train_step,C train step,5,0,25253581,0.0
+32x16,673,rltools_generic,adam_update,Adam update,6,329102,25253581,1.303189436777303
+32x16,673,rltools_generic,gap,other/gap,7,130353,25253581,0.516176299907724
+32x32,1217,legacy_c,zero,zero grad,0,21376,17433015,0.12261791778415838
+32x32,1217,legacy_c,input_copy,input copy,1,0,17433015,0.0
+32x32,1217,legacy_c,forward,forward,2,0,17433015,0.0
+32x32,1217,legacy_c,loss,loss/grad,3,0,17433015,0.0
+32x32,1217,legacy_c,backward,backward,4,0,17433015,0.0
+32x32,1217,legacy_c,sample_train_step,C train step,5,16794143,17433015,96.33527533820168
+32x32,1217,legacy_c,adam_update,Adam update,6,560329,17433015,3.214182974086812
+32x32,1217,legacy_c,gap,other/gap,7,57167,17433015,0.3279237699273476
+32x32,1217,cpp_direct_c_backend,zero,zero grad,0,272891,18013959,1.5148863167724542
+32x32,1217,cpp_direct_c_backend,input_copy,input copy,1,0,18013959,0.0
+32x32,1217,cpp_direct_c_backend,forward,forward,2,7717362,18013959,42.84101012997753
+32x32,1217,cpp_direct_c_backend,loss,loss/grad,3,49634,18013959,0.2755307703320519
+32x32,1217,cpp_direct_c_backend,backward,backward,4,9363185,18013959,51.9773859816157
+32x32,1217,cpp_direct_c_backend,sample_train_step,C train step,5,0,18013959,0.0
+32x32,1217,cpp_direct_c_backend,adam_update,Adam update,6,496887,18013959,2.7583442373772473
+32x32,1217,cpp_direct_c_backend,gap,other/gap,7,114000,18013959,0.6328425639250095
+32x32,1217,cpp_m55,zero,zero grad,0,281833,17521556,1.6084929900061389
+32x32,1217,cpp_m55,input_copy,input copy,1,0,17521556,0.0
+32x32,1217,cpp_m55,forward,forward,2,7285528,17521556,41.58037105836947
+32x32,1217,cpp_m55,loss,loss/grad,3,17056,17521556,0.09734295287473327
+32x32,1217,cpp_m55,backward,backward,4,9369655,17521556,53.475016716551885
+32x32,1217,cpp_m55,sample_train_step,C train step,5,0,17521556,0.0
+32x32,1217,cpp_m55,adam_update,Adam update,6,480556,17521556,2.7426559604637855
+32x32,1217,cpp_m55,gap,other/gap,7,86928,17521556,0.496120321733983
+32x32,1217,cpp_generic,zero,zero grad,0,275502,22441837,1.2276267758294475
+32x32,1217,cpp_generic,input_copy,input copy,1,0,22441837,0.0
+32x32,1217,cpp_generic,forward,forward,2,7817107,22441837,34.83274118780918
+32x32,1217,cpp_generic,loss,loss/grad,3,43306,22441837,0.1929699427012147
+32x32,1217,cpp_generic,backward,backward,4,13734615,22441837,61.20093912098194
+32x32,1217,cpp_generic,sample_train_step,C train step,5,0,22441837,0.0
+32x32,1217,cpp_generic,adam_update,Adam update,6,502371,22441837,2.2385466929467497
+32x32,1217,cpp_generic,gap,other/gap,7,68936,22441837,0.3071762797314676
+32x32,1217,rltools_generic,zero,zero grad,0,261931,51995458,0.5037574628153098
+32x32,1217,rltools_generic,input_copy,input copy,1,43120,51995458,0.08293032056761573
+32x32,1217,rltools_generic,forward,forward,2,19969640,51995458,38.40650850695459
+32x32,1217,rltools_generic,loss,loss/grad,3,2048,51995458,0.003938805577979523
+32x32,1217,rltools_generic,backward,backward,4,31034076,51995458,59.68612873839865
+32x32,1217,rltools_generic,sample_train_step,C train step,5,0,51995458,0.0
+32x32,1217,rltools_generic,adam_update,Adam update,6,569824,51995458,1.0959111082356463
+32x32,1217,rltools_generic,gap,other/gap,7,114819,51995458,0.22082505745021036
+64x32,2369,legacy_c,zero,zero grad,0,40072,33581881,0.11932625215365393
+64x32,2369,legacy_c,input_copy,input copy,1,0,33581881,0.0
+64x32,2369,legacy_c,forward,forward,2,0,33581881,0.0
+64x32,2369,legacy_c,loss,loss/grad,3,0,33581881,0.0
+64x32,2369,legacy_c,backward,backward,4,0,33581881,0.0
+64x32,2369,legacy_c,sample_train_step,C train step,5,31437116,33581881,93.6133267817845
+64x32,2369,legacy_c,adam_update,Adam update,6,1192790,33581881,3.5518856135545236
+64x32,2369,legacy_c,gap,other/gap,7,911903,33581881,2.715461352507324
+64x32,2369,cpp_direct_c_backend,zero,zero grad,0,536064,37177393,1.4419085275828782
+64x32,2369,cpp_direct_c_backend,input_copy,input copy,1,0,37177393,0.0
+64x32,2369,cpp_direct_c_backend,forward,forward,2,16251775,37177393,43.71413294095151
+64x32,2369,cpp_direct_c_backend,loss,loss/grad,3,70077,37177393,0.18849358264577615
+64x32,2369,cpp_direct_c_backend,backward,backward,4,17566854,37177393,47.25144121859217
+64x32,2369,cpp_direct_c_backend,sample_train_step,C train step,5,0,37177393,0.0
+64x32,2369,cpp_direct_c_backend,adam_update,Adam update,6,1048369,37177393,2.819909938278889
+64x32,2369,cpp_direct_c_backend,gap,other/gap,7,1704254,37177393,4.584113791948779
+64x32,2369,cpp_m55,zero,zero grad,0,539878,28511700,1.8935314274490824
+64x32,2369,cpp_m55,input_copy,input copy,1,0,28511700,0.0
+64x32,2369,cpp_m55,forward,forward,2,13218624,28511700,46.362103978366775
+64x32,2369,cpp_m55,loss,loss/grad,3,623841,28511700,2.188017550689717
+64x32,2369,cpp_m55,backward,backward,4,12988210,28511700,45.55396556501366
+64x32,2369,cpp_m55,sample_train_step,C train step,5,0,28511700,0.0
+64x32,2369,cpp_m55,adam_update,Adam update,6,1066551,28511700,3.7407485348120244
+64x32,2369,cpp_m55,gap,other/gap,7,74596,28511700,0.2616329436687395
+64x32,2369,cpp_generic,zero,zero grad,0,536890,39329309,1.3651142459685728
+64x32,2369,cpp_generic,input_copy,input copy,1,0,39329309,0.0
+64x32,2369,cpp_generic,forward,forward,2,15390578,39329309,39.13259193035911
+64x32,2369,cpp_generic,loss,loss/grad,3,187975,39329309,0.4779514432862271
+64x32,2369,cpp_generic,backward,backward,4,22119872,39329309,56.242717104437304
+64x32,2369,cpp_generic,sample_train_step,C train step,5,0,39329309,0.0
+64x32,2369,cpp_generic,adam_update,Adam update,6,1036327,39329309,2.634999257169761
+64x32,2369,cpp_generic,gap,other/gap,7,57667,39329309,0.14662601877902304
+64x32,2369,rltools_generic,zero,zero grad,0,500422,108828511,0.45982619389141505
+64x32,2369,rltools_generic,input_copy,input copy,1,46757,108828511,0.04296392514274132
+64x32,2369,rltools_generic,forward,forward,2,38933782,108828511,35.77535118531577
+64x32,2369,rltools_generic,loss,loss/grad,3,4096,108828511,0.0037637196010152155
+64x32,2369,rltools_generic,backward,backward,4,67908807,108828511,62.399831051625796
+64x32,2369,rltools_generic,sample_train_step,C train step,5,0,108828511,0.0
+64x32,2369,rltools_generic,adam_update,Adam update,6,1278753,108828511,1.1750165358781763
+64x32,2369,rltools_generic,gap,other/gap,7,155894,108828511,0.14324738854508445

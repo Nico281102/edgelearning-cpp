@@ -168,12 +168,12 @@ Runtime ratios below are variant cycles divided by legacy C cycles:
 
 ```text
 hidden   direct-C-backend   cpp-m55   cpp-generic   rltools-generic
-8x8              0.951       0.457        0.441             0.621
-16x8             0.976       0.631        0.646             0.858
+8x8              0.947       0.456        0.441             0.617
+16x8             0.975       0.631        0.644             0.855
 16x16            0.991       0.705        0.822             1.195
 32x16            1.005       0.878        1.030             2.122
-32x32            1.232       0.975        1.256             2.953
-64x32            1.188       0.876        1.311             3.475
+32x32            1.229       0.975        1.259             2.952
+64x32            1.052       0.834        1.242             3.258
 ```
 
 Model footprint is reported in the generated tables as C arena/control bytes,
