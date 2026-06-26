@@ -162,6 +162,7 @@ def write_speedup_csv(path: Path, rows: list[dict[str, str]]) -> list[dict[str, 
                 "speedup_over_legacy",
                 "cycles_over_legacy",
             ],
+            lineterminator="\n",
         )
         writer.writeheader()
         writer.writerows(out)
@@ -173,25 +174,30 @@ def read_trace_rows(summary_rows: list[dict[str, str]],
     traces: list[dict[str, object]] = []
     seen_logs: set[Path] = set()
     for summary in summary_rows:
-        log_path = resolve_report_path(summary.get("log_path", ""), project_root)
-        if not log_path.exists() or log_path in seen_logs:
-            continue
-        seen_logs.add(log_path)
-        for line in log_path.read_text(encoding="utf-8", errors="replace").splitlines():
-            kind, values = parse_kv_line(line)
-            if kind != "TRACE":
+        raw_paths = [summary.get("log_path", "")]
+        raw_paths.extend(summary.get(f"{variant}_log_path", "") for variant in VARIANTS)
+        for raw_path in raw_paths:
+            if not raw_path:
                 continue
-            mse_e9 = to_int(values.get("minibatch_mse_e-9"))
-            traces.append(
-                {
-                    "config": normalize_config_label(values.get("config", "")),
-                    "variant": values.get("variant", ""),
-                    "seed": to_int(values.get("seed")),
-                    "step": to_int(values.get("step")),
-                    "sample_passes": to_int(values.get("sample_passes")),
-                    "minibatch_mse": mse_e9 / 1_000_000_000.0,
-                }
-            )
+            log_path = resolve_report_path(raw_path, project_root)
+            if not log_path.exists() or log_path in seen_logs:
+                continue
+            seen_logs.add(log_path)
+            for line in log_path.read_text(encoding="utf-8", errors="replace").splitlines():
+                kind, values = parse_kv_line(line)
+                if kind != "TRACE":
+                    continue
+                mse_e9 = to_int(values.get("minibatch_mse_e-9"))
+                traces.append(
+                    {
+                        "config": normalize_config_label(values.get("config", "")),
+                        "variant": values.get("variant", ""),
+                        "seed": to_int(values.get("seed")),
+                        "step": to_int(values.get("step")),
+                        "sample_passes": to_int(values.get("sample_passes")),
+                        "minibatch_mse": mse_e9 / 1_000_000_000.0,
+                    }
+                )
     return traces
 
 
@@ -201,6 +207,7 @@ def write_convergence_csv(path: Path, rows: list[dict[str, object]]) -> None:
         writer = csv.DictWriter(
             f,
             fieldnames=["config", "variant", "seed", "step", "sample_passes", "minibatch_mse"],
+            lineterminator="\n",
         )
         writer.writeheader()
         writer.writerows(rows)
@@ -239,6 +246,12 @@ def write_speedup_svg(path: Path, rows: list[dict[str, object]]) -> None:
     params = sorted({int(row["params"]) for row in rows})
     configs_by_params = {int(row["params"]): str(row["config"]) for row in rows}
     speeds = [float(row["speedup_over_legacy"]) for row in rows if float(row["speedup_over_legacy"]) > 0]
+    if not params or not speeds:
+        lines = svg_header(width, height)
+        lines.append('<text class="title" x="82" y="34">Speedup trace unavailable</text>')
+        lines.append("</svg>")
+        path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        return
     x_min, x_max = min(params), max(params)
     y_min, y_max = 0.0, max(1.0, max(speeds) * 1.12)
 
@@ -317,6 +330,7 @@ def write_runtime_breakdown_csv(path: Path, rows: list[dict[str, str]]) -> list[
                 "variant_cycles_avg",
                 "percent_of_variant",
             ],
+            lineterminator="\n",
         )
         writer.writeheader()
         writer.writerows(out)
@@ -428,27 +442,38 @@ def write_runtime_breakdown_svg(path: Path, rows: list[dict[str, object]]) -> No
 def update_markdown_plots(summary_csv: Path,
                           speedup_svg: Path,
                           convergence_svg: Path,
-                          runtime_breakdown_svg: Path) -> None:
+                          runtime_breakdown_svg: Path,
+                          elf_svg: Path | None = None) -> None:
     md_path = summary_csv.with_suffix(".md")
     if not md_path.exists():
         return
     start = "<!-- plots:start -->"
     end = "<!-- plots:end -->"
-    section = "\n".join(
-        [
-            start,
-            "## Generated plots",
-            "",
-            f"![Speedup over legacy C]({speedup_svg.name})",
-            "",
-            f"![Training-loop component breakdown]({runtime_breakdown_svg.name})",
-            "",
-            f"![Convergence trace]({convergence_svg.name})",
-            end,
-            "",
-        ]
-    )
     text = md_path.read_text(encoding="utf-8")
+    elf_line = ""
+    if elf_svg is not None and elf_svg.exists():
+        elf_line = f"![Firmware ELF component breakdown]({elf_svg.name})"
+    elif start in text and end in text:
+        old_section = text.split(start, 1)[1].split(end, 1)[0]
+        for line in old_section.splitlines():
+            if line.startswith("![Firmware ELF component breakdown]"):
+                elf_line = line
+                break
+
+    section_lines = [
+        start,
+        "## Generated plots",
+        "",
+        f"![Speedup over legacy C]({speedup_svg.name})",
+        "",
+        f"![Training-loop component breakdown]({runtime_breakdown_svg.name})",
+        "",
+        f"![Convergence trace]({convergence_svg.name})",
+    ]
+    if elf_line:
+        section_lines.extend(["", elf_line])
+    section_lines.extend([end, ""])
+    section = "\n".join(section_lines)
     if start in text and end in text:
         before = text.split(start, 1)[0].rstrip()
         after = text.split(end, 1)[1].lstrip()
@@ -538,6 +563,7 @@ def main() -> int:
     )
     runtime_breakdown_csv = args.output_dir / f"stm32n6_training_component_breakdown_{args.date}{output_tag}.csv"
     runtime_breakdown_svg = args.output_dir / f"stm32n6_training_component_breakdown_{args.date}{output_tag}.svg"
+    elf_svg = args.output_dir / f"stm32n6_elf_component_breakdown_{args.date}{output_tag}.svg"
 
     speedup_rows = write_speedup_csv(speedup_csv, summary_rows)
     write_speedup_svg(speedup_svg, speedup_rows)
@@ -546,7 +572,7 @@ def main() -> int:
     trace_rows = read_trace_rows(summary_rows, project_root)
     write_convergence_csv(convergence_csv, trace_rows)
     write_convergence_svg(convergence_svg, trace_rows, args.convergence_config)
-    update_markdown_plots(summary_csv, speedup_svg, convergence_svg, runtime_breakdown_svg)
+    update_markdown_plots(summary_csv, speedup_svg, convergence_svg, runtime_breakdown_svg, elf_svg)
 
     print(speedup_csv)
     print(speedup_svg)

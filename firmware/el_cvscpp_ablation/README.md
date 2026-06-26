@@ -38,8 +38,9 @@ sh firmware/el_cvscpp_ablation/flash_and_run_n6.sh --config 8x8
 ```
 
 By default this builds the combined `all` firmware, which runs the C baseline
-and all three C++ variants in one image so numerical comparisons are emitted in
-the same UART log. To build and run one isolated variant instead:
+and all C++ variants in one image so numerical comparisons are emitted in the
+same UART log. This is useful as a smoke/regression run. To build and run one
+isolated deployable variant instead:
 
 ```sh
 sh firmware/el_cvscpp_ablation/flash_and_run_n6.sh --config 8x8 --variant cpp_m55
@@ -71,17 +72,28 @@ For a build-only check without touching the board:
 sh firmware/el_cvscpp_ablation/flash_and_run_n6.sh --config 8x8 --skip-flash --skip-fsbl --skip-capture
 ```
 
-To generate every per-variant ELF for the footprint ablation without touching
-the board:
-
-```sh
-sh firmware/el_cvscpp_ablation/run_variant_size_sweep_n6.sh
-```
-
 ## Full Sweep
 
 ```sh
 sh firmware/el_cvscpp_ablation/run_sweep_n6.sh
+```
+
+The default sweep builds, flashes, and measures one isolated firmware image for
+each variant and network size. Runtime cycles, component profiling, convergence
+traces, and ELF sizes in the generated report therefore come from the same
+deployable firmware image.
+
+To run only the combined same-firmware comparison smoke test:
+
+```sh
+EL_CVSCPP_SWEEP_VARIANTS=all sh firmware/el_cvscpp_ablation/run_sweep_n6.sh
+```
+
+To build every per-variant ELF for a footprint-only check without touching the
+board:
+
+```sh
+sh firmware/el_cvscpp_ablation/run_sweep_n6.sh --skip-flash --skip-fsbl --skip-capture
 ```
 
 Each firmware run measures:
@@ -133,7 +145,8 @@ The default network-size sweep is:
 `64x32` intentionally replaces the earlier `32x64` case. Larger previous
 cases such as `64x64` and `128x64` are not part of the default run.
 
-The UART log reports ablation comparisons for every seed:
+The combined `variant=all` smoke log reports ablation comparisons for every
+seed:
 
 - `legacy_c_vs_cpp_direct_c_backend`
 - `legacy_c_vs_cpp_m55`
@@ -149,31 +162,29 @@ It also prints model-size fields:
   runtime and model object.
 
 The linked firmware footprint is recorded by `arm-none-eabi-size` in
-`*.size.txt` next to the ELF.
-
-For separate per-variant ELF sizes, build with
-`run_variant_size_sweep_n6.sh`. Those ELF sizes are firmware-artifact sizes:
-they still include the common benchmark harness and static rollout buffers in
-each variant image.
+`*.size.txt` next to each per-variant ELF. Those ELF sizes are
+firmware-artifact sizes: they still include the common benchmark harness and
+static rollout buffers in each variant image.
 
 ## Current Measurement Snapshot
 
 The 2026-06-26 input-3 ten-seed sweep shows the expected small-network RLTools
 profile on the firmware path: RLTools generic is faster than legacy C on `8x8`
 and `16x8`, then slower from `16x16` upward. The C++ direct legacy-C backend
-remains close to the legacy C baseline on smaller and mid-size cases, while the
-native C++ M55 backend is faster than legacy C across the measured sweep.
+remains close to the legacy C baseline, with normal per-topology variation,
+while the native C++ M55 backend is faster than legacy C across the measured
+sweep.
 
 Runtime ratios below are variant cycles divided by legacy C cycles:
 
 ```text
 hidden   direct-C-backend   cpp-m55   cpp-generic   rltools-generic
-8x8              0.947       0.456        0.441             0.617
-16x8             0.975       0.631        0.644             0.855
-16x16            0.991       0.705        0.822             1.195
-32x16            1.005       0.878        1.030             2.122
-32x32            1.229       0.975        1.259             2.952
-64x32            1.052       0.834        1.242             3.258
+8x8              0.955       0.457        0.439             0.621
+16x8             0.969       0.632        0.642             0.838
+16x16            0.984       0.702        0.818             1.187
+32x16            1.001       0.876        1.027             2.120
+32x32            0.941       0.903        1.165             2.734
+64x32            1.107       0.875        1.283             3.563
 ```
 
 Model footprint is reported in the generated tables as C arena/control bytes,
@@ -183,8 +194,8 @@ firmware images with `arm-none-eabi-size`.
 
 ## Report
 
-After a sweep, generate CSV and Markdown tables with cycle averages, min/max,
-model sizes, and ELF sizes:
+After a sweep, generate the single CSV and Markdown report with cycle averages,
+min/max, model sizes, per-variant ELF sizes, and artifact paths:
 
 ```sh
 python3 firmware/el_cvscpp_ablation/report_sweep_n6.py
@@ -196,6 +207,9 @@ The default report paths are:
 firmware/el_cvscpp_ablation/results/stm32n6_sweep_<date>_10seed.csv
 firmware/el_cvscpp_ablation/results/stm32n6_sweep_<date>_10seed.md
 ```
+
+With the default input size this resolves to
+`stm32n6_sweep_<date>_input3_10seed.{csv,md}`.
 
 Generate public CSV/SVG curves for speedup and convergence with:
 
@@ -214,10 +228,13 @@ firmware/el_cvscpp_ablation/results/stm32n6_convergence_<date>.csv
 firmware/el_cvscpp_ablation/results/stm32n6_convergence_<date>_32x32.svg
 ```
 
+When generated from an input-tagged sweep report, the plot paths also include
+that input tag, for example `stm32n6_speedup_<date>_input3.svg`.
+
 The plotter also adds a generated-plots section to the matching sweep Markdown
 report when it exists.
 
-Generate the ELF component-breakdown graph with:
+Generate the ELF component-breakdown graph from the same sweep CSV with:
 
 ```sh
 python3 firmware/el_cvscpp_ablation/plot_elf_component_breakdown_n6.py
@@ -230,19 +247,9 @@ firmware/el_cvscpp_ablation/results/stm32n6_elf_component_breakdown_<date>.csv
 firmware/el_cvscpp_ablation/results/stm32n6_elf_component_breakdown_<date>.svg
 ```
 
+When generated from an input-tagged sweep report, these paths also include the
+input tag.
+
 This plot is based on the available per-variant ELF footprint fields:
 `text`, `data`, and `bss`. It does not claim a runtime phase breakdown; that
 would require additional timing probes inside the firmware loop.
-
-After building separate variant ELF files, generate the footprint table with:
-
-```sh
-python3 firmware/el_cvscpp_ablation/report_variant_elf_sizes_n6.py
-```
-
-The default report paths are:
-
-```text
-firmware/el_cvscpp_ablation/results/stm32n6_variant_elf_sizes_<date>.csv
-firmware/el_cvscpp_ablation/results/stm32n6_variant_elf_sizes_<date>.md
-```

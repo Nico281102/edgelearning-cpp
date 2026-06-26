@@ -39,30 +39,31 @@ def parse_args() -> argparse.Namespace:
     today = dt.date.today().isoformat()
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--size-csv",
+        "--summary-csv",
         type=Path,
-        help="CSV produced by report_variant_elf_sizes_n6.py. Defaults to the latest one.",
+        help="CSV produced by report_sweep_n6.py. Defaults to the latest 10-seed sweep CSV.",
     )
+    parser.add_argument("--size-csv", type=Path, dest="summary_csv", help=argparse.SUPPRESS)
     parser.add_argument("--output-dir", type=Path, default=script_dir / "results")
     parser.add_argument("--date", default=today)
     parser.add_argument("--output-tag", default=None)
     return parser.parse_args()
 
 
-def latest_size_csv(results_dir: Path) -> Path:
+def latest_summary_csv(results_dir: Path) -> Path:
     matches = sorted(
-        results_dir.glob("stm32n6_variant_elf_sizes_*.csv"),
+        results_dir.glob("stm32n6_sweep_*_10seed.csv"),
         key=lambda path: path.stat().st_mtime,
     )
     if not matches:
-        raise SystemExit("No per-variant ELF CSV found; run report_variant_elf_sizes_n6.py first.")
+        raise SystemExit("No sweep CSV found; run report_sweep_n6.py first.")
     return matches[-1]
 
 
-def infer_output_tag(size_csv: Path, explicit_tag: str | None) -> str:
+def infer_output_tag(summary_csv: Path, explicit_tag: str | None) -> str:
     if explicit_tag is not None:
         return explicit_tag
-    match = re.search(r"_input(\d+)(?:_|$)", size_csv.stem)
+    match = re.search(r"_input(\d+)(?:_|$)", summary_csv.stem)
     return f"_input{match.group(1)}" if match else ""
 
 
@@ -75,23 +76,23 @@ def to_int(value: object, default: int = 0) -> int:
 def read_rows(path: Path) -> list[dict[str, object]]:
     rows: list[dict[str, object]] = []
     with path.open("r", encoding="utf-8", newline="") as f:
-        for row in csv.DictReader(f):
-            if row.get("variant") not in VARIANTS:
-                continue
-            out: dict[str, object] = {
-                "config": row.get("config", ""),
-                "input_features": to_int(row.get("input_features")),
-                "variant": row.get("variant", ""),
-                "model_size_kind": row.get("model_size_kind", ""),
-                "model_state_bytes": to_int(row.get("model_state_bytes")),
-                "cycles_avg": to_int(row.get("cycles_avg")),
-                "elf_text": to_int(row.get("elf_text")),
-                "elf_data": to_int(row.get("elf_data")),
-                "elf_bss": to_int(row.get("elf_bss")),
-                "elf_dec": to_int(row.get("elf_dec")),
-                "elf_file_bytes": to_int(row.get("elf_file_bytes")),
-            }
-            rows.append(out)
+        for summary in csv.DictReader(f):
+            for variant in VARIANTS:
+                rows.append(
+                    {
+                        "config": summary.get("config", ""),
+                        "input_features": to_int(summary.get("input_features")),
+                        "variant": variant,
+                        "model_size_kind": summary.get(f"{variant}_model_size_kind", ""),
+                        "model_state_bytes": to_int(summary.get(f"{variant}_model_state_bytes")),
+                        "cycles_avg": to_int(summary.get(f"{variant}_cycles_avg")),
+                        "elf_text": to_int(summary.get(f"{variant}_elf_text")),
+                        "elf_data": to_int(summary.get(f"{variant}_elf_data")),
+                        "elf_bss": to_int(summary.get(f"{variant}_elf_bss")),
+                        "elf_dec": to_int(summary.get(f"{variant}_elf_dec")),
+                        "elf_file_bytes": to_int(summary.get(f"{variant}_elf_file_bytes")),
+                    }
+                )
     return rows
 
 
@@ -113,6 +114,7 @@ def write_breakdown_csv(path: Path, rows: list[dict[str, object]]) -> None:
                 "elf_dec",
                 "elf_file_bytes",
             ],
+            lineterminator="\n",
         )
         writer.writeheader()
         writer.writerows(rows)
@@ -253,17 +255,45 @@ def write_svg(path: Path, rows: list[dict[str, object]]) -> None:
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
+def update_markdown_plots(summary_csv: Path, elf_svg: Path) -> None:
+    md_path = summary_csv.with_suffix(".md")
+    if not md_path.exists():
+        return
+    start = "<!-- plots:start -->"
+    end = "<!-- plots:end -->"
+    image_line = f"![Firmware ELF component breakdown]({elf_svg.name})"
+    text = md_path.read_text(encoding="utf-8")
+    if start not in text or end not in text:
+        section = "\n".join([start, "## Generated plots", "", image_line, end, ""])
+        md_path.write_text(text.rstrip() + "\n\n" + section, encoding="utf-8")
+        return
+
+    before, rest = text.split(start, 1)
+    section, after = rest.split(end, 1)
+    lines = section.strip().splitlines()
+    filtered = [
+        line for line in lines
+        if not line.startswith("![Firmware ELF component breakdown]")
+    ]
+    if filtered and filtered[-1] != "":
+        filtered.append("")
+    filtered.append(image_line)
+    new_section = "\n".join([start, *filtered, end])
+    md_path.write_text(before.rstrip() + "\n\n" + new_section + after, encoding="utf-8")
+
+
 def main() -> int:
     args = parse_args()
-    size_csv = args.size_csv or latest_size_csv(args.output_dir)
-    output_tag = infer_output_tag(size_csv, args.output_tag)
-    rows = read_rows(size_csv)
+    summary_csv = args.summary_csv or latest_summary_csv(args.output_dir)
+    output_tag = infer_output_tag(summary_csv, args.output_tag)
+    rows = read_rows(summary_csv)
     if not rows:
-        raise SystemExit(f"No rows found in {size_csv}")
+        raise SystemExit(f"No rows found in {summary_csv}")
     out_csv = args.output_dir / f"stm32n6_elf_component_breakdown_{args.date}{output_tag}.csv"
     out_svg = args.output_dir / f"stm32n6_elf_component_breakdown_{args.date}{output_tag}.svg"
     write_breakdown_csv(out_csv, rows)
     write_svg(out_svg, rows)
+    update_markdown_plots(summary_csv, out_svg)
     print(out_csv)
     print(out_svg)
     return 0
