@@ -10,8 +10,8 @@ Topology: `Input<16> -> Dense<32,Tanh> -> Dense<16,Tanh> -> Dense<1,Linear>`. Da
 
 | Policy | Native FP16 activation | Activation bytes | Required memory | Final MSE | Mean train step ns | Median train step ns |
 |---|---:|---:|---:|---:|---:|---:|
-| FP32 | false | 260 | 17940 | 0.000217621 | 1726.23 | 1713.56 |
-| MixedFP16 | true | 130 | 17812 | 0.000204056 | 1815.32 | 1732.15 |
+| FP32 | false | 260 | 17876 | 0.000217621 | 1557.41 | 1513.89 |
+| MixedFP16 | true | 130 | 17748 | 0.000204056 | 1492.73 | 1492.6 |
 
 Activation memory saving in this topology: 50%.
 
