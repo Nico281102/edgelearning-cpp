@@ -75,6 +75,16 @@ def find_one(path: Path, pattern: str) -> Path | None:
     return matches[0] if matches else None
 
 
+def portable_project_path(path: Path | None, project_root: Path) -> str:
+    if path is None:
+        return ""
+    try:
+        relative = path.resolve().relative_to(project_root.resolve())
+    except ValueError:
+        return path.as_posix()
+    return "${EL_CVSCPP_PROJECT_ROOT}/" + relative.as_posix()
+
+
 def parse_size_file(path: Path | None) -> dict[str, int]:
     if path is None or not path.exists():
         return {"elf_text": 0, "elf_data": 0, "elf_bss": 0, "elf_dec": 0}
@@ -244,10 +254,10 @@ def build_row(project_root: Path,
         "input_features": to_int(begin.get("input_features"), input_features),
         "variant": variant,
         "warmups": to_int(begin.get("warmups"), to_int(combined_row.get("warmups"))),
-        "build_dir": str(build_dir),
-        "serial_path": str(build_dir / "serial.log"),
-        "size_path": str(size_path or ""),
-        "elf_path": str(elf_path),
+        "build_dir": portable_project_path(build_dir, project_root),
+        "serial_path": portable_project_path(build_dir / "serial.log", project_root),
+        "size_path": portable_project_path(size_path, project_root),
+        "elf_path": portable_project_path(elf_path, project_root),
         "elf_file_bytes": elf_path.stat().st_size if elf_path.exists() else 0,
     }
     runtime = parse_variant_log(build_dir / "serial.log", variant)

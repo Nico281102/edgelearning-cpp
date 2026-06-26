@@ -176,6 +176,16 @@ def find_one(path: Path, pattern: str) -> Path | None:
     return matches[0] if matches else None
 
 
+def portable_project_path(path: Path | None, project_root: Path) -> str:
+    if path is None:
+        return ""
+    try:
+        relative = path.resolve().relative_to(project_root.resolve())
+    except ValueError:
+        return path.as_posix()
+    return "${EL_CVSCPP_PROJECT_ROOT}/" + relative.as_posix()
+
+
 def build_row(project_root: Path,
               build_config: str,
               appli_project_name: str,
@@ -283,9 +293,9 @@ def build_row(project_root: Path,
         "compare_m55_ok": all_ok(compare_ok["legacy_c_vs_cpp_m55"]),
         "compare_generic_ok": all_ok(compare_ok["legacy_c_vs_cpp_generic"]),
         "compare_rltools_ok": all_ok(compare_ok["cpp_generic_vs_rltools_generic"]),
-        "log_path": str(serial_path),
-        "size_path": str(size_path or ""),
-        "elf_path": str(elf_path),
+        "log_path": portable_project_path(serial_path, project_root),
+        "size_path": portable_project_path(size_path, project_root),
+        "elf_path": portable_project_path(elf_path, project_root),
         "elf_file_bytes": elf_path.stat().st_size if elf_path.exists() else 0,
     }
     row.update(profile_values("legacy_c", legacy))

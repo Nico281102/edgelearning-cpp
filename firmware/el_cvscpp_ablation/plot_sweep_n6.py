@@ -8,6 +8,7 @@ import csv
 import datetime as dt
 import html
 import math
+import os
 import re
 from pathlib import Path
 
@@ -59,6 +60,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output-dir", type=Path, default=script_dir / "results")
     parser.add_argument("--date", default=today)
     parser.add_argument("--output-tag", default=None)
+    parser.add_argument("--env-file", type=Path, default=script_dir / ".env")
     return parser.parse_args()
 
 
@@ -75,6 +77,19 @@ def latest_summary_csv(results_dir: Path) -> Path:
 def read_csv(path: Path) -> list[dict[str, str]]:
     with path.open("r", encoding="utf-8", newline="") as f:
         return list(csv.DictReader(f))
+
+
+def load_env(path: Path) -> dict[str, str]:
+    values: dict[str, str] = {}
+    if not path.exists():
+        return values
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        values[key.strip()] = value.strip().strip('"').strip("'")
+    return values
 
 
 def to_int(value: object, default: int = 0) -> int:
@@ -108,6 +123,14 @@ def infer_output_tag(summary_csv: Path, explicit_tag: str | None) -> str:
         return explicit_tag
     match = re.search(r"_input(\d+)(?:_|$)", summary_csv.stem)
     return f"_input{match.group(1)}" if match else ""
+
+
+def resolve_report_path(raw_path: str, project_root: Path | None) -> Path:
+    if project_root is not None:
+        for prefix in ("${EL_CVSCPP_PROJECT_ROOT}/", "$EL_CVSCPP_PROJECT_ROOT/"):
+            if raw_path.startswith(prefix):
+                return project_root / raw_path[len(prefix):]
+    return Path(os.path.expandvars(raw_path))
 
 
 def write_speedup_csv(path: Path, rows: list[dict[str, str]]) -> list[dict[str, object]]:
@@ -145,11 +168,12 @@ def write_speedup_csv(path: Path, rows: list[dict[str, str]]) -> list[dict[str, 
     return out
 
 
-def read_trace_rows(summary_rows: list[dict[str, str]]) -> list[dict[str, object]]:
+def read_trace_rows(summary_rows: list[dict[str, str]],
+                    project_root: Path | None) -> list[dict[str, object]]:
     traces: list[dict[str, object]] = []
     seen_logs: set[Path] = set()
     for summary in summary_rows:
-        log_path = Path(summary.get("log_path", ""))
+        log_path = resolve_report_path(summary.get("log_path", ""), project_root)
         if not log_path.exists() or log_path in seen_logs:
             continue
         seen_logs.add(log_path)
@@ -500,6 +524,9 @@ def write_convergence_svg(path: Path, rows: list[dict[str, object]], config: str
 
 def main() -> int:
     args = parse_args()
+    env = load_env(args.env_file)
+    raw_project_root = os.environ.get("EL_CVSCPP_PROJECT_ROOT", env.get("EL_CVSCPP_PROJECT_ROOT", ""))
+    project_root = Path(raw_project_root).expanduser().resolve() if raw_project_root else None
     summary_csv = args.summary_csv or latest_summary_csv(args.output_dir)
     output_tag = infer_output_tag(summary_csv, args.output_tag)
     summary_rows = read_csv(summary_csv)
@@ -516,7 +543,7 @@ def main() -> int:
     write_speedup_svg(speedup_svg, speedup_rows)
     runtime_breakdown_rows = write_runtime_breakdown_csv(runtime_breakdown_csv, summary_rows)
     write_runtime_breakdown_svg(runtime_breakdown_svg, runtime_breakdown_rows)
-    trace_rows = read_trace_rows(summary_rows)
+    trace_rows = read_trace_rows(summary_rows, project_root)
     write_convergence_csv(convergence_csv, trace_rows)
     write_convergence_svg(convergence_svg, trace_rows, args.convergence_config)
     update_markdown_plots(summary_csv, speedup_svg, convergence_svg, runtime_breakdown_svg)

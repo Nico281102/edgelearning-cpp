@@ -43,7 +43,7 @@ PYTHON=${EL_CVSCPP_PYTHON:-python3}
 APPLI_PROJECT_NAME=${EL_CVSCPP_APPLI_PROJECT_NAME:-EL_C_vsCpp_Appli}
 FSBL_PROJECT_NAME=${EL_CVSCPP_FSBL_PROJECT_NAME:-EL_C_vsCpp_FSBL}
 BUILD_CONFIG=${EL_CVSCPP_BUILD_CONFIG:-EL_C_vsCpp_Ablation_DEBUG}
-SERIAL_PORT=${EL_CVSCPP_SERIAL_PORT:-/dev/tty.usbmodem1102}
+SERIAL_PORT=${EL_CVSCPP_SERIAL_PORT:-}
 SERIAL_BAUDRATE=${EL_CVSCPP_SERIAL_BAUDRATE:-12000000}
 SERIAL_TIMEOUT=${EL_CVSCPP_SERIAL_TIMEOUT:-120}
 GDB_PORT=${EL_CVSCPP_GDB_PORT:-61234}
@@ -79,7 +79,7 @@ Options:
                           Default: $VARIANT
   --h1 N                  First hidden width. Default: 8.
   --h2 N                  Second hidden width. Default: 8.
-  --serial-port PATH      Default: $SERIAL_PORT
+  --serial-port PATH      UART device used for capture.
   --serial-baudrate N     Default: $SERIAL_BAUDRATE
   --serial-timeout SEC    Default: $SERIAL_TIMEOUT
   --project-root PATH     CubeIDE EL_C_vsCpp project root.
@@ -204,6 +204,9 @@ CAPTURE_LOG="$APP_BUILD_DIR/serial.log"
 [ -f "$EXTERNAL_LOADER" ] || fail "External loader not found: $EXTERNAL_LOADER"
 [ -x "$PYTHON" ] || fail "Python not executable: $PYTHON"
 [ "$SKIP_FSBL" = "1" ] || [ -f "$FSBL_ELF" ] || fail "FSBL ELF not found: $FSBL_ELF"
+if [ "$SKIP_CAPTURE" != "1" ]; then
+  [ -n "$SERIAL_PORT" ] || fail "EL_CVSCPP_SERIAL_PORT is required in $ENV_FILE or via --serial-port"
+fi
 
 cleanup() {
   if [ -n "$GDBSERVER_PID" ] && kill -0 "$GDBSERVER_PID" 2>/dev/null; then

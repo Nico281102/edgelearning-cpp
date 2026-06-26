@@ -29,7 +29,7 @@ cp firmware/el_cvscpp_ablation/.env.example firmware/el_cvscpp_ablation/.env
 
 Edit `firmware/el_cvscpp_ablation/.env` with the local paths. The file is
 ignored by git. Use `ls /dev/tty.usbmodem* /dev/cu.usbmodem*` to identify the
-ST-LINK UART if the default serial port is different.
+ST-LINK UART and put it in `EL_CVSCPP_SERIAL_PORT`.
 
 ## Run One Case
 
