@@ -137,7 +137,7 @@ def write_reports(results: list[SizeResult], result_dir: Path, size_tool: str) -
     md_path = result_dir / "m55_regression_elf_size.md"
 
     with csv_path.open("w", newline="") as f:
-        writer = csv.writer(f)
+        writer = csv.writer(f, lineterminator="\n")
         writer.writerow(
             [
                 "target",

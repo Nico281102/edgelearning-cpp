@@ -283,7 +283,7 @@ def write_reports(results: list[SizeResult], result_dir: Path) -> None:
     md_path = result_dir / "code_size_report.md"
 
     with csv_path.open("w", newline="") as f:
-        writer = csv.writer(f)
+        writer = csv.writer(f, lineterminator="\n")
         writer.writerow([
             "implementation",
             "commit",
