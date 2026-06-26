@@ -6,9 +6,9 @@ This C++20 version is a new implementation inspired by that C design, built to m
 
 The framework is sample-wise by design: it processes one sample at a time, accumulates gradients, and applies an optimizer step according to the configured batch policy. This keeps activation memory bounded by one sample rather than by the whole batch, following the same broad motivation as memory-efficient large-batch and edge-training work such as Piao et al. (2023) and Re-Forward-style memory-efficient backpropagation for edge reinforcement learning.
 
-The v0.1 implementation fully supports Dense layers, direct Conv2D layers, vector-shaped custom layers, custom activations, custom losses, custom initializers, and model-level precision policies on the generic scalar backend. It does not include PPO, reinforcement learning applications, CarRacing, Pendulum, STM32N6 application code, STAI integration, host-MCU protocols, private datasets, generated models, or post-baseline optimized kernels. The old C baseline is referenced for methodology and regression measurements only; its source is not vendored in this repository.
+The v0.1 implementation fully supports Dense layers, direct Conv2D layers, Flatten, shape-aware custom layers, custom activations, custom losses, custom initializers, and model-level precision policies on the generic scalar backend. It does not include PPO, reinforcement learning applications, CarRacing, Pendulum, STM32N6 application code, STAI integration, host-MCU protocols, private datasets, generated models, or post-baseline optimized kernels. The old C baseline is referenced for methodology and regression measurements only; its source is not vendored in this repository.
 
-Current custom-layer limitations and future work are documented in `docs/limitations.md`. In short, v0.1 custom layers are vector-shaped; future shape-rich layers should carry compile-time tensor shape/layout metadata for normalization, recurrent layers, gates, GRU, attention, and richer backend dispatch.
+Current custom-layer limitations and future work are documented in `docs/limitations.md`. In short, layer inputs and outputs now carry compile-time `TensorSpec` metadata, while graph-style multi-input layers, stateful recurrent layers, and richer backend dispatch remain future work.
 
 ## Why C++
 
@@ -18,7 +18,7 @@ The main reason is genericity. Model topology, layer shapes, activation policies
 
 The second reason is low runtime overhead. Most structural decisions are resolved at compile time: layer order, feature counts, parameter offsets, cache size, workspace size, backend policy, and precision types. The runtime path does not need virtual dispatch, heap allocation, runtime shape descriptors, or a dynamic graph interpreter. The compiler sees the full model type and can inline and simplify aggressively.
 
-The third reason is API quality. The public API can stay compact and expressive while still being strict. A user writes `edge::Model<edge::Input<8>, edge::Dense<32, edge::ReLU>, edge::Dense<1>>`, and the compiler rejects inconsistent shapes, insufficient static arenas, or missing custom-layer contracts. Typed views such as `TensorView<const T, N>` make read-only and mutable buffers explicit without falling back to `void* + size_t`.
+The third reason is API quality. The public API can stay compact and expressive while still being strict. A user writes `edge::Model<edge::InputVector<8>, edge::Dense<32, edge::ReLU>, edge::Dense<1>>`, and the compiler rejects inconsistent shapes, insufficient static arenas, or missing custom-layer contracts. Typed views such as `TensorView<const T, N>` make read-only and mutable buffers explicit without falling back to `void* + size_t`.
 
 The fourth reason is performance. C++ does not automatically make the code faster than C, and claims must be measured. The point is that template-based static polymorphism can produce C-like code with little abstraction cost, while still allowing specialization by backend and type. In some cases it can be faster than a more runtime-driven C design because the compiler sees more constants and can remove dispatch, fold offsets, inline activation policies, and specialize hot paths. The benchmark methodology is kept separate from the old C source; only measurements and methodology should be published here.
 
@@ -40,7 +40,7 @@ The CMake target `edge::edgelearning` is header-only. For GNU/Clang builds, CMak
 #include <edge/edge.hpp>
 
 using Model = edge::Model<
-    edge::Input<8>,
+    edge::InputVector<8>,
     edge::Dense<32, edge::ReLU>,
     edge::Dense<16, edge::ReLU>,
     edge::Dense<1>>;
@@ -63,7 +63,7 @@ The input dimension of each Dense layer is inferred from the previous layer. Bac
 ```cpp
 using M = edge::Model<
     edge::Backend::Generic,
-    edge::Input<8>,
+    edge::InputVector<8>,
     edge::Dense<32, edge::ReLU>,
     edge::Dense<1>>;
 ```
@@ -84,7 +84,7 @@ struct DoublePrecision {
 
 using DoubleModel = edge::Model<
     DoublePrecision,
-    edge::Input<8>,
+    edge::InputVector<8>,
     edge::Dense<16, edge::ReLU>,
     edge::Dense<1>>;
 ```
@@ -95,7 +95,7 @@ The same syntax can be combined with an explicit backend:
 using M = edge::Model<
     edge::Backend::Generic,
     DoublePrecision,
-    edge::Input<8>,
+    edge::InputVector<8>,
     edge::Dense<1>>;
 ```
 
@@ -107,9 +107,10 @@ See `examples/custom_precision.cpp` for a compilable example.
 |---|---:|---|
 | Dense layer | Yes | Forward, backward, gradient accumulation, initialization, serialization |
 | Conv2D layer | Yes | Direct CHW convolution, stride/padding, forward/backward, generic CPU reference |
+| Flatten layer | Yes | Converts any compile-time tensor spec into a flat vector spec |
 | Dropout layer | No | Future layer type |
 | LayerNorm layer | No | Future layer type |
-| Custom layer | Yes | Vector-shaped layers with compile-time feature, parameter, cache, and workspace counts |
+| Custom layer | Yes | Shape-aware `Instance<InputSpec>` layers with compile-time output spec, parameter, cache, and workspace counts |
 | Custom activation | Yes | Generic backend supports user activation policies |
 | Custom loss | Yes | Loss computes `value` and `dLoss/dOutput` through the training loss API |
 | Custom initializer | Yes | User initializers can fill Dense weights with the model parameter type |
@@ -237,15 +238,20 @@ Built-ins are `Linear`, `ReLU`, `Tanh`, and `Sigmoid`.
 
 ## Custom Layer
 
-A custom vector layer provides a nested `Instance<InFeatures>` with compile-time shape and memory counts, plus typed `initialize`, `forward`, and `backward` functions:
+A custom layer provides a nested `Instance<InputSpec>` with compile-time input/output specs and memory counts, plus typed `initialize`, `forward`, and `backward` functions:
 
 ```cpp
 struct TrainableScale {
-    template<std::size_t InFeatures>
+    template<typename InputSpec>
     struct Instance {
-        static constexpr std::size_t in_features = InFeatures;
-        static constexpr std::size_t out_features = InFeatures;
-        static constexpr std::size_t parameter_count = InFeatures;
+        static_assert(InputSpec::layout == edge::Layout::Flat);
+
+        using input_spec = InputSpec;
+        using output_spec = edge::Vector<InputSpec::elements>;
+
+        static constexpr std::size_t in_features = input_spec::elements;
+        static constexpr std::size_t out_features = output_spec::elements;
+        static constexpr std::size_t parameter_count = in_features;
         static constexpr std::size_t cache_count = 0;
         static constexpr std::size_t workspace_count = 0;
 
@@ -274,7 +280,7 @@ struct TrainableScale {
     };
 };
 
-using M = edge::Model<edge::Input<4>, TrainableScale, edge::Dense<1>>;
+using M = edge::Model<edge::InputVector<4>, TrainableScale, edge::Dense<1>>;
 ```
 
 `TensorView` is passed by value because it is a small typed view, similar to `std::span<T, N>`. Data that the layer must not modify is exposed through `TensorView<const T, N>`. `PropagateInputGradient` tells the layer whether it must write `dLoss/dInput`; the model sets it to `false` for the first layer during ordinary training. Backend code can still use `view.data()` when a contiguous pointer is needed for an optimized kernel. See `examples/custom_layer.cpp` for a full implementation.
@@ -287,14 +293,15 @@ The layout is channel-first flattened `CHW`. Parameters are laid out as filters 
 
 ```cpp
 using MnistShapeModel = edge::Model<
-    edge::Input<28 * 28>,
+    edge::Input<edge::CHW<1, 28, 28>>,
     edge::Conv2D<
-        1, 28, 28,     // input C,H,W
-        4, 3, 3,       // output channels, kernel H,W
+        4,             // output channels
+        edge::Kernel<3, 3>,
         edge::ReLU,
         edge::DefaultInitializer,
-        1, 1,          // stride H,W
-        1, 1>,         // padding H,W
+        edge::Stride<1, 1>,
+        edge::Padding<1, 1>>,
+    edge::Flatten,
     edge::Dense<10>>;
 ```
 

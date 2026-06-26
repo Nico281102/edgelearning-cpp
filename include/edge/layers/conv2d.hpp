@@ -1,66 +1,90 @@
 #pragma once
 
 #include <cstddef>
+#include <type_traits>
 
 #include <edge/activations.hpp>
+#include <edge/backend.hpp>
 #include <edge/initializers.hpp>
 #include <edge/tensor.hpp>
+#include <edge/tensor_spec.hpp>
 
 namespace edge {
 
+template<std::size_t Height, std::size_t Width = Height>
+struct Kernel {
+    static_assert(Height > 0, "Kernel height must be greater than zero");
+    static_assert(Width > 0, "Kernel width must be greater than zero");
+
+    static constexpr std::size_t height = Height;
+    static constexpr std::size_t width = Width;
+};
+
+template<std::size_t Height, std::size_t Width = Height>
+struct Stride {
+    static_assert(Height > 0, "Stride height must be greater than zero");
+    static_assert(Width > 0, "Stride width must be greater than zero");
+
+    static constexpr std::size_t height = Height;
+    static constexpr std::size_t width = Width;
+};
+
+template<std::size_t Height, std::size_t Width = Height>
+struct Padding {
+    static constexpr std::size_t height = Height;
+    static constexpr std::size_t width = Width;
+};
+
 template<
-    std::size_t InChannels,
-    std::size_t InHeight,
-    std::size_t InWidth,
     std::size_t OutChannels,
-    std::size_t KernelHeight,
-    std::size_t KernelWidth,
+    typename KernelSpec,
     typename Activation = Linear,
     typename Initializer = DefaultInitializer,
-    std::size_t StrideHeight = 1,
-    std::size_t StrideWidth = StrideHeight,
-    std::size_t PaddingHeight = 0,
-    std::size_t PaddingWidth = PaddingHeight>
+    typename StrideSpec = Stride<1>,
+    typename PaddingSpec = Padding<0>>
 struct Conv2D {
-    static_assert(InChannels > 0, "Conv2D input channel count must be greater than zero");
-    static_assert(InHeight > 0, "Conv2D input height must be greater than zero");
-    static_assert(InWidth > 0, "Conv2D input width must be greater than zero");
     static_assert(OutChannels > 0, "Conv2D output channel count must be greater than zero");
-    static_assert(KernelHeight > 0, "Conv2D kernel height must be greater than zero");
-    static_assert(KernelWidth > 0, "Conv2D kernel width must be greater than zero");
-    static_assert(StrideHeight > 0, "Conv2D stride height must be greater than zero");
-    static_assert(StrideWidth > 0, "Conv2D stride width must be greater than zero");
-    static_assert(InHeight + 2U * PaddingHeight >= KernelHeight,
-                  "Conv2D kernel height exceeds padded input height");
-    static_assert(InWidth + 2U * PaddingWidth >= KernelWidth,
-                  "Conv2D kernel width exceeds padded input width");
 
-    static constexpr std::size_t in_channels = InChannels;
-    static constexpr std::size_t in_height = InHeight;
-    static constexpr std::size_t in_width = InWidth;
     static constexpr std::size_t out_channels = OutChannels;
-    static constexpr std::size_t kernel_height = KernelHeight;
-    static constexpr std::size_t kernel_width = KernelWidth;
-    static constexpr std::size_t stride_height = StrideHeight;
-    static constexpr std::size_t stride_width = StrideWidth;
-    static constexpr std::size_t padding_height = PaddingHeight;
-    static constexpr std::size_t padding_width = PaddingWidth;
-    static constexpr std::size_t out_height =
-        ((InHeight + 2U * PaddingHeight - KernelHeight) / StrideHeight) + 1U;
-    static constexpr std::size_t out_width =
-        ((InWidth + 2U * PaddingWidth - KernelWidth) / StrideWidth) + 1U;
+    static constexpr std::size_t kernel_height = KernelSpec::height;
+    static constexpr std::size_t kernel_width = KernelSpec::width;
+    static constexpr std::size_t stride_height = StrideSpec::height;
+    static constexpr std::size_t stride_width = StrideSpec::width;
+    static constexpr std::size_t padding_height = PaddingSpec::height;
+    static constexpr std::size_t padding_width = PaddingSpec::width;
     using activation = Activation;
     using initializer = Initializer;
 
-    template<std::size_t InFeatures>
+    template<typename InputSpec>
     struct Instance {
-        static_assert(InFeatures == InChannels * InHeight * InWidth,
-                      "Conv2D input feature count must match InChannels * InHeight * InWidth");
+        static_assert(InputSpec::layout == Layout::CHW,
+                      "Conv2D requires a CHW input spec");
+        static_assert(InputSpec::rank == 3U,
+                      "Conv2D CHW input spec must have rank 3");
 
-        static constexpr std::size_t in_features = InFeatures;
-        static constexpr std::size_t out_features = OutChannels * out_height * out_width;
+        using input_spec = InputSpec;
+
+        static constexpr std::size_t in_channels =
+            shape_dim_v<0U, typename input_spec::shape>;
+        static constexpr std::size_t in_height =
+            shape_dim_v<1U, typename input_spec::shape>;
+        static constexpr std::size_t in_width =
+            shape_dim_v<2U, typename input_spec::shape>;
+        static_assert(in_height + 2U * padding_height >= kernel_height,
+                      "Conv2D kernel height exceeds padded input height");
+        static_assert(in_width + 2U * padding_width >= kernel_width,
+                      "Conv2D kernel width exceeds padded input width");
+
+        static constexpr std::size_t out_height =
+            ((in_height + 2U * padding_height - kernel_height) / stride_height) + 1U;
+        static constexpr std::size_t out_width =
+            ((in_width + 2U * padding_width - kernel_width) / stride_width) + 1U;
+        using output_spec = CHW<OutChannels, out_height, out_width>;
+
+        static constexpr std::size_t in_features = input_spec::elements;
+        static constexpr std::size_t out_features = output_spec::elements;
         static constexpr std::size_t filter_count =
-            OutChannels * InChannels * KernelHeight * KernelWidth;
+            OutChannels * in_channels * kernel_height * kernel_width;
         static constexpr std::size_t bias_count = OutChannels;
         static constexpr std::size_t parameter_count = filter_count + bias_count;
         static constexpr bool stores_preactivation =
@@ -78,7 +102,7 @@ struct Conv2D {
             ParameterT* filters = params.data();
             ParameterT* bias = filters + filter_count;
             Initializer::template fill<ParameterT,
-                                       InChannels * KernelHeight * KernelWidth,
+                                       in_channels * kernel_height * kernel_width,
                                        OutChannels>(filters, rng, config);
             for (std::size_t i = 0; i < bias_count; ++i) {
                 bias[i] = static_cast<ParameterT>(config.bias);
@@ -92,6 +116,13 @@ struct Conv2D {
             TensorView<const typename Types::ParameterT, parameter_count> params,
             TensorView<typename Types::ActivationT, cache_count> cache,
             TensorView<typename Types::AccumulatorT, workspace_count>) noexcept {
+            if constexpr (!std::is_same_v<typename Types::BackendT, Backend::Generic> &&
+                          !backend_falls_back_to_generic_v<typename Types::BackendT>) {
+                static_assert(detail::always_false_v<typename Types::BackendT>,
+                              "Selected backend does not provide Conv2D forward and generic "
+                              "fallback is disabled");
+            }
+
             using ActivationT = typename Types::ActivationT;
             using AccumulatorT = typename Types::AccumulatorT;
             const auto* filters = params.data();
@@ -101,9 +132,9 @@ struct Conv2D {
                 for (std::size_t oh = 0; oh < out_height; ++oh) {
                     for (std::size_t ow = 0; ow < out_width; ++ow) {
                         AccumulatorT z = static_cast<AccumulatorT>(bias[oc]);
-                        for (std::size_t ic = 0; ic < InChannels; ++ic) {
-                            for (std::size_t kh = 0; kh < KernelHeight; ++kh) {
-                                for (std::size_t kw = 0; kw < KernelWidth; ++kw) {
+                        for (std::size_t ic = 0; ic < in_channels; ++ic) {
+                            for (std::size_t kh = 0; kh < kernel_height; ++kh) {
+                                for (std::size_t kw = 0; kw < kernel_width; ++kw) {
                                     const auto ih = input_row(oh, kh);
                                     const auto iw = input_col(ow, kw);
                                     if (!is_valid_input(ih, iw)) {
@@ -140,6 +171,13 @@ struct Conv2D {
             TensorView<typename Types::GradientT, parameter_count> gradients,
             TensorView<const typename Types::ActivationT, cache_count> cache,
             TensorView<typename Types::AccumulatorT, workspace_count>) noexcept {
+            if constexpr (!std::is_same_v<typename Types::BackendT, Backend::Generic> &&
+                          !backend_falls_back_to_generic_v<typename Types::BackendT>) {
+                static_assert(detail::always_false_v<typename Types::BackendT>,
+                              "Selected backend does not provide Conv2D backward and generic "
+                              "fallback is disabled");
+            }
+
             using AccumulatorT = typename Types::AccumulatorT;
             (void)params;
             auto* grad_filters = gradients.data();
@@ -165,9 +203,9 @@ struct Conv2D {
                         grad_bias[oc] = static_cast<typename Types::GradientT>(
                             static_cast<AccumulatorT>(grad_bias[oc]) + delta);
 
-                        for (std::size_t ic = 0; ic < InChannels; ++ic) {
-                            for (std::size_t kh = 0; kh < KernelHeight; ++kh) {
-                                for (std::size_t kw = 0; kw < KernelWidth; ++kw) {
+                        for (std::size_t ic = 0; ic < in_channels; ++ic) {
+                            for (std::size_t kh = 0; kh < kernel_height; ++kh) {
+                                for (std::size_t kw = 0; kw < kernel_width; ++kw) {
                                     const auto ih = input_row(oh, kh);
                                     const auto iw = input_col(ow, kw);
                                     if (!is_valid_input(ih, iw)) {
@@ -196,27 +234,27 @@ struct Conv2D {
     private:
         static constexpr std::ptrdiff_t input_row(std::size_t out_row,
                                                   std::size_t kernel_row) noexcept {
-            return static_cast<std::ptrdiff_t>(out_row * StrideHeight + kernel_row) -
-                   static_cast<std::ptrdiff_t>(PaddingHeight);
+            return static_cast<std::ptrdiff_t>(out_row * stride_height + kernel_row) -
+                   static_cast<std::ptrdiff_t>(padding_height);
         }
 
         static constexpr std::ptrdiff_t input_col(std::size_t out_col,
                                                   std::size_t kernel_col) noexcept {
-            return static_cast<std::ptrdiff_t>(out_col * StrideWidth + kernel_col) -
-                   static_cast<std::ptrdiff_t>(PaddingWidth);
+            return static_cast<std::ptrdiff_t>(out_col * stride_width + kernel_col) -
+                   static_cast<std::ptrdiff_t>(padding_width);
         }
 
         static constexpr bool is_valid_input(std::ptrdiff_t row,
                                              std::ptrdiff_t col) noexcept {
             return row >= 0 && col >= 0 &&
-                   row < static_cast<std::ptrdiff_t>(InHeight) &&
-                   col < static_cast<std::ptrdiff_t>(InWidth);
+                   row < static_cast<std::ptrdiff_t>(in_height) &&
+                   col < static_cast<std::ptrdiff_t>(in_width);
         }
 
         static constexpr std::size_t input_index(std::size_t channel,
                                                  std::size_t row,
                                                  std::size_t col) noexcept {
-            return (channel * InHeight + row) * InWidth + col;
+            return (channel * in_height + row) * in_width + col;
         }
 
         static constexpr std::size_t output_index(std::size_t channel,
@@ -229,8 +267,8 @@ struct Conv2D {
                                                   std::size_t in_channel,
                                                   std::size_t kernel_row,
                                                   std::size_t kernel_col) noexcept {
-            return ((out_channel * InChannels + in_channel) * KernelHeight + kernel_row) *
-                       KernelWidth +
+            return ((out_channel * in_channels + in_channel) * kernel_height + kernel_row) *
+                       kernel_width +
                    kernel_col;
         }
     };

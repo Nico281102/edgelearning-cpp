@@ -8,11 +8,17 @@
 namespace {
 
 struct TrainableScale {
-    template<std::size_t InFeatures>
+    template<typename InputSpec>
     struct Instance {
-        static constexpr std::size_t in_features = InFeatures;
-        static constexpr std::size_t out_features = InFeatures;
-        static constexpr std::size_t parameter_count = InFeatures;
+        static_assert(InputSpec::layout == edge::Layout::Flat,
+                      "TrainableScale expects a flat tensor");
+
+        using input_spec = InputSpec;
+        using output_spec = edge::Vector<InputSpec::elements>;
+
+        static constexpr std::size_t in_features = input_spec::elements;
+        static constexpr std::size_t out_features = output_spec::elements;
+        static constexpr std::size_t parameter_count = in_features;
         static constexpr std::size_t cache_count = 0;
         static constexpr std::size_t workspace_count = 0;
 
@@ -67,7 +73,7 @@ struct TrainableScale {
 
 int main() {
     using Model = edge::Model<
-        edge::Input<2>,
+        edge::InputVector<2>,
         TrainableScale,
         edge::Dense<1, edge::Linear>>;
 

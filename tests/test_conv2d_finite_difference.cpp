@@ -8,8 +8,9 @@
 namespace {
 
 using Model = edge::Model<
-    edge::Input<9>,
-    edge::Conv2D<1, 3, 3, 2, 2, 2, edge::Tanh>,
+    edge::Input<edge::CHW<1, 3, 3>>,
+    edge::Conv2D<2, edge::Kernel<2, 2>, edge::Tanh>,
+    edge::Flatten,
     edge::Dense<1, edge::Linear>>;
 
 float loss_value(Model& model,

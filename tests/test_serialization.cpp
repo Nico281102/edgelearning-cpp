@@ -5,7 +5,7 @@
 #include "test_harness.hpp"
 
 int main() {
-    using Model = edge::Model<edge::Input<2>, edge::Dense<2>, edge::Dense<1>>;
+    using Model = edge::Model<edge::InputVector<2>, edge::Dense<2>, edge::Dense<1>>;
     Model a;
     Model b;
     std::array<float, Model::parameter_count> params{};

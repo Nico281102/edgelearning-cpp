@@ -7,7 +7,7 @@
 namespace {
 
 using Model = edge::Model<
-    edge::Input<2>,
+    edge::InputVector<2>,
     edge::Dense<2, edge::Tanh>,
     edge::Dense<1, edge::Linear>>;
 

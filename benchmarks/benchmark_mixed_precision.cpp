@@ -27,14 +27,14 @@ constexpr std::size_t kRepeats = 5;
 
 using FP32Model = edge::Model<
     edge::precision::FP32,
-    edge::Input<kInputSize>,
+    edge::InputVector<kInputSize>,
     edge::Dense<32, edge::Tanh>,
     edge::Dense<16, edge::Tanh>,
     edge::Dense<1>>;
 
 using MixedModel = edge::Model<
     edge::precision::MixedFP16,
-    edge::Input<kInputSize>,
+    edge::InputVector<kInputSize>,
     edge::Dense<32, edge::Tanh>,
     edge::Dense<16, edge::Tanh>,
     edge::Dense<1>>;
@@ -285,7 +285,7 @@ void write_markdown(const std::filesystem::path& path,
            "spirit to FP16 mixed precision training described by Micikevicius et al.; this "
            "small host benchmark does not use dynamic loss scaling because gradients and "
            "parameters remain FP32.\n\n";
-    out << "Topology: `Input<16> -> Dense<32,Tanh> -> Dense<16,Tanh> -> Dense<1,Linear>`. "
+    out << "Topology: `InputVector<16> -> Dense<32,Tanh> -> Dense<16,Tanh> -> Dense<1,Linear>`. "
         << "Dataset: deterministic synthetic regression, " << kSamples << " samples, "
         << kEpochs << " epochs, Adam, batch size 1. Timing reports mean/median/min "
         << "train-step nanoseconds over " << kRepeats << " fresh training runs.\n\n";

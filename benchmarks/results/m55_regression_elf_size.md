@@ -8,35 +8,9 @@ Legacy-C targets are split into `direct_backend` (C++ model calling the legacy C
 
 | Target | Case | Text | RoData | Data | BSS | Other | Total sections | File bytes |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| test_legacy_c_generic_direct_backend_regression_128x64 | 128x64 | 25200 | 1719 | 128 | 406884 | 848 | 434779 | 54584 |
-| test_legacy_c_generic_generic_cpp_regression_128x64 | 128x64 | 26720 | 1757 | 128 | 406756 | 848 | 436209 | 71936 |
-| test_legacy_c_generic_native_m55_regression_128x64 | 128x64 | 26820 | 1753 | 128 | 406884 | 848 | 436433 | 71888 |
-| test_m55_regression_128x64 | 128x64 | 9584 | 1208 | 80 | 405264 | 96 | 416232 | 36440 |
-| test_legacy_c_generic_direct_backend_regression_16x16 | 16x16 | 24992 | 1718 | 128 | 28900 | 848 | 56586 | 54568 |
-| test_legacy_c_generic_generic_cpp_regression_16x16 | 16x16 | 26532 | 1756 | 128 | 28772 | 848 | 58036 | 56176 |
-| test_legacy_c_generic_native_m55_regression_16x16 | 16x16 | 26620 | 1752 | 128 | 28900 | 848 | 58248 | 56160 |
-| test_m55_regression_16x16 | 16x16 | 8120 | 1207 | 80 | 27408 | 96 | 36911 | 38024 |
-| test_legacy_c_generic_direct_backend_regression_16x8 | 16x8 | 25048 | 1717 | 128 | 24196 | 848 | 51937 | 54584 |
-| test_legacy_c_generic_generic_cpp_regression_16x8 | 16x8 | 26872 | 1755 | 128 | 24068 | 848 | 53671 | 72896 |
-| test_legacy_c_generic_native_m55_regression_16x8 | 16x8 | 26972 | 1751 | 128 | 24196 | 848 | 53895 | 72880 |
-| test_m55_regression_16x8 | 16x8 | 9020 | 1206 | 80 | 22672 | 96 | 33074 | 38440 |
-| test_legacy_c_generic_direct_backend_regression_32x16 | 32x16 | 25092 | 1718 | 128 | 54180 | 848 | 81966 | 54584 |
-| test_legacy_c_generic_generic_cpp_regression_32x16 | 32x16 | 26496 | 1756 | 128 | 54052 | 848 | 83280 | 56112 |
-| test_legacy_c_generic_native_m55_regression_32x16 | 32x16 | 26580 | 1752 | 128 | 54180 | 848 | 83488 | 56096 |
-| test_m55_regression_32x16 | 32x16 | 8560 | 1207 | 80 | 52752 | 96 | 62695 | 37896 |
-| test_legacy_c_generic_direct_backend_regression_32x32 | 32x32 | 25076 | 1718 | 128 | 71780 | 848 | 99550 | 54568 |
-| test_legacy_c_generic_generic_cpp_regression_32x32 | 32x32 | 26380 | 1756 | 128 | 71652 | 848 | 100764 | 55328 |
-| test_legacy_c_generic_native_m55_regression_32x32 | 32x32 | 26464 | 1752 | 128 | 71780 | 848 | 100972 | 55328 |
-| test_m55_regression_32x32 | 32x32 | 9048 | 1207 | 80 | 70416 | 96 | 80847 | 36328 |
-| test_legacy_c_generic_direct_backend_regression_32x64 | 32x64 | 25088 | 1718 | 128 | 107236 | 848 | 135018 | 54584 |
-| test_legacy_c_generic_generic_cpp_regression_32x64 | 32x64 | 26552 | 1756 | 128 | 107108 | 848 | 136392 | 55696 |
-| test_legacy_c_generic_native_m55_regression_32x64 | 32x64 | 26636 | 1752 | 128 | 107236 | 848 | 136600 | 55680 |
-| test_m55_regression_32x64 | 32x64 | 9208 | 1207 | 80 | 105744 | 96 | 116335 | 37032 |
-| test_legacy_c_generic_direct_backend_regression_64x64 | 64x64 | 25156 | 1718 | 128 | 206948 | 848 | 234798 | 54568 |
-| test_legacy_c_generic_generic_cpp_regression_64x64 | 64x64 | 26808 | 1756 | 128 | 206820 | 848 | 236360 | 71904 |
-| test_legacy_c_generic_native_m55_regression_64x64 | 64x64 | 26904 | 1752 | 128 | 206948 | 848 | 236580 | 71856 |
-| test_m55_regression_64x64 | 64x64 | 9692 | 1207 | 80 | 205584 | 96 | 216659 | 36392 |
-| test_legacy_c_generic_direct_backend_regression_8x8 | 8x8 | 25500 | 1716 | 128 | 13604 | 848 | 41796 | 54560 |
-| test_legacy_c_generic_generic_cpp_regression_8x8 | 8x8 | 27824 | 1754 | 128 | 13476 | 848 | 44030 | 72432 |
-| test_legacy_c_generic_native_m55_regression_8x8 | 8x8 | 27916 | 1750 | 128 | 13604 | 848 | 44246 | 72416 |
-| test_m55_regression_8x8 | 8x8 | 9816 | 1205 | 80 | 12048 | 96 | 23245 | 37528 |
+| test_m55_regression_16x16 | 16x16 | 10300 | 1207 | 80 | 27408 | 96 | 39091 | 38520 |
+| test_m55_regression_16x8 | 16x8 | 11196 | 1206 | 80 | 22672 | 96 | 35250 | 39016 |
+| test_m55_regression_32x16 | 32x16 | 10260 | 1207 | 80 | 52752 | 96 | 64395 | 38376 |
+| test_m55_regression_32x32 | 32x32 | 10056 | 1207 | 80 | 70416 | 96 | 81855 | 36632 |
+| test_m55_regression_64x32 | 64x32 | 10628 | 1207 | 80 | 137488 | 96 | 149499 | 36728 |
+| test_m55_regression_8x8 | 8x8 | 12240 | 1205 | 80 | 12048 | 96 | 25669 | 54520 |

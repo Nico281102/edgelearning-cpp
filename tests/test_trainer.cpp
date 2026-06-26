@@ -6,7 +6,7 @@
 
 namespace {
 
-using Model = edge::Model<edge::Input<1>, edge::Dense<1, edge::Linear>>;
+using Model = edge::Model<edge::InputVector<1>, edge::Dense<1, edge::Linear>>;
 
 float train_two_samples(edge::GradientReduction reduction, std::size_t batch_size) {
     edge::Trainer<Model, edge::MSE, edge::SGD> trainer(

@@ -100,15 +100,15 @@ int main() {
     constexpr std::size_t iterations = 1000;
     std::cout << "case,input,output,param_bytes,grad_bytes,opt_bytes,act_bytes,workspace_bytes,total_bytes,"
                  "forward_ns,backward_ns,train_step_ns,optimizer_ns,zero_grad_ns\n";
-    run_case<edge::Model<edge::Input<8>, edge::Dense<16, edge::ReLU>, edge::Dense<1>>>(
+    run_case<edge::Model<edge::InputVector<8>, edge::Dense<16, edge::ReLU>, edge::Dense<1>>>(
         "8-16-1", iterations);
     run_case<edge::Model<
-        edge::Input<8>, edge::Dense<32, edge::ReLU>, edge::Dense<16, edge::ReLU>, edge::Dense<1>>>(
+        edge::InputVector<8>, edge::Dense<32, edge::ReLU>, edge::Dense<16, edge::ReLU>, edge::Dense<1>>>(
         "8-32-16-1", iterations);
     run_case<edge::Model<
-        edge::Input<32>, edge::Dense<64, edge::ReLU>, edge::Dense<32, edge::ReLU>, edge::Dense<4>>>(
+        edge::InputVector<32>, edge::Dense<64, edge::ReLU>, edge::Dense<32, edge::ReLU>, edge::Dense<4>>>(
         "32-64-32-4", iterations);
     run_case<edge::Model<
-        edge::Input<128>, edge::Dense<64, edge::ReLU>, edge::Dense<32, edge::ReLU>, edge::Dense<3>>>(
+        edge::InputVector<128>, edge::Dense<64, edge::ReLU>, edge::Dense<32, edge::ReLU>, edge::Dense<3>>>(
         "128-64-32-3", iterations);
 }

@@ -118,14 +118,14 @@ constexpr const char* kVariantName = "rltools_generic";
 
 using GenericModel = edge::Model<
     edge::Backend::Generic,
-    edge::Input<kInputFeatures>,
+    edge::InputVector<kInputFeatures>,
     edge::Dense<kHidden1, edge::ReLU>,
     edge::Dense<kHidden2, edge::ReLU>,
     edge::Dense<kOutputFeatures, edge::Linear>>;
 
 using M55Model = edge::Model<
     edge::Backend::M55,
-    edge::Input<kInputFeatures>,
+    edge::InputVector<kInputFeatures>,
     edge::Dense<kHidden1, edge::ReLU>,
     edge::Dense<kHidden2, edge::ReLU>,
     edge::Dense<kOutputFeatures, edge::Linear>>;
@@ -135,9 +135,15 @@ struct LegacyCReLU {};
 
 template<std::size_t OutFeatures, typename Activation>
 struct LegacyCDense {
-    template<std::size_t InFeatures>
+    template<typename InputSpec>
     struct Instance {
-        static constexpr std::size_t in_features = InFeatures;
+        static_assert(InputSpec::layout == edge::Layout::Flat,
+                      "LegacyCDense expects a flat tensor");
+
+        using input_spec = InputSpec;
+        using output_spec = edge::Vector<OutFeatures>;
+
+        static constexpr std::size_t in_features = input_spec::elements;
         static constexpr std::size_t out_features = OutFeatures;
         static constexpr std::size_t weight_count = in_features * out_features;
         static constexpr std::size_t bias_count = out_features;
@@ -307,7 +313,7 @@ struct LegacyCDense {
 
 using DirectCBackendModel = edge::Model<
     edge::Backend::M55,
-    edge::Input<kInputFeatures>,
+    edge::InputVector<kInputFeatures>,
     LegacyCDense<kHidden1, LegacyCReLU>,
     LegacyCDense<kHidden2, LegacyCReLU>,
     LegacyCDense<kOutputFeatures, LegacyCLinear>>;

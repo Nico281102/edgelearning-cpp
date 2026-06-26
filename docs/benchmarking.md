@@ -2,10 +2,10 @@
 
 `benchmark_edgelearning_cpp` measures several Dense-only models:
 
-- `Input<8>, Dense<16, ReLU>, Dense<1>`
-- `Input<8>, Dense<32, ReLU>, Dense<16, ReLU>, Dense<1>`
-- `Input<32>, Dense<64, ReLU>, Dense<32, ReLU>, Dense<4>`
-- `Input<128>, Dense<64, ReLU>, Dense<32, ReLU>, Dense<3>`
+- `InputVector<8>, Dense<16, ReLU>, Dense<1>`
+- `InputVector<8>, Dense<32, ReLU>, Dense<16, ReLU>, Dense<1>`
+- `InputVector<32>, Dense<64, ReLU>, Dense<32, ReLU>, Dense<4>`
+- `InputVector<128>, Dense<64, ReLU>, Dense<32, ReLU>, Dense<3>`
 
 It reports forward, backward, train step, optimizer step, zero-grad time, and memory breakdown.
 
@@ -24,8 +24,8 @@ It compares the FP32 baseline with `edge::precision::MixedFP16` on a determinist
 
 The M55 regression sweep is built as one static binary per topology:
 
-- `Input<32>, Dense<H1, ReLU>, Dense<H2, ReLU>, Dense<1, Linear>`
-- hidden pairs: `8x8`, `16x8`, `16x16`, `32x16`, `32x32`, `32x64`, `64x64`, `128x64`
+- `InputVector<32>, Dense<H1, ReLU>, Dense<H2, ReLU>, Dense<1, Linear>`
+- hidden pairs: `8x8`, `16x8`, `16x16`, `32x16`, `32x32`, `64x32`
 - batch size: 256
 - task: deterministic synthetic linear regression
 
@@ -60,7 +60,7 @@ DWT cycle counter on the MCU.
 
 The current firmware sweep uses:
 
-- topology: `Input<3>, Dense<H1, ReLU>, Dense<H2, ReLU>, Dense<1, Linear>`
+- topology: `InputVector<3>, Dense<H1, ReLU>, Dense<H2, ReLU>, Dense<1, Linear>`
 - hidden pairs: `8x8`, `16x8`, `16x16`, `32x16`, `32x32`, `64x32`
 - variants: legacy C M55, C++ direct legacy-C backend, C++ native M55,
   C++ generic, RLTools generic

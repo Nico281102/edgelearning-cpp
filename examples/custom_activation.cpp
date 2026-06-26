@@ -21,7 +21,7 @@ struct Swish {
 };
 
 int main() {
-    using Model = edge::Model<edge::Input<2>, edge::Dense<4, Swish>, edge::Dense<1>>;
+    using Model = edge::Model<edge::InputVector<2>, edge::Dense<4, Swish>, edge::Dense<1>>;
     Model model;
     model.initialize(edge::InitConfig{.seed = 3U});
     const std::array<float, 2> input{0.2F, -0.1F};

@@ -33,7 +33,7 @@
 namespace {
 
 using Model = edge::Model<
-    edge::Input<8>,
+    edge::InputVector<8>,
     edge::Dense<32, edge::ReLU>,
     edge::Dense<16, edge::ReLU>,
     edge::Dense<1>>;
@@ -132,7 +132,7 @@ int main() {
     report << "- Host CPU/model: " << host_cpu_name() << "\n";
     report << "- Hardware threads: " << std::thread::hardware_concurrency() << "\n\n";
     report << "## Current C++ Measurement\n\n";
-    report << "- Topology: `Input<8>, Dense<32, ReLU>, Dense<16, ReLU>, Dense<1>`\n";
+    report << "- Topology: `InputVector<8>, Dense<32, ReLU>, Dense<16, ReLU>, Dense<1>`\n";
     report << "- Iterations: " << iterations << "\n";
     report << "- Optimizer: Adam, learning rate 0.01\n";
     report << "- Batch reduction: Mean, batch size 8\n";

@@ -7,7 +7,7 @@
 
 int main() {
     {
-        using Model = edge::Model<edge::Input<2>, edge::Dense<2, edge::Linear>>;
+        using Model = edge::Model<edge::InputVector<2>, edge::Dense<2, edge::Linear>>;
         Model model;
         float* p = model.parameter_data();
         p[0] = 1.0F;
@@ -24,7 +24,7 @@ int main() {
     }
 
     {
-        using Model = edge::Model<edge::Input<2>, edge::Dense<2, edge::ReLU>>;
+        using Model = edge::Model<edge::InputVector<2>, edge::Dense<2, edge::ReLU>>;
         Model model;
         float* p = model.parameter_data();
         p[0] = 1.0F;
@@ -41,7 +41,7 @@ int main() {
     }
 
     {
-        using Model = edge::Model<edge::Input<1>, edge::Dense<1, edge::Tanh>>;
+        using Model = edge::Model<edge::InputVector<1>, edge::Dense<1, edge::Tanh>>;
         Model model;
         float* p = model.parameter_data();
         p[0] = 2.0F;
@@ -52,7 +52,7 @@ int main() {
     }
 
     {
-        using Model = edge::Model<edge::Input<1>, edge::Dense<1, edge::Sigmoid>>;
+        using Model = edge::Model<edge::InputVector<1>, edge::Dense<1, edge::Sigmoid>>;
         Model model;
         float* p = model.parameter_data();
         p[0] = 4.0F;

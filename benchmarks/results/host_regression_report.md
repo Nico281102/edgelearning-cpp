@@ -2,7 +2,7 @@
 
 Baseline C commit: `0085814908ca1b57ece4fe367361d084fd74aa3e`.
 
-C++ commit used: `51f36c7`.
+C++ commit used: `5690c2e (dirty)`.
 
 This repository does not vendor or republish the old C source. The old C baseline is intended to be cloned or checked out locally outside `edgelearning-cpp` for side-by-side measurement using the same topology, seed, synthetic dataset, optimizer, and batch policy.
 
@@ -16,11 +16,11 @@ This repository does not vendor or republish the old C source. The old C baselin
 
 ## Current C++ Measurement
 
-- Topology: `Input<8>, Dense<32, ReLU>, Dense<16, ReLU>, Dense<1>`
+- Topology: `InputVector<8>, Dense<32, ReLU>, Dense<16, ReLU>, Dense<1>`
 - Iterations: 1000
 - Optimizer: Adam, learning rate 0.01
 - Batch reduction: Mean, batch size 8
-- C++ train_step mean: 296.792 ns
+- C++ train_step mean: 13595.5 ns
 - Parameter bytes: 3332
 - Gradient bytes: 3332
 - Optimizer bytes: 6664

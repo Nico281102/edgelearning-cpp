@@ -29,7 +29,7 @@ struct L1Loss {
 };
 
 int main() {
-    using Model = edge::Model<edge::Input<2>, edge::Dense<1>>;
+    using Model = edge::Model<edge::InputVector<2>, edge::Dense<1>>;
     edge::Trainer<Model, L1Loss, edge::SGD> trainer(edge::SGDConfig{.learning_rate = 0.01F});
     trainer.model().initialize(edge::InitConfig{.seed = 1U});
 

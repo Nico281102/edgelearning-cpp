@@ -2,49 +2,9 @@
 
 EdgeLearning++ v0.1 keeps the core training path intentionally small: static model topology, explicit arena ownership, no heap allocation in the training path, and compile-time memory planning. That makes the current implementation useful for embedded experiments, but it also means some higher-level layer interfaces are deliberately limited.
 
-## Custom Layers Are Vector-Shaped
+## Shape-Aware Sequential Layers
 
-The current custom-layer contract is based on a flattened feature count:
-
-```cpp
-template<std::size_t InFeatures>
-struct Instance {
-    static constexpr std::size_t in_features = InFeatures;
-    static constexpr std::size_t out_features = InFeatures;
-    static constexpr std::size_t parameter_count = 0;
-    static constexpr std::size_t cache_count = 0;
-    static constexpr std::size_t workspace_count = 0;
-};
-```
-
-This works well for layers that naturally operate on vectors:
-
-```cpp
-Input<8> -> Dense<16> -> Dense<1>
-```
-
-It also works for simple custom layers such as scaling, clipping, elementwise transforms, residual-like vector operations, or any layer where the author is happy to treat the tensor as a flat array.
-
-The limitation is that a flat count does not carry tensor meaning. For example, `784` elements could mean:
-
-```text
-784
-1 x 28 x 28
-28 x 28 x 1
-49 tokens x 16 features
-```
-
-Those shapes have the same element count, but they do not have the same semantics. A Conv2D layer needs channels, height, width, kernel geometry, stride, padding, and layout. A normalization layer needs to know which axes are normalized. An attention layer needs token count, feature dimension, number of heads, and sometimes a mask layout. A recurrent layer needs hidden-state shape and sequence semantics.
-
-## What v0.1 Already Does
-
-Built-in layers can still encode richer facts internally. `edge::Conv2D` already exposes compile-time geometry such as input channels, input height, input width, output channels, kernel size, stride, padding, output height, output width, parameter count, cache count, and workspace count.
-
-The issue is not that shape-rich layers are impossible. The issue is that the generic custom-layer interface does not yet provide a standard tensor-shape vocabulary for user-defined layers. A user can flatten the data and implement the math, but the framework does not yet help the custom layer express that the flat data is `CHW`, `HWC`, `Time x Feature`, `Token x Feature`, or `Head x Token x Feature`.
-
-## Why This Matters
-
-Shape metadata should remain compile-time. That is the key embedded constraint. The goal is not to copy a dynamic framework where tensor shapes are runtime descriptors. The goal is to let the compiler know more:
+Layer inputs and outputs carry compile-time tensor metadata:
 
 ```cpp
 TensorSpec<Shape<1, 28, 28>, Layout::CHW>
@@ -52,7 +12,25 @@ TensorSpec<Shape<32, 64>, Layout::TimeFeature>
 TensorSpec<Shape<8, 16, 32>, Layout::HeadTokenFeature>
 ```
 
-With that information, the model can still compute:
+A custom layer receives that information through `Instance<InputSpec>` and returns its own `output_spec`:
+
+```cpp
+template<typename InputSpec>
+struct Instance {
+    using input_spec = InputSpec;
+    using output_spec = edge::Vector<InputSpec::elements>;
+
+    static constexpr std::size_t in_features = input_spec::elements;
+    static constexpr std::size_t out_features = output_spec::elements;
+    static constexpr std::size_t parameter_count = 0;
+    static constexpr std::size_t cache_count = 0;
+    static constexpr std::size_t workspace_count = 0;
+};
+```
+
+The storage is still contiguous. `in_features` and `out_features` remain the flattened extents used by `TensorView`, while `input_spec` and `output_spec` preserve semantic shape and layout for compile-time validation.
+
+With that information, the model computes:
 
 - output shape
 - parameter count
@@ -63,42 +41,7 @@ With that information, the model can still compute:
 
 all at compile time.
 
-## Proposed Future Direction
-
-A future custom-layer API should move from `Instance<InFeatures>` to an input tensor specification:
-
-```cpp
-template<std::size_t... Dims>
-struct Shape {};
-
-enum class Layout {
-    Flat,
-    CHW,
-    HWC,
-    TimeFeature,
-    TokenFeature,
-    HeadTokenFeature
-};
-
-template<typename ShapeT, Layout LayoutV>
-struct TensorSpec {
-    using shape = ShapeT;
-    static constexpr Layout layout = LayoutV;
-    static constexpr std::size_t elements = /* product of dims */;
-};
-
-template<typename InputSpec>
-struct Instance {
-    using input = InputSpec;
-    using output = TensorSpec<Shape<4, 26, 26>, Layout::CHW>;
-
-    static constexpr std::size_t parameter_count = /* compile-time */;
-    static constexpr std::size_t cache_count = /* compile-time */;
-    static constexpr std::size_t workspace_count = /* compile-time */;
-};
-```
-
-The low-level storage can still be contiguous. The view can still be passed by value. The difference is that the layer receives shape meaning in addition to element count.
+The main v0.1 limitation is now topology, not shape vocabulary: models are sequential single-input/single-output chains. `Dense` requires a flat `Vector<N>` input, `Conv2D` requires `CHW<C,H,W>`, and `Flatten` explicitly converts a shaped tensor into a vector before Dense.
 
 ## Input-Gradient Policy
 
@@ -124,18 +67,18 @@ Future work may add an explicit model-level option to request gradients all the 
 
 ## Examples
 
-Conv2D should be able to say:
+Conv2D says:
 
 ```cpp
-using input = TensorSpec<Shape<1, 28, 28>, Layout::CHW>;
-using output = TensorSpec<Shape<4, 26, 26>, Layout::CHW>;
+using input_spec = TensorSpec<Shape<1, 28, 28>, Layout::CHW>;
+using output_spec = TensorSpec<Shape<4, 26, 26>, Layout::CHW>;
 ```
 
 LayerNorm should be able to say:
 
 ```cpp
-using input = TensorSpec<Shape<64>, Layout::Flat>;
-using output = input;
+using input_spec = TensorSpec<Shape<64>, Layout::Flat>;
+using output_spec = input_spec;
 static constexpr std::size_t parameter_count = 2 * 64; // gamma and beta
 static constexpr std::size_t cache_count = 2;           // mean and inverse stddev
 ```
@@ -143,16 +86,16 @@ static constexpr std::size_t cache_count = 2;           // mean and inverse stdd
 GRU should be able to expose sequence and hidden-state requirements:
 
 ```cpp
-using input = TensorSpec<Shape<16, 32>, Layout::TimeFeature>; // 16 steps, 32 features
-using output = TensorSpec<Shape<16, 64>, Layout::TimeFeature>;
+using input_spec = TensorSpec<Shape<16, 32>, Layout::TimeFeature>; // 16 steps, 32 features
+using output_spec = TensorSpec<Shape<16, 64>, Layout::TimeFeature>;
 static constexpr std::size_t state_count = 64;
 ```
 
 Attention should be able to expose token and head dimensions:
 
 ```cpp
-using input = TensorSpec<Shape<32, 128>, Layout::TokenFeature>; // 32 tokens, 128 dims
-using output = TensorSpec<Shape<32, 128>, Layout::TokenFeature>;
+using input_spec = TensorSpec<Shape<32, 128>, Layout::TokenFeature>; // 32 tokens, 128 dims
+using output_spec = TensorSpec<Shape<32, 128>, Layout::TokenFeature>;
 static constexpr std::size_t workspace_count = 32 * 32; // example attention-score buffer
 ```
 
@@ -182,7 +125,7 @@ using inputs = TypeList<QuerySpec, KeySpec, ValueSpec>;
 using outputs = TypeList<OutputSpec>;
 ```
 
-That is future work. The current recommendation is to keep v0.1 custom layers vector-shaped and use built-in layers for shape-rich operations that are already supported, such as `Conv2D`.
+That is future work. The current recommendation is to keep v0.1 custom layers single-input/single-output and use explicit `Flatten` boundaries when moving from shaped tensors to Dense layers.
 
 ## Backend Specialization
 
@@ -190,7 +133,7 @@ Backend specialization should remain a compile-time decision. A shape-rich custo
 
 ```cpp
 if constexpr (std::is_same_v<typename Types::BackendT, edge::Backend::M55> &&
-              input::layout == Layout::CHW &&
+              input_spec::layout == Layout::CHW &&
               std::is_same_v<typename Types::ActivationT, float>) {
     // target-specific kernel
 }
@@ -203,6 +146,7 @@ The backend should not discover shape from runtime strings or descriptors. Shape
 The current design is intentionally conservative:
 
 - Dense and Conv2D are supported as built-in layers.
-- Custom layers are supported, but the public custom-layer interface is vector-shaped.
-- Precision policy, memory planning, and backend dispatch are already compile-time.
-- Future work is to add a shape-rich tensor specification, then state and multi-input support, without losing compile-time arena sizing.
+- Flatten is the explicit boundary from shaped tensors to vector Dense layers.
+- Custom layers receive `InputSpec` and expose `output_spec`, but models remain sequential.
+- Precision policy, memory planning, shape propagation, and backend dispatch are compile-time.
+- Future work is state and multi-input support without losing compile-time arena sizing.

@@ -9,14 +9,9 @@
 #include <edge/initializers.hpp>
 #include <edge/precision.hpp>
 #include <edge/tensor.hpp>
+#include <edge/tensor_spec.hpp>
 
 namespace edge {
-
-template<std::size_t Features>
-struct Input {
-    static_assert(Features > 0, "Input feature count must be greater than zero");
-    static constexpr std::size_t features = Features;
-};
 
 template<
     std::size_t OutFeatures,
@@ -33,10 +28,16 @@ struct Dense {
 
 namespace detail {
 
-template<std::size_t InFeatures, typename DenseSpec>
+template<typename InputSpec, typename DenseSpec>
 struct DenseInstance {
-    static constexpr std::size_t in_features = InFeatures;
-    static constexpr std::size_t out_features = DenseSpec::out_features;
+    static_assert(InputSpec::layout == Layout::Flat,
+                  "Dense requires a flat input spec; insert edge::Flatten after shaped layers");
+
+    using input_spec = InputSpec;
+    using output_spec = Vector<DenseSpec::out_features>;
+
+    static constexpr std::size_t in_features = input_spec::elements;
+    static constexpr std::size_t out_features = output_spec::elements;
     using activation = typename DenseSpec::activation;
     using initializer = typename DenseSpec::initializer;
     using precision_override = typename DenseSpec::precision_override;
@@ -74,14 +75,22 @@ struct DenseInstance {
                         TensorView<typename Types::AccumulatorT, workspace_count>) noexcept {
         using ActivationT = typename Types::ActivationT;
         using AccumulatorT = typename Types::AccumulatorT;
-        if constexpr (std::is_same_v<typename Types::BackendT, Backend::M55> &&
-                      std::is_same_v<typename Types::ParameterT, float> &&
-                      std::is_same_v<ActivationT, float> &&
-                      std::is_same_v<AccumulatorT, float>) {
+        static constexpr bool m55_supported =
+            std::is_same_v<typename Types::BackendT, Backend::M55> &&
+            std::is_same_v<typename Types::ParameterT, float> &&
+            std::is_same_v<ActivationT, float> &&
+            std::is_same_v<AccumulatorT, float> &&
+            m55_mve_available;
+        if constexpr (m55_supported) {
             if (m55_dense_forward<in_features, out_features, cache_count, activation>(
                     input, output, params, cache)) {
                 return;
             }
+        } else if constexpr (!std::is_same_v<typename Types::BackendT, Backend::Generic> &&
+                             !backend_falls_back_to_generic_v<typename Types::BackendT>) {
+            static_assert(always_false_v<typename Types::BackendT>,
+                          "Selected backend does not provide Dense forward and generic fallback "
+                          "is disabled");
         }
 
         const auto* weights = params.data();
@@ -112,11 +121,14 @@ struct DenseInstance {
                          TensorView<const typename Types::ActivationT, cache_count> cache,
                          TensorView<typename Types::AccumulatorT, workspace_count>) noexcept {
         using AccumulatorT = typename Types::AccumulatorT;
-        if constexpr (std::is_same_v<typename Types::BackendT, Backend::M55> &&
-                      std::is_same_v<typename Types::ParameterT, float> &&
-                      std::is_same_v<typename Types::ActivationT, float> &&
-                      std::is_same_v<typename Types::GradientT, float> &&
-                      std::is_same_v<AccumulatorT, float>) {
+        static constexpr bool m55_supported =
+            std::is_same_v<typename Types::BackendT, Backend::M55> &&
+            std::is_same_v<typename Types::ParameterT, float> &&
+            std::is_same_v<typename Types::ActivationT, float> &&
+            std::is_same_v<typename Types::GradientT, float> &&
+            std::is_same_v<AccumulatorT, float> &&
+            m55_mve_available;
+        if constexpr (m55_supported) {
             if constexpr (PropagateInputGradient) {
                 if (m55_dense_backward<in_features, out_features, cache_count, activation>(
                         input, output, upstream, downstream, params, gradients, cache)) {
@@ -131,6 +143,11 @@ struct DenseInstance {
                     return;
                 }
             }
+        } else if constexpr (!std::is_same_v<typename Types::BackendT, Backend::Generic> &&
+                             !backend_falls_back_to_generic_v<typename Types::BackendT>) {
+            static_assert(always_false_v<typename Types::BackendT>,
+                          "Selected backend does not provide Dense backward and generic fallback "
+                          "is disabled");
         }
 
         (void)params;

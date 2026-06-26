@@ -6,7 +6,7 @@
 
 int main() {
     {
-        using Model = edge::Model<edge::Input<1>, edge::Dense<1>>;
+        using Model = edge::Model<edge::InputVector<1>, edge::Dense<1>>;
         Model model;
         model.parameter_data()[0] = 1.0F;
         model.gradient_data()[0] = 2.0F;
@@ -17,7 +17,7 @@ int main() {
     }
 
     {
-        using Model = edge::Model<edge::Input<1>, edge::Dense<1>>;
+        using Model = edge::Model<edge::InputVector<1>, edge::Dense<1>>;
         edge::Trainer<Model, edge::MSE, edge::Adam> a(edge::AdamConfig{.learning_rate = 0.01F});
         edge::Trainer<Model, edge::MSE, edge::Adam> b(edge::AdamConfig{.learning_rate = 0.01F});
         const std::array<float, 1> input{1.0F};

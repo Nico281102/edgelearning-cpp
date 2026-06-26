@@ -14,7 +14,7 @@ If the old C benchmark output exists at `/tmp/edgelearning_c_baseline_008581_ben
 regression-sweep topology:
 
 - input features: 32
-- hidden layers: `8x8`, `16x8`, `16x16`, `32x16`, `32x32`, `32x64`, `64x64`, `128x64`
+- hidden layers: `8x8`, `16x8`, `16x16`, `32x16`, `32x32`, `64x32`
 - output: 1 linear neuron
 - batch: 256 samples, accumulated before one SGD update
 
@@ -29,6 +29,8 @@ repository:
   C backend kernels directly.
 - `test_legacy_c_<backend>_native_m55_regression_<hidden1>x<hidden2>`:
   legacy C network versus the static C++ model using `Backend::M55`.
+- `test_legacy_c_<backend>_generic_cpp_regression_<hidden1>x<hidden2>`:
+  legacy C network versus the static C++ model using `Backend::Generic`.
 
 Use `-DEDGE_LEGACY_C_BACKEND=m55` for the firmware/Cortex-M55 comparison, plus
 `-DEDGE_LEGACY_C_INCLUDE_DIRS=...` if the toolchain needs CMSIS include paths.

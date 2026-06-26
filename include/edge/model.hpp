@@ -15,6 +15,7 @@
 #include <edge/precision.hpp>
 #include <edge/status.hpp>
 #include <edge/tensor.hpp>
+#include <edge/tensor_spec.hpp>
 
 namespace edge {
 namespace detail {
@@ -30,29 +31,30 @@ struct TypeListPrepend<T, TypeList<Ts...>> {
     using type = TypeList<T, Ts...>;
 };
 
-template<std::size_t InFeatures, typename LayerSpec, typename = void>
+template<typename InputSpecT, typename LayerSpec, typename = void>
 struct MakeLayerInstance {
     static_assert(sizeof(LayerSpec) == 0,
-                  "Layer must be edge::Dense or provide template<std::size_t In> struct Instance");
+                  "Layer must be edge::Dense or provide template<typename InputSpec> struct "
+                  "Instance");
 };
 
-template<std::size_t InFeatures, typename DenseSpec>
+template<typename InputSpecT, typename DenseSpec>
     requires DenseLayerSpec<DenseSpec>
-struct MakeLayerInstance<InFeatures, DenseSpec> {
-    using type = DenseInstance<InFeatures, DenseSpec>;
+struct MakeLayerInstance<InputSpecT, DenseSpec> {
+    using type = DenseInstance<InputSpecT, DenseSpec>;
 };
 
-template<std::size_t InFeatures, typename LayerSpec>
-    requires CustomLayerSpec<InFeatures, LayerSpec> && (!DenseLayerSpec<LayerSpec>)
-struct MakeLayerInstance<InFeatures, LayerSpec> {
-    using type = typename LayerSpec::template Instance<InFeatures>;
+template<typename InputSpecT, typename LayerSpec>
+    requires CustomLayerSpec<InputSpecT, LayerSpec> && (!DenseLayerSpec<LayerSpec>)
+struct MakeLayerInstance<InputSpecT, LayerSpec> {
+    using type = typename LayerSpec::template Instance<InputSpecT>;
 };
 
 template<typename... Specs>
 struct ModelArgs;
 
 template<typename InputLayer, typename... Layers>
-    requires InputSpec<InputLayer>
+    requires InputLayerSpec<InputLayer>
 struct ModelArgs<InputLayer, Layers...> {
     using backend = Backend::Default;
     using precision = edge::precision::FP32;
@@ -61,7 +63,7 @@ struct ModelArgs<InputLayer, Layers...> {
 };
 
 template<typename PrecisionT, typename InputLayer, typename... Layers>
-    requires PrecisionPolicy<PrecisionT> && InputSpec<InputLayer>
+    requires PrecisionPolicy<PrecisionT> && InputLayerSpec<InputLayer>
 struct ModelArgs<PrecisionT, InputLayer, Layers...> {
     using backend = Backend::Default;
     using precision = PrecisionT;
@@ -70,7 +72,7 @@ struct ModelArgs<PrecisionT, InputLayer, Layers...> {
 };
 
 template<typename BackendPolicyT, typename InputLayer, typename... Layers>
-    requires BackendPolicy<BackendPolicyT> && InputSpec<InputLayer>
+    requires BackendPolicy<BackendPolicyT> && InputLayerSpec<InputLayer>
 struct ModelArgs<BackendPolicyT, InputLayer, Layers...> {
     using backend = BackendPolicyT;
     using precision = edge::precision::FP32;
@@ -79,7 +81,8 @@ struct ModelArgs<BackendPolicyT, InputLayer, Layers...> {
 };
 
 template<typename BackendPolicyT, typename PrecisionT, typename InputLayer, typename... Layers>
-    requires BackendPolicy<BackendPolicyT> && PrecisionPolicy<PrecisionT> && InputSpec<InputLayer>
+    requires BackendPolicy<BackendPolicyT> && PrecisionPolicy<PrecisionT> &&
+             InputLayerSpec<InputLayer>
 struct ModelArgs<BackendPolicyT, PrecisionT, InputLayer, Layers...> {
     using backend = BackendPolicyT;
     using precision = PrecisionT;
@@ -87,32 +90,34 @@ struct ModelArgs<BackendPolicyT, PrecisionT, InputLayer, Layers...> {
     using layers = TypeList<Layers...>;
 };
 
-template<std::size_t CurrentFeatures, typename... Layers>
+template<typename CurrentSpec, typename... Layers>
 struct LayerChain;
 
-template<std::size_t CurrentFeatures>
-struct LayerChain<CurrentFeatures> {
+template<typename CurrentSpec>
+struct LayerChain<CurrentSpec> {
     using instances = TypeList<>;
+    using output_spec = CurrentSpec;
     static constexpr std::size_t layer_count = 0;
-    static constexpr std::size_t output_features = CurrentFeatures;
+    static constexpr std::size_t output_features = output_spec::elements;
     static constexpr std::size_t parameter_count = 0;
     static constexpr std::size_t output_activation_count = 0;
     static constexpr std::size_t cache_count = 0;
     static constexpr std::size_t layer_workspace_count = 0;
-    static constexpr std::size_t max_features = CurrentFeatures;
+    static constexpr std::size_t max_features = output_spec::elements;
 };
 
-template<std::size_t CurrentFeatures, typename Layer, typename... Rest>
-struct LayerChain<CurrentFeatures, Layer, Rest...> {
-    using instance = typename MakeLayerInstance<CurrentFeatures, Layer>::type;
+template<typename CurrentSpec, typename Layer, typename... Rest>
+struct LayerChain<CurrentSpec, Layer, Rest...> {
+    using instance = typename MakeLayerInstance<CurrentSpec, Layer>::type;
     static_assert(LayerInstanceSpec<instance>,
                   "Layer instance must expose shape, parameter, cache, and workspace constants");
 
-    using tail = LayerChain<instance::out_features, Rest...>;
+    using tail = LayerChain<typename instance::output_spec, Rest...>;
     using instances = typename TypeListPrepend<instance, typename tail::instances>::type;
+    using output_spec = typename tail::output_spec;
 
     static constexpr std::size_t layer_count = 1U + tail::layer_count;
-    static constexpr std::size_t output_features = tail::output_features;
+    static constexpr std::size_t output_features = output_spec::elements;
     static constexpr std::size_t parameter_count =
         instance::parameter_count + tail::parameter_count;
     static constexpr std::size_t output_activation_count =
@@ -123,7 +128,8 @@ struct LayerChain<CurrentFeatures, Layer, Rest...> {
             ? instance::workspace_count
             : tail::layer_workspace_count;
     static constexpr std::size_t local_max =
-        CurrentFeatures > instance::out_features ? CurrentFeatures : instance::out_features;
+        CurrentSpec::elements > instance::out_features ? CurrentSpec::elements
+                                                       : instance::out_features;
     static constexpr std::size_t max_features =
         local_max > tail::max_features ? local_max : tail::max_features;
 };
@@ -139,27 +145,27 @@ struct ModelTypes {
     using LossT = typename PrecisionT::LossT;
 };
 
-template<bool IsFirst, std::size_t CurrentFeatures, typename... Layers>
+template<std::size_t LayerIndex, typename CurrentSpec, typename... Layers>
 struct BackwardWorkspacePlan;
 
-template<bool IsFirst, std::size_t CurrentFeatures>
-struct BackwardWorkspacePlan<IsFirst, CurrentFeatures> {
+template<std::size_t LayerIndex, typename CurrentSpec>
+struct BackwardWorkspacePlan<LayerIndex, CurrentSpec> {
     static constexpr std::size_t slot0_count = 0;
     static constexpr std::size_t slot1_count = 0;
 };
 
 template<
-    bool IsFirst,
-    std::size_t CurrentFeatures,
+    std::size_t LayerIndex,
+    typename CurrentSpec,
     typename Layer,
     typename... Rest>
-struct BackwardWorkspacePlan<IsFirst, CurrentFeatures, Layer, Rest...> {
-    using instance = typename MakeLayerInstance<CurrentFeatures, Layer>::type;
-    using tail = BackwardWorkspacePlan<false, instance::out_features, Rest...>;
+struct BackwardWorkspacePlan<LayerIndex, CurrentSpec, Layer, Rest...> {
+    using instance = typename MakeLayerInstance<CurrentSpec, Layer>::type;
+    using tail = BackwardWorkspacePlan<LayerIndex + 1U, typename instance::output_spec, Rest...>;
 
     static constexpr std::size_t layers_after = sizeof...(Rest);
     static constexpr bool upstream_uses_slot0 = (layers_after % 2U) == 0U;
-    static constexpr bool propagate_input_gradient = !IsFirst;
+    static constexpr bool propagate_input_gradient = LayerIndex != 0U;
     static constexpr std::size_t layer_slot0_count =
         upstream_uses_slot0 ? instance::out_features
                             : (propagate_input_gradient ? instance::in_features : 0U);
@@ -179,14 +185,16 @@ template<typename BackendPolicyT, typename PrecisionT, typename InputLayer, type
 class ModelImpl<BackendPolicyT, PrecisionT, InputLayer, TypeList<Layers...>> {
     static_assert(sizeof...(Layers) > 0, "Model requires at least one trainable layer");
 
-    using Chain = LayerChain<InputLayer::features, Layers...>;
+    using Chain = LayerChain<typename InputLayer::spec, Layers...>;
     using Instances = typename Chain::instances;
 
 public:
     using backend = BackendPolicyT;
     using precision = PrecisionT;
     using types = ModelTypes<BackendPolicyT, PrecisionT>;
-    using workspace_plan = BackwardWorkspacePlan<true, InputLayer::features, Layers...>;
+    using workspace_plan = BackwardWorkspacePlan<0U, typename InputLayer::spec, Layers...>;
+    using input_spec = typename InputLayer::spec;
+    using output_spec = typename Chain::output_spec;
     using parameter_type = typename types::ParameterT;
     using activation_type = typename types::ActivationT;
     using gradient_type = typename types::GradientT;
@@ -195,8 +203,8 @@ public:
     using loss_type = typename types::LossT;
     using scalar_type = activation_type;
 
-    static constexpr std::size_t input_size = InputLayer::features;
-    static constexpr std::size_t output_size = Chain::output_features;
+    static constexpr std::size_t input_size = input_spec::elements;
+    static constexpr std::size_t output_size = output_spec::elements;
     static constexpr std::size_t layer_count = Chain::layer_count;
     static constexpr std::size_t parameter_count = Chain::parameter_count;
     static constexpr std::size_t gradient_count = parameter_count;
@@ -557,13 +565,21 @@ private:
     void backward_entry(accumulator_type*& upstream,
                         accumulator_type*& downstream,
                         TypeList<InstancesT...>) noexcept {
-        backward_layers<0, 0, input_size, 0, 0, 0, InstancesT...>(upstream, downstream);
+        backward_layers<0U, 0, 0, input_size, 0, 0, 0, InstancesT...>(upstream, downstream);
     }
 
-    template<std::size_t, std::size_t, std::size_t, std::size_t, std::size_t, std::size_t>
+    template<
+        std::size_t,
+        std::size_t,
+        std::size_t,
+        std::size_t,
+        std::size_t,
+        std::size_t,
+        std::size_t>
     void backward_layers(accumulator_type*&, accumulator_type*&) noexcept {}
 
     template<
+        std::size_t LayerIndex,
         std::size_t ParamOffset,
         std::size_t GradOffset,
         std::size_t ActOutOffset,
@@ -575,6 +591,7 @@ private:
     void backward_layers(accumulator_type*& upstream, accumulator_type*& downstream) noexcept {
         if constexpr (sizeof...(Tail) > 0) {
             backward_layers<
+                LayerIndex + 1U,
                 ParamOffset + Instance::parameter_count,
                 GradOffset + Instance::parameter_count,
                 ActOutOffset + Instance::out_features,
@@ -585,6 +602,7 @@ private:
         }
 
         backward_one_layer<
+            LayerIndex,
             ParamOffset,
             GradOffset,
             ActOutOffset,
@@ -595,6 +613,7 @@ private:
     }
 
     template<
+        std::size_t LayerIndex,
         std::size_t ParamOffset,
         std::size_t GradOffset,
         std::size_t ActOutOffset,
@@ -603,8 +622,7 @@ private:
         std::size_t WorkspaceOffset,
         typename Instance>
     void backward_one_layer(accumulator_type*& upstream, accumulator_type*& downstream) noexcept {
-        static constexpr bool propagate_input_gradient =
-            !(ParamOffset == 0U && PrevActOffset == 0U);
+        static constexpr bool propagate_input_gradient = LayerIndex != 0U;
         Instance::template backward<propagate_input_gradient, types>(
             TensorView<const activation_type, Instance::in_features>(
                 activations_ + PrevActOffset),

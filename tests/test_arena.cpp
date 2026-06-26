@@ -9,7 +9,7 @@
 int main() {
     using Model = edge::Model<
         edge::Backend::Generic,
-        edge::Input<3>,
+        edge::InputVector<3>,
         edge::Dense<4, edge::ReLU>,
         edge::Dense<1>>;
 

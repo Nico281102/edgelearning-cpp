@@ -101,26 +101,26 @@ int main() {
     std::cout << "case,input,output,parameter_count,total_bytes,batch,samples,seeds,min_ns,median_ns,mean_ns,max_ns\n";
 
     run_case<edge::Model<
-        edge::Input<8>,
+        edge::InputVector<8>,
         edge::Dense<32, edge::ReLU>,
         edge::Dense<16, edge::ReLU>,
         edge::Dense<1>>>("8-32-16-1", samples);
 
     run_case<edge::Model<
-        edge::Input<8>,
+        edge::InputVector<8>,
         edge::Dense<64, edge::ReLU>,
         edge::Dense<64, edge::ReLU>,
         edge::Dense<1>>>("8-64-64-1", samples);
 
     run_case<edge::Model<
-        edge::Input<8>,
+        edge::InputVector<8>,
         edge::Dense<32, edge::ReLU>,
         edge::Dense<52, edge::ReLU>,
         edge::Dense<52, edge::ReLU>,
         edge::Dense<1>>>("8-32-52-52-1", samples);
 
     run_case<edge::Model<
-        edge::Input<8>,
+        edge::InputVector<8>,
         edge::Dense<20, edge::ReLU>,
         edge::Dense<36, edge::ReLU>,
         edge::Dense<52, edge::ReLU>,
@@ -128,26 +128,26 @@ int main() {
         edge::Dense<1>>>("8-20-36-52-36-1", samples);
 
     run_case<edge::Model<
-        edge::Input<32>,
+        edge::InputVector<32>,
         edge::Dense<128, edge::ReLU>,
         edge::Dense<64, edge::ReLU>,
         edge::Dense<16>>>("32-128-64-16", samples);
 
     run_case<edge::Model<
-        edge::Input<128>,
+        edge::InputVector<128>,
         edge::Dense<128, edge::ReLU>,
         edge::Dense<64, edge::ReLU>,
         edge::Dense<3>>>("128-128-64-3", samples);
 
     run_case<edge::Model<
-        edge::Input<256>,
+        edge::InputVector<256>,
         edge::Dense<128, edge::ReLU>,
         edge::Dense<64, edge::ReLU>,
         edge::Dense<32, edge::ReLU>,
         edge::Dense<8>>>("256-128-64-32-8", samples);
 
     run_case<edge::Model<
-        edge::Input<512>,
+        edge::InputVector<512>,
         edge::Dense<256, edge::ReLU>,
         edge::Dense<128, edge::ReLU>,
         edge::Dense<32, edge::ReLU>,

@@ -5,8 +5,14 @@
 
 int main() {
     using Model = edge::Model<
-        edge::Input<28 * 28>,
-        edge::Conv2D<1, 28, 28, 4, 3, 3, edge::ReLU, edge::DefaultInitializer, 1, 1, 1, 1>,
+        edge::Input<edge::CHW<1, 28, 28>>,
+        edge::Conv2D<4,
+                     edge::Kernel<3, 3>,
+                     edge::ReLU,
+                     edge::DefaultInitializer,
+                     edge::Stride<1, 1>,
+                     edge::Padding<1, 1>>,
+        edge::Flatten,
         edge::Dense<10>>;
 
     edge::Trainer<Model, edge::MSE, edge::SGD> trainer(

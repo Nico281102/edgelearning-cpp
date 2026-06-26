@@ -20,12 +20,12 @@ void load_params(Model& model) {
 int main() {
     using Generic = edge::Model<
         edge::Backend::Generic,
-        edge::Input<4>,
+        edge::InputVector<4>,
         edge::Dense<3, edge::ReLU>,
         edge::Dense<2, edge::Linear>>;
     using M55 = edge::Model<
         edge::Backend::M55,
-        edge::Input<4>,
+        edge::InputVector<4>,
         edge::Dense<3, edge::ReLU>,
         edge::Dense<2, edge::Linear>>;
 
@@ -53,13 +53,15 @@ int main() {
 
     using ConvGeneric = edge::Model<
         edge::Backend::Generic,
-        edge::Input<9>,
-        edge::Conv2D<1, 3, 3, 2, 2, 2, edge::ReLU>,
+        edge::Input<edge::CHW<1, 3, 3>>,
+        edge::Conv2D<2, edge::Kernel<2, 2>, edge::ReLU>,
+        edge::Flatten,
         edge::Dense<1, edge::Linear>>;
     using ConvM55 = edge::Model<
         edge::Backend::M55,
-        edge::Input<9>,
-        edge::Conv2D<1, 3, 3, 2, 2, 2, edge::ReLU>,
+        edge::Input<edge::CHW<1, 3, 3>>,
+        edge::Conv2D<2, edge::Kernel<2, 2>, edge::ReLU>,
+        edge::Flatten,
         edge::Dense<1, edge::Linear>>;
 
     ConvGeneric conv_generic;

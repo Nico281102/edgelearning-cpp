@@ -26,7 +26,7 @@ int main() {
     using Model = edge::Model<
         edge::Backend::Generic,
         DoublePrecision,
-        edge::Input<2>,
+        edge::InputVector<2>,
         edge::Dense<1, edge::Linear>>;
 
     static_assert(std::is_same_v<Model::parameter_type, double>);
@@ -88,7 +88,7 @@ int main() {
     using MixedModel = edge::Model<
         edge::Backend::Generic,
         edge::precision::MixedFP16,
-        edge::Input<2>,
+        edge::InputVector<2>,
         edge::Dense<1, edge::Linear>>;
     static_assert(std::is_same_v<MixedModel::parameter_type, float>);
     static_assert(std::is_same_v<MixedModel::gradient_type, float>);

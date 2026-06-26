@@ -62,21 +62,24 @@ struct DoublePrecision {
     using LossT = double;
 };
 
-using Model = edge::Model<DoublePrecision, edge::Input<2>, edge::Dense<1>>;
+using Model = edge::Model<DoublePrecision, edge::InputVector<2>, edge::Dense<1>>;
 ```
 
 The policy drives both APIs and memory planning. `Model::parameter_data()` returns `ParameterT*`, `Model::forward()` accepts `ActivationT`, and `Model::required_memory` includes the exact section sizes and alignments implied by the policy.
 
 ## Custom Layer
 
-Custom vector layers provide a nested instance specialized by the inferred input width:
+Custom layers provide a nested instance specialized by the inferred input tensor spec:
 
 ```cpp
 struct MyLayer {
-    template<std::size_t InFeatures>
+    template<typename InputSpec>
     struct Instance {
-        static constexpr std::size_t in_features = InFeatures;
-        static constexpr std::size_t out_features = InFeatures;
+        using input_spec = InputSpec;
+        using output_spec = edge::Vector<InputSpec::elements>;
+
+        static constexpr std::size_t in_features = input_spec::elements;
+        static constexpr std::size_t out_features = output_spec::elements;
         static constexpr std::size_t parameter_count = 0;
         static constexpr std::size_t cache_count = 0;
         static constexpr std::size_t workspace_count = 0;
@@ -107,6 +110,12 @@ struct MyLayer {
 };
 ```
 
+For a vector-only layer, add a compile-time layout check:
+
+```cpp
+static_assert(InputSpec::layout == edge::Layout::Flat);
+```
+
 Forward writes the layer output. Backward receives `dLoss/dOutput` and always accumulates parameter gradients. It writes `dLoss/dInput` only when `PropagateInputGradient` is `true`:
 
 ```cpp
@@ -124,7 +133,7 @@ Backend specialization is selected through the model type, not through runtime v
 ```cpp
 using Model = edge::Model<
     edge::Backend::M55,
-    edge::Input<8>,
+    edge::InputVector<8>,
     edge::Dense<16, edge::ReLU>,
     edge::Dense<1>>;
 ```
@@ -164,7 +173,17 @@ static void forward(edge::TensorView<const typename Types::ActivationT, in_featu
 
 `if constexpr` is important: it is a compile-time branch. When the model backend is not `M55`, the M55 branch is discarded during compilation. The binary does not need a runtime backend switch for that layer path.
 
-The optimized hook can live in a backend header, for example `include/edge/backends/m55.hpp`. The current Dense/M55 path follows this shape: the hook returns `true` when the target-specific implementation is available and `false` when the build should fall back to the generic path. That lets host builds compile and test the same model type without requiring Cortex-M55/MVE headers or instructions.
+The optimized hook can live in a backend header, for example `include/edge/backends/m55.hpp`. The current Dense/M55 path follows this shape: the hook is compiled only when the backend, precision, and target feature checks match. On host builds `Backend::M55::falls_back_to_generic` lets the same model type use the generic implementation without requiring Cortex-M55/MVE headers or instructions.
+
+`falls_back_to_generic` is a compile-time policy. If it is `true`, a layer may use its generic implementation when no target path is available. If it is `false`, the layer should `static_assert` when the selected backend has no compatible implementation:
+
+```cpp
+if constexpr (!std::is_same_v<typename Types::BackendT, edge::Backend::Generic> &&
+              !edge::backend_falls_back_to_generic_v<typename Types::BackendT>) {
+    static_assert(edge::detail::always_false_v<typename Types::BackendT>,
+                  "Selected backend does not provide this layer and generic fallback is disabled");
+}
+```
 
 Here is a trimmed example for a fused Dense+ReLU forward path. In production, if the public semantics are still "Dense followed by ReLU", prefer specializing `edge::Dense<Out, edge::ReLU>` internally. A visible `FusedReLUDense` type is useful when the fusion is a deliberate layer abstraction exposed to users.
 
@@ -194,9 +213,14 @@ The layer definition keeps the same typed contract and only selects the fused pa
 ```cpp
 template<std::size_t OutFeatures>
 struct FusedReLUDense {
-    template<std::size_t InFeatures>
+    template<typename InputSpec>
     struct Instance {
-        static constexpr std::size_t in_features = InFeatures;
+        static_assert(InputSpec::layout == edge::Layout::Flat);
+
+        using input_spec = InputSpec;
+        using output_spec = edge::Vector<OutFeatures>;
+
+        static constexpr std::size_t in_features = input_spec::elements;
         static constexpr std::size_t out_features = OutFeatures;
         static constexpr std::size_t weight_count = in_features * out_features;
         static constexpr std::size_t bias_count = out_features;
@@ -248,7 +272,7 @@ Used from a model:
 ```cpp
 using Model = edge::Model<
     edge::Backend::M55,
-    edge::Input<8>,
+    edge::InputVector<8>,
     FusedReLUDense<16>,
     edge::Dense<1>>;
 ```
@@ -274,38 +298,31 @@ generic_my_layer_backward<PropagateInputGradient>(
 The recommended rule is: keep the public layer semantic, and specialize the implementation inside `forward` and `backward`. For example, prefer `Dense` with an M55 fast path over a separate `M55Dense` layer in the user-facing model. The model then stays portable:
 
 ```cpp
-using GenericModel = edge::Model<edge::Backend::Generic, edge::Input<8>, edge::Dense<16>>;
-using M55Model = edge::Model<edge::Backend::M55, edge::Input<8>, edge::Dense<16>>;
+using GenericModel = edge::Model<edge::Backend::Generic, edge::InputVector<8>, edge::Dense<16>>;
+using M55Model = edge::Model<edge::Backend::M55, edge::InputVector<8>, edge::Dense<16>>;
 ```
 
 Both types describe the same network. Only the backend policy changes.
 
-Adding a new backend policy currently requires registering it in `include/edge/backend.hpp`. In practice that means adding the backend tag to `edge::Backend` and adding the concept trait specialization:
+Adding a new backend policy does not require runtime registration. Define a tag
+type with `is_backend_policy = true`; add `falls_back_to_generic` only when the
+default generic fallback behavior is not what you want:
 
 ```cpp
-namespace edge {
-
-struct Backend {
-    struct Generic { /* ... */ };
-    struct M55 { /* ... */ };
-
-    struct MyTarget {
-        static constexpr bool is_backend_policy = true;
-        static constexpr const char* name = "MyTarget";
-        static constexpr bool falls_back_to_generic = true;
-    };
+struct MyTargetBackend {
+    static constexpr bool is_backend_policy = true;
+    static constexpr const char* name = "MyTarget";
+    static constexpr bool falls_back_to_generic = true;
 };
 
-namespace detail {
-
-template<>
-struct is_backend_policy<Backend::MyTarget> : std::true_type {};
-
-} // namespace detail
-} // namespace edge
+using MyTargetModel =
+    edge::Model<MyTargetBackend, edge::InputVector<8>, edge::Dense<16>>;
 ```
 
-Then layer implementations can branch on `Types::BackendT`. This registration point is intentionally small; it keeps backend selection compile-time and prevents accidental runtime backend strings or unvalidated backend objects from entering the model type.
+Then layer implementations can branch on `Types::BackendT`. The explicit
+`is_backend_policy` marker keeps backend selection compile-time and prevents
+accidental runtime backend strings or unvalidated backend objects from entering
+the model type.
 
 ## Generic Conv2D Layer
 
@@ -313,9 +330,14 @@ Then layer implementations can branch on `Types::BackendT`. This registration po
 
 ```cpp
 using Model = edge::Model<
-    edge::Input<28 * 28>,
-    edge::Conv2D<1, 28, 28, 4, 3, 3, edge::ReLU,
-                 edge::DefaultInitializer, 1, 1, 1, 1>,
+    edge::Input<edge::CHW<1, 28, 28>>,
+    edge::Conv2D<4,
+                 edge::Kernel<3, 3>,
+                 edge::ReLU,
+                 edge::DefaultInitializer,
+                 edge::Stride<1, 1>,
+                 edge::Padding<1, 1>>,
+    edge::Flatten,
     edge::Dense<10>>;
 ```
 
@@ -323,4 +345,4 @@ Input and output tensors are flattened in `CHW` order. The implementation is dir
 
 ## Future Layers
 
-v0.1 custom layers are vector-shaped: they expose `in_features`, `out_features`, parameter count, cache count, and workspace count, but they do not expose a general shape/layout vocabulary for user-defined tensors. See `docs/limitations.md` for the current limitations and the proposed future direction for shape-rich layers such as normalization, Conv2D-like custom layers, RNN, GRU, gates, and attention.
+v0.1 custom layers are shape-aware but sequential: they expose `input_spec`, `output_spec`, `in_features`, `out_features`, parameter count, cache count, and workspace count. See `docs/limitations.md` for the current limits around state, multi-input layers, RNN, GRU, gates, and attention.

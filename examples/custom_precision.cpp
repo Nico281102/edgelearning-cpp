@@ -14,7 +14,7 @@ struct DoublePrecision {
 int main() {
     using Model = edge::Model<
         DoublePrecision,
-        edge::Input<2>,
+        edge::InputVector<2>,
         edge::Dense<4, edge::ReLU>,
         edge::Dense<1>>;
 

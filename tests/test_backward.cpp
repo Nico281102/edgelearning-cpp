@@ -5,7 +5,7 @@
 #include "test_harness.hpp"
 
 int main() {
-    using Model = edge::Model<edge::Input<2>, edge::Dense<1, edge::Linear>>;
+    using Model = edge::Model<edge::InputVector<2>, edge::Dense<1, edge::Linear>>;
     Model model;
     float* p = model.parameter_data();
     p[0] = 0.5F;

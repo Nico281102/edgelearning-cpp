@@ -4,17 +4,17 @@ Models are defined as compile-time type lists:
 
 ```cpp
 using Model = edge::Model<
-    edge::Input<8>,
+    edge::InputVector<8>,
     edge::Dense<32, edge::ReLU>,
     edge::Dense<1>>;
 ```
 
-The model infers each layer input dimension from the previous layer. v0.1 supports Dense layers, direct Conv2D layers, and vector-shaped custom layers. Custom layers satisfy the layer concepts in `include/edge/layers/layer_concepts.hpp` and provide compile-time shape and memory traits.
+The model infers each layer input tensor spec from the previous layer. v0.1 supports Dense layers, direct Conv2D layers, Flatten, and shape-aware custom layers. Custom layers satisfy the layer concepts in `include/edge/layers/layer_concepts.hpp` and provide compile-time input/output specs plus memory traits.
 
 Backend selection is a model-level policy:
 
 ```cpp
-edge::Model<edge::Backend::Generic, edge::Input<8>, edge::Dense<1>>;
+edge::Model<edge::Backend::Generic, edge::InputVector<8>, edge::Dense<1>>;
 ```
 
 Activation policies are semantic policies, not hardware policies. A user writes `Dense<32, ReLU>`; a backend may later specialize that operation for a target. The generic backend uses scalar C++ and supports custom activations.
@@ -23,7 +23,7 @@ Precision is a model-level policy. `edge::precision::FP32` is the default, and u
 
 The arena requirement is also part of the model type. The design is a form of static memory planning, more specifically compile-time arena sizing. `Model::required_memory` is a `static constexpr` value derived from topology, layer memory traits, precision types, and alignment rules. This was present in the initial C++20 runtime and later extended to cover custom layers and precision policies; see `docs/memory_model.md` for the concrete formula, C++ keyword explanations, and examples.
 
-The M55 backend is a clean policy and fallback point. Host builds use the generic path. Cortex-M55/MVE float builds can use original EdgeLearning++ FP32 Dense hooks, while unsupported operations fall back to generic kernels.
+The M55 backend is a clean policy and fallback point. Host builds use the generic path when `falls_back_to_generic` is enabled. Cortex-M55/MVE float builds can use original EdgeLearning++ FP32 Dense hooks, while unsupported operations fall back to generic kernels unless a backend disables fallback.
 
 ## Why C++
 
@@ -62,7 +62,8 @@ This can still be improved. A future cleanup could split the public API into cle
 | Conv2D | Yes | Direct CHW convolution with stride and padding |
 | Dropout | No | Planned extension |
 | LayerNorm | No | Planned extension |
-| Custom layer | Yes | Vector-shaped custom layers |
+| Flatten | Yes | Explicit shaped-to-vector boundary |
+| Custom layer | Yes | Shape-aware sequential custom layers |
 | Custom activation | Yes | User policies supported |
 | Custom loss | Yes | User policies supported |
 | Custom precision policy | Yes | Model-level policy supported |

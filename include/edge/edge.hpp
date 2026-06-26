@@ -8,6 +8,7 @@
 #include <edge/initializers.hpp>
 #include <edge/layers/conv2d.hpp>
 #include <edge/layers/dense.hpp>
+#include <edge/layers/flatten.hpp>
 #include <edge/layers/layer_concepts.hpp>
 #include <edge/losses.hpp>
 #include <edge/memory_plan.hpp>
@@ -19,4 +20,5 @@
 #include <edge/serialization.hpp>
 #include <edge/status.hpp>
 #include <edge/tensor.hpp>
+#include <edge/tensor_spec.hpp>
 #include <edge/trainer.hpp>

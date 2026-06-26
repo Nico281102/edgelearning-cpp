@@ -51,8 +51,9 @@ The planner works because the C++ API describes the network as a type:
 
 ```cpp
 using Model = edge::Model<
-    edge::Input<784>,
-    edge::Conv2D<1, 28, 28, 4, 3, 3, edge::ReLU>,
+    edge::Input<edge::CHW<1, 28, 28>>,
+    edge::Conv2D<4, edge::Kernel<3, 3>, edge::ReLU>,
+    edge::Flatten,
     edge::Dense<10>>;
 ```
 
@@ -65,22 +66,25 @@ Backward propagation uses two accumulator slots that are reused in ping-pong fas
 The important C++ pieces are:
 
 ```cpp
-template<std::size_t InFeatures, typename DenseSpec>
+template<typename InputSpec, typename DenseSpec>
 struct DenseInstance {
-    static constexpr std::size_t in_features = InFeatures;
-    static constexpr std::size_t out_features = DenseSpec::out_features;
+    using input_spec = InputSpec;
+    using output_spec = edge::Vector<DenseSpec::out_features>;
+
+    static constexpr std::size_t in_features = input_spec::elements;
+    static constexpr std::size_t out_features = output_spec::elements;
     static constexpr std::size_t parameter_count =
         in_features * out_features + out_features;
 };
 ```
 
-`template<std::size_t InFeatures, ...>` means `InFeatures` is a value in the type system, not a runtime function argument. `static constexpr` means the value belongs to the type and can be evaluated at compile time. So `DenseInstance<8, Dense<32>>::parameter_count` is a compile-time fact.
+`template<typename InputSpec, ...>` means the layer receives shape and layout as a type, not as a runtime descriptor. `static constexpr` means the values belong to the type and can be evaluated at compile time. So `DenseInstance<Vector<8>, Dense<32>>::parameter_count` is a compile-time fact.
 
 The model chain then folds those facts:
 
 ```cpp
-using instance = typename MakeLayerInstance<CurrentFeatures, Layer>::type;
-using tail = LayerChain<instance::out_features, Rest...>;
+using instance = typename MakeLayerInstance<CurrentSpec, Layer>::type;
+using tail = LayerChain<typename instance::output_spec, Rest...>;
 
 static constexpr std::size_t parameter_count =
     instance::parameter_count + tail::parameter_count;

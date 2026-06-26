@@ -1,6 +1,6 @@
 #pragma once
 
-#include <type_traits>
+#include <concepts>
 
 namespace edge {
 
@@ -22,18 +22,26 @@ struct Backend {
 namespace detail {
 
 template<typename T>
-struct is_backend_policy : std::false_type {};
+consteval bool backend_falls_back_to_generic() {
+    if constexpr (requires { T::falls_back_to_generic; }) {
+        return T::falls_back_to_generic;
+    } else {
+        return true;
+    }
+}
 
-template<>
-struct is_backend_policy<Backend::Generic> : std::true_type {};
-
-template<>
-struct is_backend_policy<Backend::M55> : std::true_type {};
+template<typename>
+inline constexpr bool always_false_v = false;
 
 } // namespace detail
 
 template<typename T>
-concept BackendPolicy = detail::is_backend_policy<T>::value;
+concept BackendPolicy = requires {
+    { T::is_backend_policy } -> std::convertible_to<bool>;
+} && T::is_backend_policy;
+
+template<typename T>
+inline constexpr bool backend_falls_back_to_generic_v =
+    detail::backend_falls_back_to_generic<T>();
 
 } // namespace edge
-

@@ -7,8 +7,8 @@
 int main() {
     {
         using Model = edge::Model<
-            edge::Input<4>,
-            edge::Conv2D<1, 2, 2, 1, 2, 2, edge::Linear>>;
+            edge::Input<edge::CHW<1, 2, 2>>,
+            edge::Conv2D<1, edge::Kernel<2, 2>, edge::Linear>>;
 
         static_assert(Model::input_size == 4);
         static_assert(Model::output_size == 1);
@@ -41,8 +41,13 @@ int main() {
 
     {
         using Model = edge::Model<
-            edge::Input<9>,
-            edge::Conv2D<1, 3, 3, 1, 2, 2, edge::Linear, edge::Constant, 2, 2, 1, 1>>;
+            edge::Input<edge::CHW<1, 3, 3>>,
+            edge::Conv2D<1,
+                         edge::Kernel<2, 2>,
+                         edge::Linear,
+                         edge::Constant,
+                         edge::Stride<2, 2>,
+                         edge::Padding<1, 1>>>;
 
         static_assert(Model::output_size == 4);
 

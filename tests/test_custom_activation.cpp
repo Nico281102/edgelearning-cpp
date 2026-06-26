@@ -20,7 +20,7 @@ struct SquareActivation {
 };
 
 int main() {
-    using Model = edge::Model<edge::Input<1>, edge::Dense<1, SquareActivation>>;
+    using Model = edge::Model<edge::InputVector<1>, edge::Dense<1, SquareActivation>>;
     static_assert(Model::preactivation_count == 1);
 
     Model model;

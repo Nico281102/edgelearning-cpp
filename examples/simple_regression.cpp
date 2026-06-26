@@ -4,7 +4,7 @@
 
 int main() {
     using Model = edge::Model<
-        edge::Input<8>,
+        edge::InputVector<8>,
         edge::Dense<32, edge::ReLU>,
         edge::Dense<1>>;
 
