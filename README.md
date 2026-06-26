@@ -261,11 +261,12 @@ struct TrainableScale {
                             edge::TensorView<typename Types::ActivationT, cache_count> cache,
                             edge::TensorView<typename Types::AccumulatorT, workspace_count> work) noexcept;
 
-        template<typename Types>
+        template<bool PropagateInputGradient, typename Types>
         static void backward(edge::TensorView<const typename Types::ActivationT, in_features> x,
                              edge::TensorView<const typename Types::ActivationT, out_features> y,
                              edge::TensorView<const typename Types::AccumulatorT, out_features> dy,
-                             edge::TensorView<typename Types::AccumulatorT, in_features> dx,
+                             edge::TensorView<typename Types::AccumulatorT,
+                                              PropagateInputGradient ? in_features : 0U> dx,
                              edge::TensorView<const typename Types::ParameterT, parameter_count> p,
                              edge::TensorView<typename Types::GradientT, parameter_count> dp,
                              edge::TensorView<const typename Types::ActivationT, cache_count> cache,
@@ -276,7 +277,7 @@ struct TrainableScale {
 using M = edge::Model<edge::Input<4>, TrainableScale, edge::Dense<1>>;
 ```
 
-`TensorView` is passed by value because it is a small typed view, similar to `std::span<T, N>`. Data that the layer must not modify is exposed through `TensorView<const T, N>`. Backend code can still use `view.data()` when a contiguous pointer is needed for an optimized kernel. See `examples/custom_layer.cpp` for a full implementation.
+`TensorView` is passed by value because it is a small typed view, similar to `std::span<T, N>`. Data that the layer must not modify is exposed through `TensorView<const T, N>`. `PropagateInputGradient` tells the layer whether it must write `dLoss/dInput`; the model sets it to `false` for the first layer during ordinary training. Backend code can still use `view.data()` when a contiguous pointer is needed for an optimized kernel. See `examples/custom_layer.cpp` for a full implementation.
 
 ## Conv2D
 

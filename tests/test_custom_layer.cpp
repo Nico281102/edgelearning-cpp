@@ -39,12 +39,13 @@ struct TrainableScale {
             }
         }
 
-        template<typename Types>
+        template<bool PropagateInputGradient, typename Types>
         static void backward(
             edge::TensorView<const typename Types::ActivationT, in_features> input,
             edge::TensorView<const typename Types::ActivationT, out_features>,
             edge::TensorView<const typename Types::AccumulatorT, out_features> upstream,
-            edge::TensorView<typename Types::AccumulatorT, in_features> downstream,
+            edge::TensorView<typename Types::AccumulatorT,
+                             PropagateInputGradient ? in_features : 0U> downstream,
             edge::TensorView<const typename Types::ParameterT, parameter_count> params,
             edge::TensorView<typename Types::GradientT, parameter_count> gradients,
             edge::TensorView<const typename Types::ActivationT, cache_count>,
@@ -53,8 +54,10 @@ struct TrainableScale {
                 gradients[i] = static_cast<typename Types::GradientT>(
                     static_cast<typename Types::AccumulatorT>(gradients[i]) +
                     upstream[i] * static_cast<typename Types::AccumulatorT>(input[i]));
-                downstream[i] =
-                    upstream[i] * static_cast<typename Types::AccumulatorT>(params[i]);
+                if constexpr (PropagateInputGradient) {
+                    downstream[i] =
+                        upstream[i] * static_cast<typename Types::AccumulatorT>(params[i]);
+                }
             }
         }
     };

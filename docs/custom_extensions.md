@@ -93,11 +93,12 @@ struct MyLayer {
                             edge::TensorView<typename Types::ActivationT, cache_count>,
                             edge::TensorView<typename Types::AccumulatorT, workspace_count>) noexcept;
 
-        template<typename Types>
+        template<bool PropagateInputGradient, typename Types>
         static void backward(edge::TensorView<const typename Types::ActivationT, in_features>,
                              edge::TensorView<const typename Types::ActivationT, out_features>,
                              edge::TensorView<const typename Types::AccumulatorT, out_features>,
-                             edge::TensorView<typename Types::AccumulatorT, in_features>,
+                             edge::TensorView<typename Types::AccumulatorT,
+                                              PropagateInputGradient ? in_features : 0U>,
                              edge::TensorView<const typename Types::ParameterT, parameter_count>,
                              edge::TensorView<typename Types::GradientT, parameter_count>,
                              edge::TensorView<const typename Types::ActivationT, cache_count>,
@@ -106,23 +107,15 @@ struct MyLayer {
 };
 ```
 
-Forward writes the layer output. Backward receives `dLoss/dOutput`, accumulates parameter gradients, and writes `dLoss/dInput`. Use `TensorView<const T, N>` for read-only inputs and `TensorView<T, N>` for outputs. The view is passed by value because it is only a typed pointer plus compile-time extent.
-
-Custom layers that may appear as the first trainable layer can optionally provide a second backward entry point:
+Forward writes the layer output. Backward receives `dLoss/dOutput` and always accumulates parameter gradients. It writes `dLoss/dInput` only when `PropagateInputGradient` is `true`:
 
 ```cpp
-template<typename Types>
-static void backward_inputless(
-    edge::TensorView<const typename Types::ActivationT, in_features> input,
-    edge::TensorView<const typename Types::ActivationT, out_features> output,
-    edge::TensorView<const typename Types::AccumulatorT, out_features> upstream,
-    edge::TensorView<const typename Types::ParameterT, parameter_count> params,
-    edge::TensorView<typename Types::GradientT, parameter_count> gradients,
-    edge::TensorView<const typename Types::ActivationT, cache_count> cache,
-    edge::TensorView<typename Types::AccumulatorT, workspace_count> workspace) noexcept;
+if constexpr (PropagateInputGradient) {
+    downstream[i] = /* dLoss/dInput[i] */;
+}
 ```
 
-`backward_inputless` should accumulate parameter gradients but does not write `dLoss/dInput`. The model uses it automatically for the first trainable layer when it is available, because there is normally no need to propagate a gradient into the external input sample. If the method is absent, the model falls back to `backward`, which is correct but may require a larger downstream workspace buffer.
+The model sets `PropagateInputGradient` to `false` for the first layer during ordinary training because there is normally no need to propagate a gradient into the external input sample. Internal layers receive `true` so their downstream gradient can feed the previous layer. Use `TensorView<const T, N>` for read-only inputs and `TensorView<T, N>` for outputs. The view is passed by value because it is only a typed pointer plus compile-time extent.
 
 ## Backend-Specific Layer Paths
 
@@ -243,9 +236,9 @@ struct FusedReLUDense {
             }
         }
 
-        // initialize() and backward() are still required by the custom layer
+        // initialize() and backward<PropagateInputGradient>() are still required by the custom layer
         // contract. Backward can use output[out] > 0 to apply the ReLU
-        // derivative, then accumulate gradients and downstream as usual.
+        // derivative, then accumulate gradients and optionally downstream as usual.
     };
 };
 ```
@@ -268,14 +261,14 @@ if constexpr (std::is_same_v<typename Types::BackendT, edge::Backend::M55> &&
               std::is_same_v<typename Types::ActivationT, float> &&
               std::is_same_v<typename Types::GradientT, float> &&
               std::is_same_v<typename Types::AccumulatorT, float>) {
-    if (m55_my_layer_backward(input, output, upstream, downstream,
-                              params, gradients, cache)) {
+    if (m55_my_layer_backward<PropagateInputGradient>(
+            input, output, upstream, downstream, params, gradients, cache)) {
         return;
     }
 }
 
-generic_my_layer_backward(input, output, upstream, downstream,
-                          params, gradients, cache, workspace);
+generic_my_layer_backward<PropagateInputGradient>(
+    input, output, upstream, downstream, params, gradients, cache, workspace);
 ```
 
 The recommended rule is: keep the public layer semantic, and specialize the implementation inside `forward` and `backward`. For example, prefer `Dense` with an M55 fast path over a separate `M55Dense` layer in the user-facing model. The model then stays portable:

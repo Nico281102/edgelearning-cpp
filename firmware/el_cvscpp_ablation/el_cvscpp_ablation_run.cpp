@@ -208,85 +208,13 @@ struct LegacyCDense {
             }
         }
 
-        template<typename Types>
+        template<bool PropagateInputGradient, typename Types>
         static void backward(
             edge::TensorView<const typename Types::ActivationT, in_features> input,
             edge::TensorView<const typename Types::ActivationT, out_features> output,
             edge::TensorView<const typename Types::AccumulatorT, out_features> upstream,
-            edge::TensorView<typename Types::AccumulatorT, in_features> downstream,
-            edge::TensorView<const typename Types::ParameterT, parameter_count> params,
-            edge::TensorView<typename Types::GradientT, parameter_count> gradients,
-            edge::TensorView<const typename Types::ActivationT, cache_count>,
-            edge::TensorView<typename Types::AccumulatorT, workspace_count>) noexcept {
-            static_assert(std::is_same_v<typename Types::ParameterT, float>);
-            static_assert(std::is_same_v<typename Types::ActivationT, float>);
-            static_assert(std::is_same_v<typename Types::AccumulatorT, float>);
-            static_assert(std::is_same_v<typename Types::GradientT, float>);
-
-            el_tensor_t input_t{
-                .data = const_cast<float*>(input.data()),
-                .rows = static_cast<std::uint16_t>(in_features),
-                .cols = 1U,
-            };
-            el_tensor_t output_t{
-                .data = const_cast<float*>(output.data()),
-                .rows = static_cast<std::uint16_t>(out_features),
-                .cols = 1U,
-            };
-            el_tensor_t upstream_t{
-                .data = const_cast<float*>(upstream.data()),
-                .rows = static_cast<std::uint16_t>(out_features),
-                .cols = 1U,
-            };
-            el_tensor_t downstream_t{
-                .data = downstream.data(),
-                .rows = static_cast<std::uint16_t>(in_features),
-                .cols = 1U,
-            };
-            el_tensor_t weights_t{
-                .data = const_cast<float*>(params.data()),
-                .rows = static_cast<std::uint16_t>(out_features),
-                .cols = static_cast<std::uint16_t>(in_features),
-            };
-            el_tensor_t bias_t{
-                .data = const_cast<float*>(params.data() + weight_count),
-                .rows = static_cast<std::uint16_t>(out_features),
-                .cols = 1U,
-            };
-            el_tensor_t grad_weights_t{
-                .data = gradients.data(),
-                .rows = static_cast<std::uint16_t>(out_features),
-                .cols = static_cast<std::uint16_t>(in_features),
-            };
-            el_tensor_t grad_bias_t{
-                .data = gradients.data() + weight_count,
-                .rows = static_cast<std::uint16_t>(out_features),
-                .cols = 1U,
-            };
-
-            el_layer_dense_t layer{};
-            layer.weights = &weights_t;
-            layer.bias = &bias_t;
-            layer.output = &output_t;
-            layer.activation =
-                std::is_same_v<Activation, LegacyCReLU> ? EL_ACT_RELU : EL_ACT_NONE;
-            layer.grad_weights = &grad_weights_t;
-            layer.grad_bias = &grad_bias_t;
-
-            if constexpr (std::is_same_v<Activation, LegacyCReLU>) {
-                el_backend_dense_backward_relu(
-                    &layer, &input_t, &upstream_t, &downstream_t, &grad_weights_t, &grad_bias_t);
-            } else {
-                el_backend_dense_backward_linear(
-                    &layer, &input_t, &upstream_t, &downstream_t, &grad_weights_t, &grad_bias_t);
-            }
-        }
-
-        template<typename Types>
-        static void backward_inputless(
-            edge::TensorView<const typename Types::ActivationT, in_features> input,
-            edge::TensorView<const typename Types::ActivationT, out_features> output,
-            edge::TensorView<const typename Types::AccumulatorT, out_features> upstream,
+            edge::TensorView<typename Types::AccumulatorT,
+                             PropagateInputGradient ? in_features : 0U> downstream,
             edge::TensorView<const typename Types::ParameterT, parameter_count> params,
             edge::TensorView<typename Types::GradientT, parameter_count> gradients,
             edge::TensorView<const typename Types::ActivationT, cache_count>,
@@ -341,12 +269,37 @@ struct LegacyCDense {
             layer.grad_weights = &grad_weights_t;
             layer.grad_bias = &grad_bias_t;
 
-            if constexpr (std::is_same_v<Activation, LegacyCReLU>) {
-                el_backend_dense_backward_relu(
-                    &layer, &input_t, &upstream_t, nullptr, &grad_weights_t, &grad_bias_t);
+            if constexpr (PropagateInputGradient) {
+                el_tensor_t downstream_t{
+                    .data = downstream.data(),
+                    .rows = static_cast<std::uint16_t>(in_features),
+                    .cols = 1U,
+                };
+                if constexpr (std::is_same_v<Activation, LegacyCReLU>) {
+                    el_backend_dense_backward_relu(
+                        &layer,
+                        &input_t,
+                        &upstream_t,
+                        &downstream_t,
+                        &grad_weights_t,
+                        &grad_bias_t);
+                } else {
+                    el_backend_dense_backward_linear(
+                        &layer,
+                        &input_t,
+                        &upstream_t,
+                        &downstream_t,
+                        &grad_weights_t,
+                        &grad_bias_t);
+                }
             } else {
-                el_backend_dense_backward_linear(
-                    &layer, &input_t, &upstream_t, nullptr, &grad_weights_t, &grad_bias_t);
+                if constexpr (std::is_same_v<Activation, LegacyCReLU>) {
+                    el_backend_dense_backward_relu(
+                        &layer, &input_t, &upstream_t, nullptr, &grad_weights_t, &grad_bias_t);
+                } else {
+                    el_backend_dense_backward_linear(
+                        &layer, &input_t, &upstream_t, nullptr, &grad_weights_t, &grad_bias_t);
+                }
             }
         }
     };

@@ -102,33 +102,25 @@ The low-level storage can still be contiguous. The view can still be passed by v
 
 ## Input-Gradient Policy
 
-The current layer contract can expose two backward entry points:
+The layer backward contract is parameterized by whether the layer must propagate a gradient to its input:
 
 ```cpp
-backward(..., downstream, ...);
-backward_inputless(...);
-```
-
-`backward` computes parameter gradients and writes `dLoss/dInput`. `backward_inputless` computes only the parameter gradients. The model can use the inputless form for the first trainable layer because ordinary supervised training does not need to propagate gradients into the external input sample. This keeps the current API compatible and lets layers opt in to the more memory-efficient path.
-
-A future cleanup could make this contract more explicit with one templated backward function:
-
-```cpp
-template<bool NeedInputGradient, typename Types>
+template<bool PropagateInputGradient, typename Types>
 static void backward(
     TensorView<const typename Types::ActivationT, in_features> input,
     TensorView<const typename Types::ActivationT, out_features> output,
     TensorView<const typename Types::AccumulatorT, out_features> upstream,
-    ConditionalTensorView<NeedInputGradient,
-                          typename Types::AccumulatorT,
-                          in_features> downstream,
+    TensorView<typename Types::AccumulatorT,
+               PropagateInputGradient ? in_features : 0U> downstream,
     TensorView<const typename Types::ParameterT, parameter_count> params,
     TensorView<typename Types::GradientT, parameter_count> gradients,
     TensorView<const typename Types::ActivationT, cache_count> cache,
     TensorView<typename Types::AccumulatorT, workspace_count> workspace) noexcept;
 ```
 
-The model would instantiate `backward<false>` for the first trainable layer and `backward<true>` for earlier layers that must feed gradients farther backward. That is cleaner than maintaining two similarly shaped functions, and it lets the compiler remove the downstream path with `if constexpr`. It is future work because it changes the custom-layer API and needs a migration path for existing layers.
+The model instantiates `backward<false>` for the first layer during ordinary training, because the external input sample is not a trainable quantity. It instantiates `backward<true>` for internal layers that must feed gradients farther backward. Layer implementations should still accumulate parameter gradients in both cases, and should guard downstream writes with `if constexpr (PropagateInputGradient)`.
+
+Future work may add an explicit model-level option to request gradients all the way to the model input for saliency, adversarial-example generation, or using a model as a differentiable sub-block in a larger graph.
 
 ## Examples
 

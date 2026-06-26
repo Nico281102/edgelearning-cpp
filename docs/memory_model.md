@@ -28,7 +28,7 @@ The compile-time memory breakdown is:
 - `gradient_bytes`: accumulated parameter gradients
 - `optimizer_bytes`: reserved optimizer state, large enough for Adam moments
 - `activation_bytes`: input, layer outputs, and requested pre-activations
-- `workspace_bytes`: temporary backward buffers
+- `workspace_bytes`: temporary backward slots and layer-local workspace
 - `total_bytes`: bytes through the last section, including inter-section alignment padding
 - `required_memory`: aligned arena size
 
@@ -59,6 +59,8 @@ using Model = edge::Model<
 When this alias is instantiated, the compiler sees the full topology. `using Model = ...` creates a type alias, not an object. No model memory is allocated by the alias itself; it simply names a concrete model type.
 
 Each layer specification creates a typed layer instance for the input size produced by the previous layer. That instance exposes constants such as `out_features`, `parameter_count`, `cache_count`, and `workspace_count`. The model recursively accumulates those constants across the chain.
+
+Backward propagation uses two accumulator slots that are reused in ping-pong fashion. For each layer, one slot holds `dLoss/dLayerOutput` and the other slot holds `dLoss/dLayerInput` only when the model asks that layer to propagate an input gradient. During ordinary training the first layer receives `PropagateInputGradient=false`, so the planner does not reserve a downstream buffer for the external input sample.
 
 The important C++ pieces are:
 
@@ -103,6 +105,7 @@ parameter_bytes  = parameter_count * sizeof(parameter_type);
 gradient_bytes   = gradient_count * sizeof(gradient_type);
 optimizer_bytes  = optimizer_state_count * sizeof(optimizer_state_type);
 activation_bytes = activation_count * sizeof(activation_type);
+workspace_count  = backward_slot0_count + backward_slot1_count + layer_workspace_count;
 workspace_bytes  = workspace_count * sizeof(accumulator_type);
 
 gradient_offset  = align_up(parameter_offset + parameter_bytes, alignof(gradient_type));

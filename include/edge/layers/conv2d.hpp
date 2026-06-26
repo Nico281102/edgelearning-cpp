@@ -129,23 +129,26 @@ struct Conv2D {
             }
         }
 
-        template<typename Types>
+        template<bool PropagateInputGradient, typename Types>
         static void backward(
             TensorView<const typename Types::ActivationT, in_features> input,
             TensorView<const typename Types::ActivationT, out_features> output,
             TensorView<const typename Types::AccumulatorT, out_features> upstream,
-            TensorView<typename Types::AccumulatorT, in_features> downstream,
+            TensorView<typename Types::AccumulatorT,
+                       PropagateInputGradient ? in_features : 0U> downstream,
             TensorView<const typename Types::ParameterT, parameter_count> params,
             TensorView<typename Types::GradientT, parameter_count> gradients,
             TensorView<const typename Types::ActivationT, cache_count> cache,
             TensorView<typename Types::AccumulatorT, workspace_count>) noexcept {
             using AccumulatorT = typename Types::AccumulatorT;
-            const auto* filters = params.data();
+            (void)params;
             auto* grad_filters = gradients.data();
             auto* grad_bias = gradients.data() + filter_count;
 
-            for (std::size_t i = 0; i < in_features; ++i) {
-                downstream[i] = AccumulatorT{0};
+            if constexpr (PropagateInputGradient) {
+                for (std::size_t i = 0; i < in_features; ++i) {
+                    downstream[i] = AccumulatorT{0};
+                }
             }
 
             for (std::size_t oc = 0; oc < OutChannels; ++oc) {
@@ -178,8 +181,10 @@ struct Conv2D {
                                     grad_filters[f_idx] = static_cast<typename Types::GradientT>(
                                         static_cast<AccumulatorT>(grad_filters[f_idx]) +
                                         delta * static_cast<AccumulatorT>(input[in_idx]));
-                                    downstream[in_idx] +=
-                                        static_cast<AccumulatorT>(filters[f_idx]) * delta;
+                                    if constexpr (PropagateInputGradient) {
+                                        downstream[in_idx] +=
+                                            static_cast<AccumulatorT>(params[f_idx]) * delta;
+                                    }
                                 }
                             }
                         }

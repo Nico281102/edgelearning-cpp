@@ -264,84 +264,13 @@ struct LegacyCDense {
             }
         }
 
-        template<typename Types>
+        template<bool PropagateInputGradient, typename Types>
         static void backward(
             edge::TensorView<const typename Types::ActivationT, in_features> input,
             edge::TensorView<const typename Types::ActivationT, out_features> output,
             edge::TensorView<const typename Types::AccumulatorT, out_features> upstream,
-            edge::TensorView<typename Types::AccumulatorT, in_features> downstream,
-            edge::TensorView<const typename Types::ParameterT, parameter_count> params,
-            edge::TensorView<typename Types::GradientT, parameter_count> gradients,
-            edge::TensorView<const typename Types::ActivationT, cache_count>,
-            edge::TensorView<typename Types::AccumulatorT, workspace_count>) noexcept {
-            static_assert(std::is_same_v<typename Types::ParameterT, float>);
-            static_assert(std::is_same_v<typename Types::ActivationT, float>);
-            static_assert(std::is_same_v<typename Types::AccumulatorT, float>);
-            static_assert(std::is_same_v<typename Types::GradientT, float>);
-
-            el_tensor_t input_t{
-                .data = const_cast<float*>(input.data()),
-                .rows = static_cast<std::uint16_t>(in_features),
-                .cols = 1U,
-            };
-            el_tensor_t output_t{
-                .data = const_cast<float*>(output.data()),
-                .rows = static_cast<std::uint16_t>(out_features),
-                .cols = 1U,
-            };
-            el_tensor_t upstream_t{
-                .data = const_cast<float*>(upstream.data()),
-                .rows = static_cast<std::uint16_t>(out_features),
-                .cols = 1U,
-            };
-            el_tensor_t downstream_t{
-                .data = downstream.data(),
-                .rows = static_cast<std::uint16_t>(in_features),
-                .cols = 1U,
-            };
-            el_tensor_t weights_t{
-                .data = const_cast<float*>(params.data()),
-                .rows = static_cast<std::uint16_t>(out_features),
-                .cols = static_cast<std::uint16_t>(in_features),
-            };
-            el_tensor_t bias_t{
-                .data = const_cast<float*>(params.data() + weight_count),
-                .rows = static_cast<std::uint16_t>(out_features),
-                .cols = 1U,
-            };
-            el_tensor_t grad_weights_t{
-                .data = gradients.data(),
-                .rows = static_cast<std::uint16_t>(out_features),
-                .cols = static_cast<std::uint16_t>(in_features),
-            };
-            el_tensor_t grad_bias_t{
-                .data = gradients.data() + weight_count,
-                .rows = static_cast<std::uint16_t>(out_features),
-                .cols = 1U,
-            };
-
-            el_layer_dense_t layer{};
-            layer.weights = &weights_t;
-            layer.bias = &bias_t;
-            layer.output = &output_t;
-            layer.activation = std::is_same_v<Activation, LegacyCReLU> ? EL_ACT_RELU : EL_ACT_NONE;
-            layer.grad_weights = &grad_weights_t;
-            layer.grad_bias = &grad_bias_t;
-
-            if constexpr (std::is_same_v<Activation, LegacyCReLU>) {
-                el_backend_dense_backward_relu(
-                    &layer, &input_t, &upstream_t, &downstream_t, &grad_weights_t, &grad_bias_t);
-            } else {
-                el_backend_dense_backward_linear(
-                    &layer, &input_t, &upstream_t, &downstream_t, &grad_weights_t, &grad_bias_t);
-            }
-        }
-
-        template<typename Types>
-        static void backward_inputless(
-            edge::TensorView<const typename Types::ActivationT, in_features> input,
-            edge::TensorView<const typename Types::ActivationT, out_features> output,
-            edge::TensorView<const typename Types::AccumulatorT, out_features> upstream,
+            edge::TensorView<typename Types::AccumulatorT,
+                             PropagateInputGradient ? in_features : 0U> downstream,
             edge::TensorView<const typename Types::ParameterT, parameter_count> params,
             edge::TensorView<typename Types::GradientT, parameter_count> gradients,
             edge::TensorView<const typename Types::ActivationT, cache_count>,
@@ -395,12 +324,37 @@ struct LegacyCDense {
             layer.grad_weights = &grad_weights_t;
             layer.grad_bias = &grad_bias_t;
 
-            if constexpr (std::is_same_v<Activation, LegacyCReLU>) {
-                el_backend_dense_backward_relu(
-                    &layer, &input_t, &upstream_t, nullptr, &grad_weights_t, &grad_bias_t);
+            if constexpr (PropagateInputGradient) {
+                el_tensor_t downstream_t{
+                    .data = downstream.data(),
+                    .rows = static_cast<std::uint16_t>(in_features),
+                    .cols = 1U,
+                };
+                if constexpr (std::is_same_v<Activation, LegacyCReLU>) {
+                    el_backend_dense_backward_relu(
+                        &layer,
+                        &input_t,
+                        &upstream_t,
+                        &downstream_t,
+                        &grad_weights_t,
+                        &grad_bias_t);
+                } else {
+                    el_backend_dense_backward_linear(
+                        &layer,
+                        &input_t,
+                        &upstream_t,
+                        &downstream_t,
+                        &grad_weights_t,
+                        &grad_bias_t);
+                }
             } else {
-                el_backend_dense_backward_linear(
-                    &layer, &input_t, &upstream_t, nullptr, &grad_weights_t, &grad_bias_t);
+                if constexpr (std::is_same_v<Activation, LegacyCReLU>) {
+                    el_backend_dense_backward_relu(
+                        &layer, &input_t, &upstream_t, nullptr, &grad_weights_t, &grad_bias_t);
+                } else {
+                    el_backend_dense_backward_linear(
+                        &layer, &input_t, &upstream_t, nullptr, &grad_weights_t, &grad_bias_t);
+                }
             }
         }
     };
@@ -451,11 +405,6 @@ void run_cpp_direct_c_backend_static_batch(
         .rows = static_cast<std::uint16_t>(Model::parameter_count),
         .cols = 1U,
     };
-    const el_adam_config_t adam_config{
-        .beta1 = kAdamBeta1,
-        .beta2 = kAdamBeta2,
-        .epsilon = kAdamEpsilon,
-    };
     std::uint32_t step = 0U;
 
     for (std::size_t epoch = 0; epoch < kEpochs; ++epoch) {
@@ -474,8 +423,7 @@ void run_cpp_direct_c_backend_static_batch(
                 EDGE_EXPECT_EQ(model.backward(output_gradient), edge::Status::Ok);
             }
             ++step;
-            el_backend_adam_update_ex(
-                &params_t, &gradients_t, &m_t, &v_t, kLearningRate, step, &adam_config);
+            el_backend_adam_update(&params_t, &gradients_t, &m_t, &v_t, kLearningRate, step);
         }
     }
     EDGE_EXPECT_EQ(model.export_parameters(trained_params), edge::Status::Ok);
@@ -572,11 +520,7 @@ void run_legacy_c_static_batch(const std::array<float, ParamCount>& initial_para
     EDGE_EXPECT_TRUE(el_network_import_params(&net, initial_params.data(), initial_params.size()));
     el_network_zero_grad(&net);
 
-    const el_adam_config_t adam_config{
-        .beta1 = kAdamBeta1,
-        .beta2 = kAdamBeta2,
-        .epsilon = kAdamEpsilon,
-    };
+    std::uint32_t step = 0U;
 
     for (std::size_t epoch = 0; epoch < kEpochs; ++epoch) {
         for (std::size_t batch = 0; batch < kBatchesPerEpoch; ++batch) {
@@ -597,7 +541,10 @@ void run_legacy_c_static_batch(const std::array<float, ParamCount>& initial_para
                 };
                 (void)el_network_train_step(&net, &sample_input, &sample_target, EL_LOSS_MSE);
             }
-            el_network_update_with_adam_config(&net, kLearningRate, &adam_config);
+            ++step;
+            for (std::uint8_t layer_idx = 0; layer_idx < net.num_layers; ++layer_idx) {
+                el_layer_update(&net.layers[layer_idx], kLearningRate, step);
+            }
         }
     }
 
