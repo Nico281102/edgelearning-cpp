@@ -34,39 +34,39 @@
 <line class="grid" x1="865.0" y1="62" x2="865.0" y2="534"/>
 <text class="tick" x="865.0" y="554" text-anchor="middle">64x32</text>
 <text class="tick" x="865.0" y="570" text-anchor="middle">2369</text>
-<polyline points="82.0,348.4 115.3,348.4 165.3,348.4 276.4,348.4 465.2,348.4 865.0,348.4" fill="none" stroke="#2f2f2f" stroke-width="2.4"/>
-<circle cx="82.0" cy="348.4" r="3.2" fill="#2f2f2f"/>
-<circle cx="115.3" cy="348.4" r="3.2" fill="#2f2f2f"/>
-<circle cx="165.3" cy="348.4" r="3.2" fill="#2f2f2f"/>
-<circle cx="276.4" cy="348.4" r="3.2" fill="#2f2f2f"/>
-<circle cx="465.2" cy="348.4" r="3.2" fill="#2f2f2f"/>
-<circle cx="865.0" cy="348.4" r="3.2" fill="#2f2f2f"/>
-<polyline points="82.0,338.7 115.3,343.8 165.3,346.7 276.4,345.3 465.2,383.0 865.0,377.1" fill="none" stroke="#177245" stroke-width="2.4"/>
-<circle cx="82.0" cy="338.7" r="3.2" fill="#177245"/>
-<circle cx="115.3" cy="343.8" r="3.2" fill="#177245"/>
+<polyline points="82.0,348.3 115.3,348.3 165.3,348.3 276.4,348.3 465.2,348.3 865.0,348.3" fill="none" stroke="#2f2f2f" stroke-width="2.4"/>
+<circle cx="82.0" cy="348.3" r="3.2" fill="#2f2f2f"/>
+<circle cx="115.3" cy="348.3" r="3.2" fill="#2f2f2f"/>
+<circle cx="165.3" cy="348.3" r="3.2" fill="#2f2f2f"/>
+<circle cx="276.4" cy="348.3" r="3.2" fill="#2f2f2f"/>
+<circle cx="465.2" cy="348.3" r="3.2" fill="#2f2f2f"/>
+<circle cx="865.0" cy="348.3" r="3.2" fill="#2f2f2f"/>
+<polyline points="82.0,338.8 115.3,343.7 165.3,346.7 276.4,349.2 465.2,383.3 865.0,377.7" fill="none" stroke="#177245" stroke-width="2.4"/>
+<circle cx="82.0" cy="338.8" r="3.2" fill="#177245"/>
+<circle cx="115.3" cy="343.7" r="3.2" fill="#177245"/>
 <circle cx="165.3" cy="346.7" r="3.2" fill="#177245"/>
-<circle cx="276.4" cy="345.3" r="3.2" fill="#177245"/>
-<circle cx="465.2" cy="383.0" r="3.2" fill="#177245"/>
-<circle cx="865.0" cy="377.1" r="3.2" fill="#177245"/>
-<polyline points="82.0,127.5 115.3,239.9 165.3,270.8 276.4,317.9 465.2,343.7 865.0,322.4" fill="none" stroke="#1f62b2" stroke-width="2.4"/>
-<circle cx="82.0" cy="127.5" r="3.2" fill="#1f62b2"/>
+<circle cx="276.4" cy="349.2" r="3.2" fill="#177245"/>
+<circle cx="465.2" cy="383.3" r="3.2" fill="#177245"/>
+<circle cx="865.0" cy="377.7" r="3.2" fill="#177245"/>
+<polyline points="82.0,127.4 115.3,239.9 165.3,270.6 276.4,322.5 465.2,343.6 865.0,322.1" fill="none" stroke="#1f62b2" stroke-width="2.4"/>
+<circle cx="82.0" cy="127.4" r="3.2" fill="#1f62b2"/>
 <circle cx="115.3" cy="239.9" r="3.2" fill="#1f62b2"/>
-<circle cx="165.3" cy="270.8" r="3.2" fill="#1f62b2"/>
-<circle cx="276.4" cy="317.9" r="3.2" fill="#1f62b2"/>
-<circle cx="465.2" cy="343.7" r="3.2" fill="#1f62b2"/>
-<circle cx="865.0" cy="322.4" r="3.2" fill="#1f62b2"/>
-<polyline points="82.0,112.6 115.3,246.4 165.3,308.6 276.4,349.9 465.2,386.2 865.0,394.2" fill="none" stroke="#b24a1f" stroke-width="2.4"/>
+<circle cx="165.3" cy="270.6" r="3.2" fill="#1f62b2"/>
+<circle cx="276.4" cy="322.5" r="3.2" fill="#1f62b2"/>
+<circle cx="465.2" cy="343.6" r="3.2" fill="#1f62b2"/>
+<circle cx="865.0" cy="322.1" r="3.2" fill="#1f62b2"/>
+<polyline points="82.0,112.6 115.3,246.5 165.3,308.1 276.4,353.8 465.2,386.2 865.0,392.3" fill="none" stroke="#b24a1f" stroke-width="2.4"/>
 <circle cx="82.0" cy="112.6" r="3.2" fill="#b24a1f"/>
-<circle cx="115.3" cy="246.4" r="3.2" fill="#b24a1f"/>
-<circle cx="165.3" cy="308.6" r="3.2" fill="#b24a1f"/>
-<circle cx="276.4" cy="349.9" r="3.2" fill="#b24a1f"/>
+<circle cx="115.3" cy="246.5" r="3.2" fill="#b24a1f"/>
+<circle cx="165.3" cy="308.1" r="3.2" fill="#b24a1f"/>
+<circle cx="276.4" cy="353.8" r="3.2" fill="#b24a1f"/>
 <circle cx="465.2" cy="386.2" r="3.2" fill="#b24a1f"/>
-<circle cx="865.0" cy="394.2" r="3.2" fill="#b24a1f"/>
-<polyline points="82.0,235.1 115.3,317.0 165.3,378.6 276.4,444.6 465.2,471.1 865.0,480.6" fill="none" stroke="#7a3db8" stroke-width="2.4"/>
+<circle cx="865.0" cy="392.3" r="3.2" fill="#b24a1f"/>
+<polyline points="82.0,235.1 115.3,317.6 165.3,378.6 276.4,446.5 465.2,471.1 865.0,480.6" fill="none" stroke="#7a3db8" stroke-width="2.4"/>
 <circle cx="82.0" cy="235.1" r="3.2" fill="#7a3db8"/>
-<circle cx="115.3" cy="317.0" r="3.2" fill="#7a3db8"/>
+<circle cx="115.3" cy="317.6" r="3.2" fill="#7a3db8"/>
 <circle cx="165.3" cy="378.6" r="3.2" fill="#7a3db8"/>
-<circle cx="276.4" cy="444.6" r="3.2" fill="#7a3db8"/>
+<circle cx="276.4" cy="446.5" r="3.2" fill="#7a3db8"/>
 <circle cx="465.2" cy="471.1" r="3.2" fill="#7a3db8"/>
 <circle cx="865.0" cy="480.6" r="3.2" fill="#7a3db8"/>
 <text class="label" x="473.5" y="602" text-anchor="middle">Network config and parameter count</text>

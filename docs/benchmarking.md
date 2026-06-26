@@ -93,12 +93,12 @@ Cycle ratios below are variant cycles divided by legacy C cycles; values below
 
 | Hidden | Direct C backend | C++ M55 | C++ Generic | RLTools Generic |
 |---|---:|---:|---:|---:|
-| `8x8` | 0.950 | 0.457 | 0.440 | 0.621 |
-| `16x8` | 0.976 | 0.631 | 0.645 | 0.855 |
-| `16x16` | 0.991 | 0.705 | 0.823 | 1.194 |
-| `32x16` | 0.984 | 0.859 | 1.008 | 2.077 |
-| `32x32` | 1.230 | 0.975 | 1.256 | 2.953 |
-| `64x32` | 1.183 | 0.877 | 1.328 | 3.474 |
+| `8x8` | 0.951 | 0.457 | 0.441 | 0.621 |
+| `16x8` | 0.976 | 0.631 | 0.646 | 0.858 |
+| `16x16` | 0.991 | 0.705 | 0.822 | 1.195 |
+| `32x16` | 1.005 | 0.878 | 1.030 | 2.122 |
+| `32x32` | 1.232 | 0.975 | 1.256 | 2.953 |
+| `64x32` | 1.188 | 0.876 | 1.311 | 3.475 |
 
 Model footprint is measured separately from runtime. For C, the model-state
 number is the static arena plus control state. For C++ variants, the report
