@@ -108,6 +108,22 @@ struct MyLayer {
 
 Forward writes the layer output. Backward receives `dLoss/dOutput`, accumulates parameter gradients, and writes `dLoss/dInput`. Use `TensorView<const T, N>` for read-only inputs and `TensorView<T, N>` for outputs. The view is passed by value because it is only a typed pointer plus compile-time extent.
 
+Custom layers that may appear as the first trainable layer can optionally provide a second backward entry point:
+
+```cpp
+template<typename Types>
+static void backward_inputless(
+    edge::TensorView<const typename Types::ActivationT, in_features> input,
+    edge::TensorView<const typename Types::ActivationT, out_features> output,
+    edge::TensorView<const typename Types::AccumulatorT, out_features> upstream,
+    edge::TensorView<const typename Types::ParameterT, parameter_count> params,
+    edge::TensorView<typename Types::GradientT, parameter_count> gradients,
+    edge::TensorView<const typename Types::ActivationT, cache_count> cache,
+    edge::TensorView<typename Types::AccumulatorT, workspace_count> workspace) noexcept;
+```
+
+`backward_inputless` should accumulate parameter gradients but does not write `dLoss/dInput`. The model uses it automatically for the first trainable layer when it is available, because there is normally no need to propagate a gradient into the external input sample. If the method is absent, the model falls back to `backward`, which is correct but may require a larger downstream workspace buffer.
+
 ## Backend-Specific Layer Paths
 
 Backend specialization is selected through the model type, not through runtime virtual classes:
