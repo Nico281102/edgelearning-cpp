@@ -42,6 +42,26 @@ if(Python3_Interpreter_FOUND)
         VERBATIM
     )
 endif()
+
+get_property(EDGE_M55_REGRESSION_ELF_TARGETS GLOBAL PROPERTY EDGE_M55_REGRESSION_ELF_TARGETS)
+if(Python3_Interpreter_FOUND AND EDGE_M55_REGRESSION_ELF_TARGETS)
+    set(EDGE_M55_REGRESSION_ELF_BINARY_ARGS)
+    foreach(edge_m55_target IN LISTS EDGE_M55_REGRESSION_ELF_TARGETS)
+        list(APPEND EDGE_M55_REGRESSION_ELF_BINARY_ARGS
+            --binary "${edge_m55_target}=$<TARGET_FILE:${edge_m55_target}>"
+        )
+    endforeach()
+    add_custom_target(m55_regression_elf_size
+        COMMAND "${Python3_EXECUTABLE}"
+                "${CMAKE_CURRENT_SOURCE_DIR}/measure_m55_regression_elf.py"
+                --result-dir "${CMAKE_CURRENT_SOURCE_DIR}/results"
+                ${EDGE_M55_REGRESSION_ELF_BINARY_ARGS}
+        DEPENDS ${EDGE_M55_REGRESSION_ELF_TARGETS}
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+        COMMENT "Measuring static regression sweep ELF section sizes"
+        VERBATIM
+    )
+endif()
 execute_process(
     COMMAND git -C "${CMAKE_SOURCE_DIR}" rev-parse --short HEAD
     OUTPUT_VARIABLE EDGE_CPP_GIT_COMMIT

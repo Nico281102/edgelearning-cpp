@@ -175,7 +175,10 @@ public:
     static constexpr std::size_t workspace_count = Chain::max_features * 2U + Chain::layer_workspace_count;
     static constexpr std::size_t max_features = Chain::max_features;
     static constexpr std::size_t layer_workspace_offset = Chain::max_features * 2U;
+    static constexpr std::size_t backend_alignment =
+        std::is_same_v<BackendPolicyT, Backend::M55> ? 32U : 1U;
     static constexpr std::size_t alignment = static_max_v<
+        backend_alignment,
         alignof(parameter_type),
         alignof(gradient_type),
         alignof(optimizer_state_type),
@@ -191,13 +194,13 @@ public:
 
     static constexpr std::size_t parameter_offset = 0;
     static constexpr std::size_t gradient_offset =
-        align_up(parameter_offset + parameter_bytes, alignof(gradient_type));
+        align_up(parameter_offset + parameter_bytes, alignment);
     static constexpr std::size_t optimizer_offset =
-        align_up(gradient_offset + gradient_bytes, alignof(optimizer_state_type));
+        align_up(gradient_offset + gradient_bytes, alignment);
     static constexpr std::size_t activation_offset =
-        align_up(optimizer_offset + optimizer_bytes, alignof(activation_type));
+        align_up(optimizer_offset + optimizer_bytes, alignment);
     static constexpr std::size_t workspace_offset =
-        align_up(activation_offset + activation_bytes, alignof(accumulator_type));
+        align_up(activation_offset + activation_bytes, alignment);
     static constexpr std::size_t total_bytes = workspace_offset + workspace_bytes;
     static constexpr std::size_t required_memory = align_up(total_bytes, alignment);
 
@@ -543,16 +546,70 @@ private:
                 Tail...>(upstream, downstream);
         }
 
-        Instance::template backward<types>(
-            TensorView<const activation_type, Instance::in_features>(activations_ + PrevActOffset),
-            TensorView<const activation_type, Instance::out_features>(activations_ + ActOutOffset),
-            TensorView<const accumulator_type, Instance::out_features>(upstream),
-            TensorView<accumulator_type, Instance::in_features>(downstream),
-            TensorView<const parameter_type, Instance::parameter_count>(parameters_ + ParamOffset),
-            TensorView<gradient_type, Instance::parameter_count>(gradients_ + GradOffset),
-            TensorView<const activation_type, Instance::cache_count>(cache_base() + CacheOffset),
-            TensorView<accumulator_type, Instance::workspace_count>(
-                layer_workspace_base() + WorkspaceOffset));
+        backward_one_layer<
+            ParamOffset,
+            GradOffset,
+            ActOutOffset,
+            PrevActOffset,
+            CacheOffset,
+            WorkspaceOffset,
+            Instance>(upstream, downstream);
+    }
+
+    template<
+        std::size_t ParamOffset,
+        std::size_t GradOffset,
+        std::size_t ActOutOffset,
+        std::size_t PrevActOffset,
+        std::size_t CacheOffset,
+        std::size_t WorkspaceOffset,
+        typename Instance>
+    void backward_one_layer(accumulator_type*& upstream, accumulator_type*& downstream) noexcept {
+        if constexpr (ParamOffset == 0U && PrevActOffset == 0U && requires {
+                          Instance::template backward_inputless<types>(
+                              TensorView<const activation_type, Instance::in_features>(
+                                  activations_ + PrevActOffset),
+                              TensorView<const activation_type, Instance::out_features>(
+                                  activations_ + ActOutOffset),
+                              TensorView<const accumulator_type, Instance::out_features>(upstream),
+                              TensorView<const parameter_type, Instance::parameter_count>(
+                                  parameters_ + ParamOffset),
+                              TensorView<gradient_type, Instance::parameter_count>(
+                                  gradients_ + GradOffset),
+                              TensorView<const activation_type, Instance::cache_count>(
+                                  cache_base() + CacheOffset),
+                              TensorView<accumulator_type, Instance::workspace_count>(
+                                  layer_workspace_base() + WorkspaceOffset));
+                      }) {
+            Instance::template backward_inputless<types>(
+                TensorView<const activation_type, Instance::in_features>(
+                    activations_ + PrevActOffset),
+                TensorView<const activation_type, Instance::out_features>(
+                    activations_ + ActOutOffset),
+                TensorView<const accumulator_type, Instance::out_features>(upstream),
+                TensorView<const parameter_type, Instance::parameter_count>(
+                    parameters_ + ParamOffset),
+                TensorView<gradient_type, Instance::parameter_count>(gradients_ + GradOffset),
+                TensorView<const activation_type, Instance::cache_count>(
+                    cache_base() + CacheOffset),
+                TensorView<accumulator_type, Instance::workspace_count>(
+                    layer_workspace_base() + WorkspaceOffset));
+        } else {
+            Instance::template backward<types>(
+                TensorView<const activation_type, Instance::in_features>(
+                    activations_ + PrevActOffset),
+                TensorView<const activation_type, Instance::out_features>(
+                    activations_ + ActOutOffset),
+                TensorView<const accumulator_type, Instance::out_features>(upstream),
+                TensorView<accumulator_type, Instance::in_features>(downstream),
+                TensorView<const parameter_type, Instance::parameter_count>(
+                    parameters_ + ParamOffset),
+                TensorView<gradient_type, Instance::parameter_count>(gradients_ + GradOffset),
+                TensorView<const activation_type, Instance::cache_count>(
+                    cache_base() + CacheOffset),
+                TensorView<accumulator_type, Instance::workspace_count>(
+                    layer_workspace_base() + WorkspaceOffset));
+        }
 
         accumulator_type* old_upstream = upstream;
         upstream = downstream;

@@ -16,11 +16,11 @@ target_include_directories(edgelearning_cpp INTERFACE
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     target_compile_options(edgelearning_cpp INTERFACE
-        -Wall
-        -Wextra
-        -Wpedantic
-        -fno-exceptions
-        -fno-rtti
+        $<$<COMPILE_LANGUAGE:CXX>:-Wall>
+        $<$<COMPILE_LANGUAGE:CXX>:-Wextra>
+        $<$<COMPILE_LANGUAGE:CXX>:-Wpedantic>
+        $<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions>
+        $<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>
     )
 endif()
 

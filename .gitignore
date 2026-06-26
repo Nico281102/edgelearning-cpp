@@ -1,6 +1,14 @@
 build/
 build-*/
 cmake-build-*/
+.tmp/
+.env
+.env.local
+__pycache__/
+*.pyc
+firmware/el_cvscpp_ablation/.env
+firmware/el_cvscpp_ablation/.env.local
+firmware/el_cvscpp_ablation/results.backup_*/
 *.o
 *.a
 *.elf

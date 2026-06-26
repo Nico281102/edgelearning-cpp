@@ -92,7 +92,61 @@ bool m55_dense_forward(TensorView<const float, InFeatures> input,
     const float* weights = params.data();
     const float* bias = params.data() + weight_count;
 
-    for (std::size_t out = 0; out < OutFeatures; ++out) {
+    constexpr std::size_t vector_width = 4U;
+    constexpr std::size_t out_blocks = OutFeatures / vector_width;
+    std::size_t out = 0;
+    for (std::size_t out_block = 0; out_block < out_blocks; ++out_block) {
+        out = out_block * vector_width;
+        float32x4_t acc0 = vdupq_n_f32(0.0F);
+        float32x4_t acc1 = vdupq_n_f32(0.0F);
+        float32x4_t acc2 = vdupq_n_f32(0.0F);
+        float32x4_t acc3 = vdupq_n_f32(0.0F);
+
+        const float* w0 = weights + (out * InFeatures);
+        const float* w1 = w0 + InFeatures;
+        const float* w2 = w1 + InFeatures;
+        const float* w3 = w2 + InFeatures;
+
+        constexpr std::size_t in_blocks = InFeatures / vector_width;
+        std::size_t in = 0;
+        for (std::size_t in_block = 0; in_block < in_blocks; ++in_block) {
+            in = in_block * vector_width;
+            const float32x4_t x = vldrwq_f32(input.data() + in);
+            acc0 = vfmaq_f32(acc0, x, vldrwq_f32(w0 + in));
+            acc1 = vfmaq_f32(acc1, x, vldrwq_f32(w1 + in));
+            acc2 = vfmaq_f32(acc2, x, vldrwq_f32(w2 + in));
+            acc3 = vfmaq_f32(acc3, x, vldrwq_f32(w3 + in));
+        }
+        in = in_blocks * vector_width;
+
+        if (in < InFeatures) {
+            const auto remaining = static_cast<std::uint32_t>(InFeatures - in);
+            const mve_pred16_t p = vctp32q(remaining);
+            const float32x4_t x = vldrwq_z_f32(input.data() + in, p);
+            acc0 = vfmaq_m_f32(acc0, x, vldrwq_z_f32(w0 + in, p), p);
+            acc1 = vfmaq_m_f32(acc1, x, vldrwq_z_f32(w1 + in, p), p);
+            acc2 = vfmaq_m_f32(acc2, x, vldrwq_z_f32(w2 + in, p), p);
+            acc3 = vfmaq_m_f32(acc3, x, vldrwq_z_f32(w3 + in, p), p);
+        }
+
+        const float z0 = m55_reduce_add_f32(acc0) + bias[out];
+        const float z1 = m55_reduce_add_f32(acc1) + bias[out + 1U];
+        const float z2 = m55_reduce_add_f32(acc2) + bias[out + 2U];
+        const float z3 = m55_reduce_add_f32(acc3) + bias[out + 3U];
+        if constexpr (activation_stores_preactivation<Activation, float>()) {
+            cache[out] = z0;
+            cache[out + 1U] = z1;
+            cache[out + 2U] = z2;
+            cache[out + 3U] = z3;
+        }
+        output[out] = Activation::template forward<float>(z0);
+        output[out + 1U] = Activation::template forward<float>(z1);
+        output[out + 2U] = Activation::template forward<float>(z2);
+        output[out + 3U] = Activation::template forward<float>(z3);
+    }
+    out = out_blocks * vector_width;
+
+    for (; out < OutFeatures; ++out) {
         const float z = m55_dot_f32(input.data(), weights + out * InFeatures, InFeatures) +
                         bias[out];
         if constexpr (activation_stores_preactivation<Activation, float>()) {
@@ -135,6 +189,9 @@ bool m55_dense_backward(
             activation_stores_preactivation<Activation, float>() ? cache[out] : 0.0F;
         const float deriv = activation_derivative<Activation, float>(z, output[out]);
         const float delta = upstream[out] * deriv;
+        if (delta == 0.0F) {
+            continue;
+        }
         const std::size_t row = out * InFeatures;
         grad_bias[out] += delta;
         m55_axpy_f32(grad_weights + row, input.data(), delta, InFeatures);
@@ -147,6 +204,44 @@ bool m55_dense_backward(
     (void)upstream;
     (void)downstream;
     (void)params;
+    (void)gradients;
+    (void)cache;
+    return false;
+#endif
+}
+
+template<std::size_t InFeatures,
+         std::size_t OutFeatures,
+         std::size_t CacheCount,
+         typename Activation>
+bool m55_dense_backward_inputless(
+    TensorView<const float, InFeatures> input,
+    TensorView<const float, OutFeatures> output,
+    TensorView<const float, OutFeatures> upstream,
+    TensorView<float, InFeatures * OutFeatures + OutFeatures> gradients,
+    TensorView<const float, CacheCount> cache) noexcept {
+#if EDGE_DETAIL_HAS_M55_MVE
+    constexpr std::size_t weight_count = InFeatures * OutFeatures;
+    float* grad_weights = gradients.data();
+    float* grad_bias = gradients.data() + weight_count;
+
+    for (std::size_t out = 0; out < OutFeatures; ++out) {
+        const float z =
+            activation_stores_preactivation<Activation, float>() ? cache[out] : 0.0F;
+        const float deriv = activation_derivative<Activation, float>(z, output[out]);
+        const float delta = upstream[out] * deriv;
+        if (delta == 0.0F) {
+            continue;
+        }
+        const std::size_t row = out * InFeatures;
+        grad_bias[out] += delta;
+        m55_axpy_f32(grad_weights + row, input.data(), delta, InFeatures);
+    }
+    return true;
+#else
+    (void)input;
+    (void)output;
+    (void)upstream;
     (void)gradients;
     (void)cache;
     return false;
