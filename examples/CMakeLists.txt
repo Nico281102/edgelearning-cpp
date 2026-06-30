@@ -1,5 +1,6 @@
 set(EDGE_EXAMPLES
     minimal_regression
+    minimal_regression_batch
     external_arena_static
     backend_policy
     custom_loss
