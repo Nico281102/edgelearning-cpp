@@ -86,6 +86,7 @@ constexpr std::size_t kHidden2 = EL_CVSCPP_H2;
 constexpr std::size_t kOutputFeatures = 1;
 static_assert(kInputFeatures > 0U);
 constexpr std::size_t kBatchSize = 256;
+constexpr float kBatchGradientScale = 1.0F / static_cast<float>(kBatchSize);
 constexpr std::size_t kRolloutSamples = 1024;
 constexpr std::size_t kEpochs = 2;
 static_assert((kRolloutSamples % kBatchSize) == 0U);
@@ -614,6 +615,31 @@ el_adam_config_t legacy_adam_config() {
         .epsilon = kAdamEpsilon,
     };
 }
+
+void scale_legacy_tensor(el_tensor_t* tensor, float scale) {
+    if (tensor == nullptr || tensor->data == nullptr) {
+        return;
+    }
+    const std::uint32_t count =
+        static_cast<std::uint32_t>(tensor->rows) * static_cast<std::uint32_t>(tensor->cols);
+    for (std::uint32_t i = 0; i < count; ++i) {
+        tensor->data[i] *= scale;
+    }
+}
+
+void scale_legacy_network_gradients(el_network_t* net, float scale) {
+    if (net == nullptr || scale == 1.0F) {
+        return;
+    }
+    for (std::uint8_t layer_idx = 0; layer_idx < net->num_layers; ++layer_idx) {
+        el_layer_t* layer = &net->layers[layer_idx];
+        if (layer->type != EL_LAYER_DENSE) {
+            continue;
+        }
+        scale_legacy_tensor(layer->data.dense.grad_weights, scale);
+        scale_legacy_tensor(layer->data.dense.grad_bias, scale);
+    }
+}
 #endif
 
 template<typename Model>
@@ -677,7 +703,7 @@ int train_cpp_static_batch(const RegressionDataset& dataset,
                 }
             }
             profile_begin = dwt_read();
-            if (cpp_adam_instance<Model>().step(model, 1.0F) != edge::Status::Ok) {
+            if (cpp_adam_instance<Model>().step(model, kBatchGradientScale) != edge::Status::Ok) {
                 return -4;
             }
             if (profile != nullptr) {
@@ -767,6 +793,7 @@ int train_cpp_direct_c_backend_static_batch(const RegressionDataset& dataset,
             std::uint32_t& step = cpp_direct_c_adam_step<Model>();
             ++step;
             profile_begin = dwt_read();
+            scale_legacy_tensor(&gradients_t, kBatchGradientScale);
             el_backend_adam_update_ex(
                 &params_t, &gradients_t, &m_t, &v_t, kLearningRate, step, &adam_config);
             if (profile != nullptr) {
@@ -893,7 +920,7 @@ int train_rltools_static_batch(const RegressionDataset& dataset,
                 output,
                 runtime.target,
                 runtime.output_gradient,
-                static_cast<float>(kBatchSize));
+                1.0F);
             if (profile != nullptr) {
                 profile_add(profile->loss, profile_begin);
             }
@@ -1089,6 +1116,7 @@ int train_legacy_c_static_batch(const RegressionDataset& dataset,
                 }
             }
             profile_begin = dwt_read();
+            scale_legacy_network_gradients(&runtime.net, kBatchGradientScale);
             el_network_update_with_adam_config(&runtime.net, kLearningRate, &adam_config);
             if (profile != nullptr) {
                 profile_add(profile->adam_update, profile_begin);
@@ -1282,7 +1310,8 @@ void emit_begin() {
                 "cpp_m55_required_memory=%u cpp_m55_model_object=%u "
                 "cpp_generic_required_memory=%u cpp_generic_model_object=%u "
                 "rltools_static_state=%u rltools_model_object=%u "
-                "optimizer=adam lr_e-9=%ld beta1_e-9=%ld beta2_e-9=%ld eps_e-12=%ld "
+                "optimizer=adam gradient_reduction=mean gradient_scale_e-9=%ld "
+                "lr_e-9=%ld beta1_e-9=%ld beta2_e-9=%ld eps_e-12=%ld "
                 "timing=ppo_like_sample_passes profile_schema=train_loop_components_v1 "
                 "mve=%d opt=Ofast\r\n",
                 kVariantName,
@@ -1309,6 +1338,7 @@ void emit_begin() {
                 static_cast<unsigned>(sizeof(GenericModel)),
                 static_cast<unsigned>(kRltoolsStaticStateBytes),
                 static_cast<unsigned>(kRltoolsModelObjectBytes),
+                static_cast<long>(kBatchGradientScale * 1000000000.0F),
                 static_cast<long>(kLearningRate * 1000000000.0F),
                 static_cast<long>(kAdamBeta1 * 1000000000.0F),
                 static_cast<long>(kAdamBeta2 * 1000000000.0F),

@@ -53,6 +53,7 @@ constexpr std::size_t kInputFeatures = 32;
 constexpr std::size_t kHidden1 = EDGE_M55_SWEEP_H1;
 constexpr std::size_t kHidden2 = EDGE_M55_SWEEP_H2;
 constexpr std::size_t kBatchSize = 256;
+constexpr float kBatchGradientScale = 1.0F / static_cast<float>(kBatchSize);
 constexpr std::size_t kRolloutSamples = 1024;
 constexpr std::size_t kEpochs = 2;
 static_assert((kRolloutSamples % kBatchSize) == 0U);
@@ -190,13 +191,38 @@ void run_cpp_static_batch(const std::array<float, Model::parameter_count>& initi
                     gradient_view);
                 EDGE_EXPECT_EQ(model.backward(output_gradient), edge::Status::Ok);
             }
-            EDGE_EXPECT_EQ(adam.step(model, 1.0F), edge::Status::Ok);
+            EDGE_EXPECT_EQ(adam.step(model, kBatchGradientScale), edge::Status::Ok);
         }
     }
     EDGE_EXPECT_EQ(model.export_parameters(trained_params), edge::Status::Ok);
 }
 
 #if EDGE_M55_SWEEP_ENABLE_LEGACY_C
+void scale_legacy_tensor(el_tensor_t* tensor, float scale) {
+    if (tensor == nullptr || tensor->data == nullptr) {
+        return;
+    }
+    const std::uint32_t count =
+        static_cast<std::uint32_t>(tensor->rows) * static_cast<std::uint32_t>(tensor->cols);
+    for (std::uint32_t i = 0; i < count; ++i) {
+        tensor->data[i] *= scale;
+    }
+}
+
+void scale_legacy_network_gradients(el_network_t* net, float scale) {
+    if (net == nullptr || scale == 1.0F) {
+        return;
+    }
+    for (std::uint8_t layer_idx = 0; layer_idx < net->num_layers; ++layer_idx) {
+        el_layer_t* layer = &net->layers[layer_idx];
+        if (layer->type != EL_LAYER_DENSE) {
+            continue;
+        }
+        scale_legacy_tensor(layer->data.dense.grad_weights, scale);
+        scale_legacy_tensor(layer->data.dense.grad_bias, scale);
+    }
+}
+
 struct LegacyCLinear {};
 struct LegacyCReLU {};
 
@@ -429,6 +455,7 @@ void run_cpp_direct_c_backend_static_batch(
                 EDGE_EXPECT_EQ(model.backward(output_gradient), edge::Status::Ok);
             }
             ++step;
+            scale_legacy_tensor(&gradients_t, kBatchGradientScale);
             el_backend_adam_update(&params_t, &gradients_t, &m_t, &v_t, kLearningRate, step);
         }
     }
@@ -548,6 +575,7 @@ void run_legacy_c_static_batch(const std::array<float, ParamCount>& initial_para
                 (void)el_network_train_step(&net, &sample_input, &sample_target, EL_LOSS_MSE);
             }
             ++step;
+            scale_legacy_network_gradients(&net, kBatchGradientScale);
             for (std::uint8_t layer_idx = 0; layer_idx < net.num_layers; ++layer_idx) {
                 el_layer_update(&net.layers[layer_idx], kLearningRate, step);
             }
@@ -623,7 +651,7 @@ int main() {
 #endif
     }
 
-    std::printf("case=%s seeds=%zu batch=%zu rollout=%zu epochs=%zu "
+    std::printf("case=%s seeds=%zu batch=%zu gradient_reduction=mean rollout=%zu epochs=%zu "
                 "optimizer_steps=%zu sample_passes=%zu params=%zu "
                 "legacy_c_arena=%zu legacy_c_control=%zu "
                 "cpp_direct_required_memory=%zu cpp_direct_model_object=%zu "

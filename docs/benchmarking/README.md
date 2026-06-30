@@ -79,9 +79,10 @@ The timing window excludes setup, warm-up, convergence tracing, parameter
 import/export, serial printing, and numerical comparisons. Only the hot
 training work is measured: minibatch gradient reset, forward/backward work, and
 Adam updates. EdgeLearning++ performs one forward/loss/backward pass per sample
-and applies Adam after accumulating 256 gradients. RLTools uses one static
-`[256, input_features]` input tensor and one forward/loss/backward/update per
-minibatch. Firmware runs also emit component profiling counters from a separate
+and applies Adam after accumulating and mean-scaling 256 gradients. RLTools uses
+one static `[256, input_features]` input tensor and one
+forward/loss/backward/update per minibatch with equivalent MSE mean reduction.
+Firmware runs also emit component profiling counters from a separate
 equivalent profiling pass with the same initial parameters and dataset, so the
 primary speedup timings are not polluted by internal probes. C++ and RLTools
 variants split `zero_grad`, optional `input_copy`, `forward`, `loss`,

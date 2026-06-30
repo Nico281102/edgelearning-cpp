@@ -52,7 +52,7 @@
 <line x1="899" y1="70" x2="923" y2="70" stroke="#1f62b2" stroke-width="2.4"/>
 <text class="legend" x="931" y="74">C++ M55</text>
 <line x1="899" y1="90" x2="923" y2="90" stroke="#b24a1f" stroke-width="2.4"/>
-<text class="legend" x="931" y="94">C++ generic</text>
+<text class="legend" x="931" y="94">C++ Generic</text>
 <line x1="899" y1="110" x2="923" y2="110" stroke="#7a3db8" stroke-width="2.4"/>
 <text class="legend" x="931" y="114">RLTools Generic</text>
 </svg>

@@ -18,7 +18,7 @@ LABELS = {
     "legacy_c": "C M55",
     "cpp_direct_c_backend": "C++ direct C backend",
     "cpp_m55": "C++ M55",
-    "cpp_generic": "C++ generic",
+    "cpp_generic": "C++ Generic",
     "rltools_generic": "RLTools Generic",
 }
 COLORS = {

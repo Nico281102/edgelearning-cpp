@@ -151,20 +151,21 @@ separately.
 
 | Hidden | RLTools/M55 runtime ratio | EL++ M55 network state | RLTools Generic network state |
 |---|---:|---:|---:|
-| `8x8` | 1.54x | 2,080 B | 58,192 B |
-| `16x8` | 1.48x | 3,680 B | 92,496 B |
-| `16x16` | 1.95x | 6,048 B | 111,184 B |
-| `32x16` | 2.94x | 11,296 B | 181,840 B |
-| `32x32` | 3.29x | 20,128 B | 223,312 B |
-| `64x32` | 3.92x | 38,816 B | 372,816 B |
+| `8x8` | 1.530x | 2,080 B | 58,192 B |
+| `16x8` | 1.500x | 3,680 B | 92,496 B |
+| `16x16` | 1.938x | 6,048 B | 111,184 B |
+| `32x16` | 2.933x | 11,296 B | 181,840 B |
+| `32x32` | 3.288x | 20,128 B | 223,312 B |
+| `64x32` | 3.926x | 38,816 B | 372,816 B |
 
 Source report:
 [benchmarks/firmware/stm32n6/el_cvscpp_ablation/results/stm32n6_sweep_2026-06-30_input3_10seed.md](benchmarks/firmware/stm32n6/el_cvscpp_ablation/results/stm32n6_sweep_2026-06-30_input3_10seed.md).
 Methodology and scripts:
 [benchmarks/firmware/stm32n6/el_cvscpp_ablation/README.md](benchmarks/firmware/stm32n6/el_cvscpp_ablation/README.md).
 The public firmware sweep can be reproduced without the legacy C checkout by
-running the C++ and RLTools variants. Legacy-C rows in the generated report are
-author measurements from a private external checkout.
+running the C++ and RLTools variants. A separate legacy-C snapshot is documented
+only as an internal ablation result because the old C source is not distributed
+in this repository.
 
 ## Benchmarks
 

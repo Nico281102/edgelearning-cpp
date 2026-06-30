@@ -296,6 +296,8 @@ def build_variant_row(project_root: Path,
         "timing": begin.get("timing", ""),
         "profile_schema": begin.get("profile_schema", ""),
         "optimizer": begin.get("optimizer", ""),
+        "gradient_reduction": begin.get("gradient_reduction", ""),
+        "gradient_scale_e-9": to_int(begin.get("gradient_scale_e-9")),
         "batch": to_int(begin.get("batch"), to_int(summary.get("batch"))),
         "rollout": to_int(begin.get("rollout"), to_int(summary.get("rollout"))),
         "epochs": to_int(begin.get("epochs"), to_int(summary.get("epochs"))),
@@ -359,6 +361,8 @@ def build_summary_row(config: str,
         "timing": first_value(variant_rows, "timing", ""),
         "profile_schema": first_value(variant_rows, "profile_schema", ""),
         "optimizer": first_value(variant_rows, "optimizer", ""),
+        "gradient_reduction": first_value(variant_rows, "gradient_reduction", ""),
+        "gradient_scale_e-9": first_value(variant_rows, "gradient_scale_e-9"),
         "batch": first_value(variant_rows, "batch"),
         "rollout": first_value(variant_rows, "rollout"),
         "epochs": first_value(variant_rows, "epochs"),
@@ -468,6 +472,8 @@ def write_csv(path: Path, rows: list[dict[str, object]]) -> None:
         "timing",
         "profile_schema",
         "optimizer",
+        "gradient_reduction",
+        "gradient_scale_e-9",
         "batch",
         "rollout",
         "epochs",
@@ -552,7 +558,7 @@ def write_markdown(path: Path,
         f.write(f"Task: deterministic linear regression, input {input_features}, output 1, batch 256.\n")
         f.write("Build/run unit: one firmware ELF per variant and per network size.\n")
         f.write("Protocol: Adam, rollout 1024, 2 epochs, 8 optimizer steps, 2048 sample-passes per measured run.\n")
-        f.write("Batch semantics: EdgeLearning++ accumulates gradients over 256 samples before one Adam update; RLTools uses a static tensor with shape `[256, input_features]` and one forward/loss/backward/update per minibatch.\n")
+        f.write("Batch semantics: all variants use mean-reduced minibatch gradients. C and EdgeLearning++ accumulate 256 per-sample gradients, scale by `1/256`, and then apply one Adam update; RLTools uses a static tensor with shape `[256, input_features]` and equivalent MSE mean reduction.\n")
         f.write("Warm-up: 2 full training runs per seed, with model and optimizer reset before the measured run.\n")
         f.write("Timing: pre-generated rollout hot path only; setup, import/export, reset, sample generation, warm-up, traces, and serial I/O are outside DWT.\n")
         f.write("Profiling: training-loop component counters are collected in a separate equivalent pass with the same initial parameters and dataset, then averaged over seeds.\n")

@@ -126,10 +126,12 @@ The full private ablation measures:
 
 All cases use input size 3 by default, batch size 256, one linear output
 neuron, static model or arena storage, 10 deterministic seeds, and
-deterministic synthetic linear-regression samples. EdgeLearning++ implements
-batch 256 by accumulating 256 per-sample gradients before one Adam update;
+deterministic synthetic linear-regression samples. The benchmark uses
+mean-reduced minibatch gradients: C and EdgeLearning++ accumulate 256
+per-sample gradients, scale them by `1/256`, and then apply one Adam update;
 RLTools uses a static `[256, input_features]` input tensor and one
-forward/loss/backward/update per minibatch. The measured training protocol uses
+forward/loss/backward/update per minibatch with equivalent MSE mean reduction.
+The measured training protocol uses
 Adam (`lr=1e-3`, `beta1=0.9`, `beta2=0.999`, `eps=1e-8`), a 1024-sample
 rollout, 2 epochs, 4 minibatches per epoch, 8 Adam optimizer steps, and 2048
 sample-passes. The firmware Makefile compiles both C and C++ with `-Ofast`,
