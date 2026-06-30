@@ -6,16 +6,25 @@
 <line class="axis" x1="82" y1="62" x2="82" y2="534"/>
 <line class="grid" x1="82" y1="534.0" x2="865" y2="534.0"/>
 <text class="tick" x="72" y="538.0" text-anchor="end">0.00x</text>
-<line class="grid" x1="82" y1="439.6" x2="865" y2="439.6"/>
-<text class="tick" x="72" y="443.6" text-anchor="end">0.88x</text>
-<line class="grid" x1="82" y1="345.2" x2="865" y2="345.2"/>
-<text class="tick" x="72" y="349.2" text-anchor="end">1.76x</text>
-<line class="grid" x1="82" y1="250.8" x2="865" y2="250.8"/>
-<text class="tick" x="72" y="254.8" text-anchor="end">2.64x</text>
-<line class="grid" x1="82" y1="156.4" x2="865" y2="156.4"/>
-<text class="tick" x="72" y="160.4" text-anchor="end">3.52x</text>
+<line class="grid" x1="82" y1="481.6" x2="865" y2="481.6"/>
+<text class="tick" x="72" y="485.6" text-anchor="end">0.50x</text>
+<line class="grid" x1="82" y1="429.1" x2="865" y2="429.1"/>
+<text class="tick" x="72" y="433.1" text-anchor="end">1.00x</text>
+<line class="grid" x1="82" y1="376.7" x2="865" y2="376.7"/>
+<text class="tick" x="72" y="380.7" text-anchor="end">1.50x</text>
+<line class="grid" x1="82" y1="324.2" x2="865" y2="324.2"/>
+<text class="tick" x="72" y="328.2" text-anchor="end">2.00x</text>
+<line class="grid" x1="82" y1="271.8" x2="865" y2="271.8"/>
+<text class="tick" x="72" y="275.8" text-anchor="end">2.50x</text>
+<line class="grid" x1="82" y1="219.3" x2="865" y2="219.3"/>
+<text class="tick" x="72" y="223.3" text-anchor="end">3.00x</text>
+<line class="grid" x1="82" y1="166.9" x2="865" y2="166.9"/>
+<text class="tick" x="72" y="170.9" text-anchor="end">3.50x</text>
+<line class="grid" x1="82" y1="114.4" x2="865" y2="114.4"/>
+<text class="tick" x="72" y="118.4" text-anchor="end">4.00x</text>
 <line class="grid" x1="82" y1="62.0" x2="865" y2="62.0"/>
-<text class="tick" x="72" y="66.0" text-anchor="end">4.40x</text>
+<text class="tick" x="72" y="66.0" text-anchor="end">4.50x</text>
+<line x1="82" y1="429.1" x2="865" y2="429.1" stroke="#888888" stroke-width="1.4" stroke-dasharray="4 4"/>
 <line class="grid" x1="82.0" y1="62" x2="82.0" y2="534"/>
 <text class="tick" x="82.0" y="554" text-anchor="middle">8x8</text>
 <text class="tick" x="82.0" y="570" text-anchor="middle">113</text>
@@ -34,27 +43,27 @@
 <line class="grid" x1="865.0" y1="62" x2="865.0" y2="534"/>
 <text class="tick" x="865.0" y="554" text-anchor="middle">64x32</text>
 <text class="tick" x="865.0" y="570" text-anchor="middle">2369</text>
-<polyline points="82.0,369.8 115.3,372.9 165.3,326.0 276.4,219.2 465.2,181.1 865.0,112.6" fill="none" stroke="#1f62b2" stroke-width="2.4"/>
-<circle cx="82.0" cy="369.8" r="3.2" fill="#1f62b2"/>
-<circle cx="115.3" cy="372.9" r="3.2" fill="#1f62b2"/>
-<circle cx="165.3" cy="326.0" r="3.2" fill="#1f62b2"/>
-<circle cx="276.4" cy="219.2" r="3.2" fill="#1f62b2"/>
-<circle cx="465.2" cy="181.1" r="3.2" fill="#1f62b2"/>
-<circle cx="865.0" cy="112.6" r="3.2" fill="#1f62b2"/>
-<polyline points="82.0,362.8 115.3,375.7 165.3,354.7 276.4,265.8 465.2,260.9 865.0,246.3" fill="none" stroke="#b24a1f" stroke-width="2.4"/>
-<circle cx="82.0" cy="362.8" r="3.2" fill="#b24a1f"/>
-<circle cx="115.3" cy="375.7" r="3.2" fill="#b24a1f"/>
-<circle cx="165.3" cy="354.7" r="3.2" fill="#b24a1f"/>
-<circle cx="276.4" cy="265.8" r="3.2" fill="#b24a1f"/>
-<circle cx="465.2" cy="260.9" r="3.2" fill="#b24a1f"/>
-<circle cx="865.0" cy="246.3" r="3.2" fill="#b24a1f"/>
-<polyline points="82.0,426.7 115.3,426.7 165.3,426.7 276.4,426.7 465.2,426.7 865.0,426.7" fill="none" stroke="#7a3db8" stroke-width="2.4"/>
-<circle cx="82.0" cy="426.7" r="3.2" fill="#7a3db8"/>
-<circle cx="115.3" cy="426.7" r="3.2" fill="#7a3db8"/>
-<circle cx="165.3" cy="426.7" r="3.2" fill="#7a3db8"/>
-<circle cx="276.4" cy="426.7" r="3.2" fill="#7a3db8"/>
-<circle cx="465.2" cy="426.7" r="3.2" fill="#7a3db8"/>
-<circle cx="865.0" cy="426.7" r="3.2" fill="#7a3db8"/>
+<polyline points="82.0,373.5 115.3,376.6 165.3,330.8 276.4,226.4 465.2,189.2 865.0,122.2" fill="none" stroke="#1f62b2" stroke-width="2.4"/>
+<circle cx="82.0" cy="373.5" r="3.2" fill="#1f62b2"/>
+<circle cx="115.3" cy="376.6" r="3.2" fill="#1f62b2"/>
+<circle cx="165.3" cy="330.8" r="3.2" fill="#1f62b2"/>
+<circle cx="276.4" cy="226.4" r="3.2" fill="#1f62b2"/>
+<circle cx="465.2" cy="189.2" r="3.2" fill="#1f62b2"/>
+<circle cx="865.0" cy="122.2" r="3.2" fill="#1f62b2"/>
+<polyline points="82.0,366.7 115.3,379.3 165.3,358.8 276.4,271.9 465.2,267.1 865.0,252.9" fill="none" stroke="#b24a1f" stroke-width="2.4"/>
+<circle cx="82.0" cy="366.7" r="3.2" fill="#b24a1f"/>
+<circle cx="115.3" cy="379.3" r="3.2" fill="#b24a1f"/>
+<circle cx="165.3" cy="358.8" r="3.2" fill="#b24a1f"/>
+<circle cx="276.4" cy="271.9" r="3.2" fill="#b24a1f"/>
+<circle cx="465.2" cy="267.1" r="3.2" fill="#b24a1f"/>
+<circle cx="865.0" cy="252.9" r="3.2" fill="#b24a1f"/>
+<polyline points="82.0,429.1 115.3,429.1 165.3,429.1 276.4,429.1 465.2,429.1 865.0,429.1" fill="none" stroke="#7a3db8" stroke-width="2.4"/>
+<circle cx="82.0" cy="429.1" r="3.2" fill="#7a3db8"/>
+<circle cx="115.3" cy="429.1" r="3.2" fill="#7a3db8"/>
+<circle cx="165.3" cy="429.1" r="3.2" fill="#7a3db8"/>
+<circle cx="276.4" cy="429.1" r="3.2" fill="#7a3db8"/>
+<circle cx="465.2" cy="429.1" r="3.2" fill="#7a3db8"/>
+<circle cx="865.0" cy="429.1" r="3.2" fill="#7a3db8"/>
 <text class="label" x="473.5" y="602" text-anchor="middle">Network config and parameter count</text>
 <text class="label" transform="translate(22 298.0) rotate(-90)" text-anchor="middle">baseline cycles / variant cycles</text>
 <line x1="899" y1="70" x2="923" y2="70" stroke="#1f62b2" stroke-width="2.4"/>

@@ -275,7 +275,11 @@ def write_speedup_svg(path: Path, rows: list[dict[str, object]]) -> None:
         path.write_text("\n".join(lines) + "\n", encoding="utf-8")
         return
     x_min, x_max = min(params), max(params)
-    y_min, y_max = 0.0, max(1.0, max(speeds) * 1.12)
+    y_min = 0.0
+    padded_max = max(1.0, max(speeds) * 1.08)
+    tick_step = 0.5 if padded_max <= 5.0 else 1.0
+    y_max = math.ceil(padded_max / tick_step) * tick_step
+    y_ticks = [i * tick_step for i in range(int(round(y_max / tick_step)) + 1)]
 
     def sx(value: float) -> float:
         return left + ((value - x_min) / (x_max - x_min if x_max != x_min else 1.0)) * plot_w
@@ -293,11 +297,16 @@ def write_speedup_svg(path: Path, rows: list[dict[str, object]]) -> None:
     lines.append(f'<text class="title" x="82" y="34">Speedup over {html.escape(baseline_label)}</text>')
     lines.append(f'<line class="axis" x1="{left}" y1="{top + plot_h}" x2="{left + plot_w}" y2="{top + plot_h}"/>')
     lines.append(f'<line class="axis" x1="{left}" y1="{top}" x2="{left}" y2="{top + plot_h}"/>')
-    for i in range(6):
-        value = y_min + (y_max - y_min) * i / 5
+    for value in y_ticks:
         y = sy(value)
         lines.append(f'<line class="grid" x1="{left}" y1="{y:.1f}" x2="{left + plot_w}" y2="{y:.1f}"/>')
         lines.append(f'<text class="tick" x="{left - 10}" y="{y + 4:.1f}" text-anchor="end">{value:.2f}x</text>')
+    if y_min <= 1.0 <= y_max:
+        y = sy(1.0)
+        lines.append(
+            f'<line x1="{left}" y1="{y:.1f}" x2="{left + plot_w}" y2="{y:.1f}" '
+            'stroke="#888888" stroke-width="1.4" stroke-dasharray="4 4"/>'
+        )
     for param in params:
         x = sx(param)
         lines.append(f'<line class="grid" x1="{x:.1f}" y1="{top}" x2="{x:.1f}" y2="{top + plot_h}"/>')
