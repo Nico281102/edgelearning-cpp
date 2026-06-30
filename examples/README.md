@@ -13,7 +13,6 @@ Each example focuses on one API surface. They are built by CMake when
 | `custom_activation.cpp` | Custom activation policy |
 | `custom_loss.cpp` | Custom loss with value-plus-gradient path |
 | `conv2d_flatten_dense.cpp` | `CHW` input, Conv2D, Flatten, Dense |
-| `arduino_uno_smoke/` | Minimal Arduino Uno-style smoke sketch |
 
 Build all host examples:
 

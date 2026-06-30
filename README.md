@@ -10,7 +10,8 @@ descriptors: model topology, tensor specs, layer sizes, precision types, backend
 selection, and arena size are compile-time facts. Modern agentic AI tools make
 it easier to study language features such as templates, concepts, and
 `constexpr`; this project uses those features only where they give a concrete
-embedded benefit.
+embedded benefit. The C++ redesign rationale is summarized in
+[docs/design/cpp_redesign_rationale.md](docs/design/cpp_redesign_rationale.md).
 
 ## Quick Start
 
@@ -70,9 +71,9 @@ using ImageModel = edge::Model<
     edge::Dense<10>>;
 ```
 
-For the design details, see [docs/architecture.md](docs/architecture.md). For
+For the design details, see [docs/design/architecture.md](docs/design/architecture.md). For
 current topology limits and future graph/stateful layers, see
-[docs/limitations.md](docs/limitations.md).
+[docs/design/limitations.md](docs/design/limitations.md).
 
 ## Static Memory
 
@@ -94,7 +95,7 @@ static Model model{edge::external_arena(arena)};
 The planner computes parameter, gradient, optimizer, activation, cache, and
 workspace sizes from the model type. External arenas whose size is known in the
 type are rejected at compile time if they are too small; alignment is checked at
-construction. See [docs/memory_model.md](docs/memory_model.md).
+construction. See [docs/design/memory_model.md](docs/design/memory_model.md).
 
 ## Policies
 
@@ -131,26 +132,31 @@ using DoubleModel = edge::Model<
     edge::Dense<1>>;
 ```
 
-For extension points, see [docs/custom_extensions.md](docs/custom_extensions.md).
+For extension points, see [docs/api/custom_extensions.md](docs/api/custom_extensions.md).
 
 ## STM32N6 Preview
 
 The checked-in STM32N6 sweep compares one static firmware ELF per topology and
-variant. The table below uses RLTools generic as the baseline and reports
-`RLTools cycles / EdgeLearning++ M55 cycles`; higher is better for
-EdgeLearning++ M55.
+variant. The ratio below is `RLTools generic cycles / EdgeLearning++ M55
+cycles`; values above `1.0x` mean the M55 backend completed the same measured
+training work in fewer cycles.
 
-| Hidden | EdgeLearning++ M55 speedup vs RLTools | M55 required memory | RLTools static state |
+`EL++ M55 object` is `sizeof(Model)` for the owning static model. `RLTools
+runtime state` is the static runtime bundle used by the RLTools benchmark
+wrapper. The generated report also lists arena requirements, object sizes, and
+ELF sections separately.
+
+| Hidden | RLTools/M55 runtime ratio | EL++ M55 object | RLTools runtime state |
 |---|---:|---:|---:|
-| `8x8` | 1.36x | 2,048 B | 2,092 B |
-| `16x8` | 1.33x | 3,648 B | 3,756 B |
-| `16x16` | 1.69x | 6,016 B | 6,124 B |
-| `32x16` | 2.42x | 11,264 B | 11,500 B |
-| `32x32` | 3.03x | 20,096 B | 20,332 B |
-| `64x32` | 4.08x | 38,784 B | 39,276 B |
+| `8x8` | 1.36x | 2,080 B | 2,092 B |
+| `16x8` | 1.33x | 3,680 B | 3,756 B |
+| `16x16` | 1.69x | 6,048 B | 6,124 B |
+| `32x16` | 2.42x | 11,296 B | 11,500 B |
+| `32x32` | 3.03x | 20,128 B | 20,332 B |
+| `64x32` | 4.08x | 38,816 B | 39,276 B |
 
 Source report:
-[firmware/el_cvscpp_ablation/results/stm32n6_sweep_2026-06-26_input3_10seed.md](firmware/el_cvscpp_ablation/results/stm32n6_sweep_2026-06-26_input3_10seed.md).
+[benchmarks/firmware/stm32n6/el_cvscpp_ablation/results/stm32n6_sweep_2026-06-26_input3_10seed.md](benchmarks/firmware/stm32n6/el_cvscpp_ablation/results/stm32n6_sweep_2026-06-26_input3_10seed.md).
 Methodology and scripts:
 [firmware/el_cvscpp_ablation/README.md](firmware/el_cvscpp_ablation/README.md).
 The public firmware sweep can be reproduced without the legacy C checkout by
@@ -160,9 +166,9 @@ author measurements from a private external checkout.
 ## Benchmarks
 
 Host and firmware benchmark methodology lives in
-[docs/benchmarking.md](docs/benchmarking.md). The generated result files under
-`benchmarks/results/` and `firmware/el_cvscpp_ablation/results/` are the
-authoritative source for checked-in measurements.
+[docs/benchmarking/README.md](docs/benchmarking/README.md). The generated result files under
+`benchmarks/host/` and `benchmarks/firmware/` are the authoritative source for
+checked-in measurements.
 
 Run host benchmarks with:
 
@@ -191,7 +197,7 @@ Include `edgelearning-cpp/include` in the firmware project include paths.
 The old C baseline is used only for methodology and local regression
 measurement. Its source is not vendored in this repository. The independent
 redesign boundary is documented in
-[docs/independent_redesign.md](docs/independent_redesign.md).
+[docs/design/independent_redesign.md](docs/design/independent_redesign.md).
 
 ## References
 

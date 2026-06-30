@@ -15,7 +15,7 @@
 #include <edge/edge.hpp>
 
 #ifndef EDGE_BENCHMARK_RESULT_DIR
-#define EDGE_BENCHMARK_RESULT_DIR "benchmarks/results"
+#define EDGE_BENCHMARK_RESULT_DIR "benchmarks/host/m2/c_baseline_regression/results"
 #endif
 
 #ifndef EDGE_CPP_GIT_COMMIT

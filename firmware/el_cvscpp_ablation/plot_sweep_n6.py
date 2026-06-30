@@ -49,6 +49,8 @@ SHORT_LABELS = {
 
 def parse_args() -> argparse.Namespace:
     script_dir = Path(__file__).resolve().parent
+    repo_root = script_dir.parent.parent
+    default_results_dir = repo_root / "benchmarks" / "firmware" / "stm32n6" / "el_cvscpp_ablation" / "results"
     today = dt.date.today().isoformat()
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -57,7 +59,7 @@ def parse_args() -> argparse.Namespace:
         help="Sweep CSV produced by report_sweep_n6.py. Defaults to the latest 10-seed CSV.",
     )
     parser.add_argument("--convergence-config", default="32x32")
-    parser.add_argument("--output-dir", type=Path, default=script_dir / "results")
+    parser.add_argument("--output-dir", type=Path, default=default_results_dir)
     parser.add_argument("--date", default=today)
     parser.add_argument("--output-tag", default=None)
     parser.add_argument("--env-file", type=Path, default=script_dir / ".env")

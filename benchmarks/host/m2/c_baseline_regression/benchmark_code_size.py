@@ -164,7 +164,7 @@ def cpp_commit(repo: Path) -> str:
             "--short",
             "--",
             ".",
-            ":!benchmarks/results",
+            ":!benchmarks/host/m2/c_baseline_regression/results",
         ])
         return f"{commit} (dirty)" if dirty else commit
     except Exception:

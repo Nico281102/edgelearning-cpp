@@ -609,7 +609,7 @@ def write_markdown(path: Path,
         else:
             f.write(
                 "| Config | Input | Seeds | Warm-ups | Params | C++ M55 avg | C++ Generic avg | "
-                "Generic/M55 | RLTools Generic avg | RLTools/M55 | M55 speedup vs RLTools |\n"
+                "Generic/M55 | RLTools Generic avg | RLTools/M55 | RLTools/M55 runtime ratio |\n"
             )
             f.write("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|\n")
             for row in rows:
@@ -658,8 +658,14 @@ def main() -> int:
     if not str(project_root):
         raise SystemExit("project root missing; pass --project-root or set EL_CVSCPP_PROJECT_ROOT")
 
+    script_dir = Path(__file__).resolve().parent
+    repo_root = script_dir.parent.parent
     output_stem = args.output_stem or (
-        Path(__file__).resolve().parent
+        repo_root
+        / "benchmarks"
+        / "firmware"
+        / "stm32n6"
+        / "el_cvscpp_ablation"
         / "results"
         / f"stm32n6_sweep_{dt.date.today().isoformat()}_input{input_features}_10seed"
     )

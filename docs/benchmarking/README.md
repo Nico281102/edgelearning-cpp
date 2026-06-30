@@ -11,16 +11,16 @@ It reports forward, backward, train step, optimizer step, zero-grad time, and me
 
 `benchmark_mixed_precision` writes:
 
-- `benchmarks/results/mixed_precision_summary.csv`
-- `benchmarks/results/mixed_precision_convergence.csv`
-- `benchmarks/results/mixed_precision_convergence.svg`
-- `benchmarks/results/mixed_precision_report.md`
+- `benchmarks/host/m2/mixed_precision/results/mixed_precision_summary.csv`
+- `benchmarks/host/m2/mixed_precision/results/mixed_precision_convergence.csv`
+- `benchmarks/host/m2/mixed_precision/results/mixed_precision_convergence.svg`
+- `benchmarks/host/m2/mixed_precision/results/mixed_precision_report.md`
 
 It compares the FP32 baseline with `edge::precision::MixedFP16` on a deterministic synthetic regression task. `MixedFP16` follows the common mixed-precision pattern of FP32 master parameters, gradients, accumulators, optimizer state, and loss values with FP16 activation storage when `_Float16` is available. The checked-in result is a MacBook M2 host measurement.
 
-`benchmark_regression_vs_c_baseline` writes `benchmarks/results/host_regression_report.md`. It records the baseline commit and the methodology for a local C comparison. The old C source must be checked out outside this repository and must not be vendored or published here.
+`benchmark_regression_vs_c_baseline` writes `benchmarks/host/m2/c_baseline_regression/results/host_regression_report.md`. It records the baseline commit and the methodology for a local C comparison. The old C source must be checked out outside this repository and must not be vendored or published here.
 
-`benchmark_code_size` writes `benchmarks/results/code_size_report.md` and `.csv`. It measures a minimal regression-training binary for the C++ implementation. If `EDGE_C_BASELINE_DIR` points to a local old-C checkout at commit `0085814908ca1b57ece4fe367361d084fd74aa3e`, it also builds a temporary C harness outside this repository and reports the old-C linked section sizes.
+`benchmark_code_size` writes `benchmarks/host/m2/c_baseline_regression/results/code_size_report.md` and `.csv`. It measures a minimal regression-training binary for the C++ implementation. If `EDGE_C_BASELINE_DIR` points to a local old-C checkout at commit `0085814908ca1b57ece4fe367361d084fd74aa3e`, it also builds a temporary C harness outside this repository and reports the old-C linked section sizes.
 
 The M55 regression sweep is built as one static binary per topology:
 
@@ -46,7 +46,7 @@ Choose `-DEDGE_LEGACY_C_BACKEND=m55` for the old C M55 backend or `generic` for
 host validation.
 
 `m55_regression_elf_size` measures the generated static sweep ELFs and writes
-`benchmarks/results/m55_regression_elf_size.csv` and `.md`. The `.bss` numbers
+`benchmarks/firmware/stm32n6/m55_regression/results/m55_regression_elf_size.csv` and `.md`. The `.bss` numbers
 include the static C++ model storage or legacy C arena. Set `EDGE_SIZE_TOOL`
 when a specific tool is required, for example `arm-none-eabi-size` in the
 firmware toolchain.
@@ -93,7 +93,7 @@ size is measured from one separate ELF per variant and topology with
 static rollout buffers.
 
 The checked-in generated report is the source of record for firmware numbers:
-`firmware/el_cvscpp_ablation/results/stm32n6_sweep_2026-06-26_input3_10seed.md`.
+`benchmarks/firmware/stm32n6/el_cvscpp_ablation/results/stm32n6_sweep_2026-06-26_input3_10seed.md`.
 It includes private legacy-C rows measured by the project author. Users without
 the C checkout can regenerate the C++/RLTools rows by running the default public
 sweep. The accompanying CSV contains raw cycle averages, model-state fields,
@@ -103,6 +103,29 @@ breakdown.
 
 README.md includes a short RLTools-baseline preview. Avoid copying the full
 firmware tables into multiple documents; regenerate or link the report instead.
+
+### Firmware Variant Interpretation
+
+The STM32N6 report contains the rows needed for the main four-way comparison:
+
+| Variant | Meaning |
+|---|---|
+| `legacy_c` | `EL-C M55`, the private legacy C runtime with the M55 backend |
+| `cpp_generic` | `EL++ generic scalar`, the public C++ model without specialized M55 kernels |
+| `cpp_m55` | `EL++ M55`, the same public C++ model using the M55 backend policy |
+| `rltools_generic` | `RLTools generic/static`, the external static C++ baseline |
+
+The `cpp_direct_c_backend` row is an additional ablation: it keeps the C++ model
+layout while calling the legacy C backend kernels directly. It is useful for
+debugging backend effects, but it is not required for the four-way public
+presentation.
+
+For runtime ratios, use `cycles_avg` from the CSV. For model size, use
+`legacy_c_arena_bytes + legacy_c_control_bytes` for `EL-C M55`,
+`cpp_*_model_object` for owning C++ models, and `rltools_static_state` for the
+RLTools runtime bundle. For deployable image footprint, use the per-variant
+`*_elf_text`, `*_elf_data`, `*_elf_bss`, `*_elf_dec`, and `*_elf_file_bytes`
+columns.
 
 For fair comparisons, use the same compiler family, optimization flags, topology, flat parameter layout, initial weights, synthetic samples, optimizer, batch policy, and iteration count.
 

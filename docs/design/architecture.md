@@ -421,7 +421,7 @@ Section sizes and offsets are computed from layer traits and precision policy
 types. Metadata such as shape, layout, backend policy, layer count, and offsets
 is not stored in the arena; it exists in types and constants.
 
-See `docs/memory_model.md` for the detailed formulas and external arena rules.
+See `docs/design/memory_model.md` for the detailed formulas and external arena rules.
 
 ## Precision Policy
 

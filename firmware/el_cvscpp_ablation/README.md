@@ -189,7 +189,7 @@ static rollout buffers in each variant image.
 The checked-in 2026-06-26 input-3 ten-seed run is recorded in:
 
 ```text
-firmware/el_cvscpp_ablation/results/stm32n6_sweep_2026-06-26_input3_10seed.md
+benchmarks/firmware/stm32n6/el_cvscpp_ablation/results/stm32n6_sweep_2026-06-26_input3_10seed.md
 ```
 
 That generated report is the source of record for runtime ratios, model-state
@@ -217,8 +217,8 @@ python3 firmware/el_cvscpp_ablation/report_sweep_n6.py \
 The default report paths are:
 
 ```text
-firmware/el_cvscpp_ablation/results/stm32n6_sweep_<date>_10seed.csv
-firmware/el_cvscpp_ablation/results/stm32n6_sweep_<date>_10seed.md
+benchmarks/firmware/stm32n6/el_cvscpp_ablation/results/stm32n6_sweep_<date>_10seed.csv
+benchmarks/firmware/stm32n6/el_cvscpp_ablation/results/stm32n6_sweep_<date>_10seed.md
 ```
 
 With the default input size this resolves to
@@ -233,12 +233,12 @@ python3 firmware/el_cvscpp_ablation/plot_sweep_n6.py
 The default plot paths are:
 
 ```text
-firmware/el_cvscpp_ablation/results/stm32n6_speedup_<date>.csv
-firmware/el_cvscpp_ablation/results/stm32n6_speedup_<date>.svg
-firmware/el_cvscpp_ablation/results/stm32n6_training_component_breakdown_<date>.csv
-firmware/el_cvscpp_ablation/results/stm32n6_training_component_breakdown_<date>.svg
-firmware/el_cvscpp_ablation/results/stm32n6_convergence_<date>.csv
-firmware/el_cvscpp_ablation/results/stm32n6_convergence_<date>_32x32.svg
+benchmarks/firmware/stm32n6/el_cvscpp_ablation/results/stm32n6_speedup_<date>.csv
+benchmarks/firmware/stm32n6/el_cvscpp_ablation/results/stm32n6_speedup_<date>.svg
+benchmarks/firmware/stm32n6/el_cvscpp_ablation/results/stm32n6_training_component_breakdown_<date>.csv
+benchmarks/firmware/stm32n6/el_cvscpp_ablation/results/stm32n6_training_component_breakdown_<date>.svg
+benchmarks/firmware/stm32n6/el_cvscpp_ablation/results/stm32n6_convergence_<date>.csv
+benchmarks/firmware/stm32n6/el_cvscpp_ablation/results/stm32n6_convergence_<date>_32x32.svg
 ```
 
 When generated from an input-tagged sweep report, the plot paths also include
@@ -256,8 +256,8 @@ python3 firmware/el_cvscpp_ablation/plot_elf_component_breakdown_n6.py
 The default output paths are:
 
 ```text
-firmware/el_cvscpp_ablation/results/stm32n6_elf_component_breakdown_<date>.csv
-firmware/el_cvscpp_ablation/results/stm32n6_elf_component_breakdown_<date>.svg
+benchmarks/firmware/stm32n6/el_cvscpp_ablation/results/stm32n6_elf_component_breakdown_<date>.csv
+benchmarks/firmware/stm32n6/el_cvscpp_ablation/results/stm32n6_elf_component_breakdown_<date>.svg
 ```
 
 When generated from an input-tagged sweep report, these paths also include the

@@ -352,4 +352,4 @@ Input and output tensors are flattened in `CHW` order. The implementation is dir
 
 ## Future Layers
 
-v0.1 custom layers are shape-aware but sequential: they expose `input_spec`, `output_spec`, `in_features`, `out_features`, parameter count, cache count, and workspace count. See `docs/limitations.md` for the current limits around state, multi-input layers, RNN, GRU, gates, and attention.
+v0.1 custom layers are shape-aware but sequential: they expose `input_spec`, `output_spec`, `in_features`, `out_features`, parameter count, cache count, and workspace count. See `docs/design/limitations.md` for the current limits around state, multi-input layers, RNN, GRU, gates, and attention.
