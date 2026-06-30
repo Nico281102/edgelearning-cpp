@@ -15,4 +15,19 @@ The redesign excludes application-specific reinforcement-learning projects,
 datasets, generated models, firmware applications, host-MCU protocols, and
 post-baseline optimized kernels.
 
-The C baseline may be checked out locally outside this repository for regression benchmarking. Public benchmark artifacts must contain methodology and measurements only, not the old C source.
+The C baseline may be checked out locally outside this repository for regression
+benchmarking. Public benchmark artifacts must contain methodology and
+measurements only, not the old C source.
+
+## Private C Ablation Snapshot
+
+The figure below shows an internal STM32N6 ablation run used to check the
+redesign hypothesis against the earlier C runtime. It is included as a result
+snapshot for readers who want to inspect the comparison, but it is not a
+reproducible public benchmark from this repository because the legacy C source
+is not distributed here.
+
+![STM32N6 private C ablation speedup](assets/stm32n6_speedup_2026-06-30_private_c_ablation.svg)
+
+The public, reproducible firmware benchmark remains the C++/RLTools sweep under
+`benchmarks/firmware/stm32n6/el_cvscpp_ablation/results/`.
