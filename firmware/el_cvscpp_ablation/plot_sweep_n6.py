@@ -98,6 +98,15 @@ def to_int(value: object, default: int = 0) -> int:
     return int(str(value))
 
 
+def active_variants_from_summary(rows: list[dict[str, str]]) -> tuple[str, ...]:
+    active = [
+        variant
+        for variant in VARIANTS
+        if any(to_int(row.get(f"{variant}_cycles_avg")) > 0 for row in rows)
+    ]
+    return tuple(active) if active else VARIANTS
+
+
 def parse_kv_line(line: str) -> tuple[str, dict[str, str]]:
     parts = line.strip().split()
     if not parts:
@@ -137,16 +146,24 @@ def write_speedup_csv(path: Path, rows: list[dict[str, str]]) -> list[dict[str, 
     out: list[dict[str, object]] = []
     for row in rows:
         legacy = to_int(row.get("legacy_c_cycles_avg"))
+        rltools = to_int(row.get("rltools_generic_cycles_avg"))
+        baseline_variant = "legacy_c" if legacy > 0 else "rltools_generic"
+        baseline = legacy if legacy > 0 else rltools
         for variant in VARIANTS:
             cycles = to_int(row.get(f"{variant}_cycles_avg"))
-            speedup = (legacy / cycles) if cycles else 0.0
+            if cycles <= 0:
+                continue
+            speedup = (baseline / cycles) if cycles else 0.0
             out.append(
                 {
                     "config": row["config"],
                     "params": to_int(row.get("params")),
                     "variant": variant,
+                    "baseline_variant": baseline_variant,
                     "cycles_avg": cycles,
-                    "speedup_over_legacy": speedup,
+                    "speedup_over_baseline": speedup,
+                    "cycles_over_baseline": (cycles / baseline) if baseline else 0.0,
+                    "speedup_over_legacy": (legacy / cycles) if legacy else 0.0,
                     "cycles_over_legacy": (cycles / legacy) if legacy else 0.0,
                 }
             )
@@ -158,7 +175,10 @@ def write_speedup_csv(path: Path, rows: list[dict[str, str]]) -> list[dict[str, 
                 "config",
                 "params",
                 "variant",
+                "baseline_variant",
                 "cycles_avg",
+                "speedup_over_baseline",
+                "cycles_over_baseline",
                 "speedup_over_legacy",
                 "cycles_over_legacy",
             ],
@@ -245,7 +265,7 @@ def write_speedup_svg(path: Path, rows: list[dict[str, object]]) -> None:
     plot_h = height - top - bottom
     params = sorted({int(row["params"]) for row in rows})
     configs_by_params = {int(row["params"]): str(row["config"]) for row in rows}
-    speeds = [float(row["speedup_over_legacy"]) for row in rows if float(row["speedup_over_legacy"]) > 0]
+    speeds = [float(row["speedup_over_baseline"]) for row in rows if float(row["speedup_over_baseline"]) > 0]
     if not params or not speeds:
         lines = svg_header(width, height)
         lines.append('<text class="title" x="82" y="34">Speedup trace unavailable</text>')
@@ -261,8 +281,14 @@ def write_speedup_svg(path: Path, rows: list[dict[str, object]]) -> None:
     def sy(value: float) -> float:
         return top + (1.0 - ((value - y_min) / (y_max - y_min))) * plot_h
 
+    baseline_variant = str(rows[0].get("baseline_variant", "legacy_c")) if rows else "legacy_c"
+    baseline_label = "legacy C baseline" if baseline_variant == "legacy_c" else "RLTools generic baseline"
+    active_variants = tuple(
+        variant for variant in VARIANTS if any(str(row["variant"]) == variant for row in rows)
+    )
+
     lines = svg_header(width, height)
-    lines.append('<text class="title" x="82" y="34">Speedup over legacy C baseline</text>')
+    lines.append(f'<text class="title" x="82" y="34">Speedup over {html.escape(baseline_label)}</text>')
     lines.append(f'<line class="axis" x1="{left}" y1="{top + plot_h}" x2="{left + plot_w}" y2="{top + plot_h}"/>')
     lines.append(f'<line class="axis" x1="{left}" y1="{top}" x2="{left}" y2="{top + plot_h}"/>')
     for i in range(6):
@@ -275,28 +301,32 @@ def write_speedup_svg(path: Path, rows: list[dict[str, object]]) -> None:
         lines.append(f'<line class="grid" x1="{x:.1f}" y1="{top}" x2="{x:.1f}" y2="{top + plot_h}"/>')
         lines.append(f'<text class="tick" x="{x:.1f}" y="{top + plot_h + 20}" text-anchor="middle">{html.escape(configs_by_params[param])}</text>')
         lines.append(f'<text class="tick" x="{x:.1f}" y="{top + plot_h + 36}" text-anchor="middle">{param}</text>')
-    by_variant: dict[str, list[dict[str, object]]] = {variant: [] for variant in VARIANTS}
+    by_variant: dict[str, list[dict[str, object]]] = {variant: [] for variant in active_variants}
     for row in rows:
-        by_variant[str(row["variant"])].append(row)
-    for variant in VARIANTS:
+        variant = str(row["variant"])
+        if variant in by_variant:
+            by_variant[variant].append(row)
+    for variant in active_variants:
         series = sorted(by_variant[variant], key=lambda row: int(row["params"]))
-        points = [(sx(float(row["params"])), sy(float(row["speedup_over_legacy"]))) for row in series]
+        points = [(sx(float(row["params"])), sy(float(row["speedup_over_baseline"]))) for row in series]
         lines.append(polyline(points, COLORS[variant]))
         for x, y in points:
             lines.append(circle(x, y, COLORS[variant]))
     lines.append(f'<text class="label" x="{left + plot_w / 2:.1f}" y="{height - 18}" text-anchor="middle">Network config and parameter count</text>')
-    lines.append(f'<text class="label" transform="translate(22 {top + plot_h / 2:.1f}) rotate(-90)" text-anchor="middle">legacy C cycles / variant cycles</text>')
-    draw_legend(lines, width - right + 34, top + 8, VARIANTS)
+    lines.append(f'<text class="label" transform="translate(22 {top + plot_h / 2:.1f}) rotate(-90)" text-anchor="middle">baseline cycles / variant cycles</text>')
+    draw_legend(lines, width - right + 34, top + 8, active_variants)
     lines.append("</svg>")
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def write_runtime_breakdown_csv(path: Path, rows: list[dict[str, str]]) -> list[dict[str, object]]:
+def write_runtime_breakdown_csv(path: Path,
+                                rows: list[dict[str, str]],
+                                variants: tuple[str, ...]) -> list[dict[str, object]]:
     out: list[dict[str, object]] = []
     for row in rows:
         config = row["config"]
         params = to_int(row.get("params"))
-        for variant in VARIANTS:
+        for variant in variants:
             total = to_int(row.get(f"{variant}_profile_cycles_avg"))
             if total == 0:
                 total = to_int(row.get(f"{variant}_cycles_avg"))
@@ -337,7 +367,9 @@ def write_runtime_breakdown_csv(path: Path, rows: list[dict[str, str]]) -> list[
     return out
 
 
-def write_runtime_breakdown_svg(path: Path, rows: list[dict[str, object]]) -> None:
+def write_runtime_breakdown_svg(path: Path,
+                                rows: list[dict[str, object]],
+                                variants: tuple[str, ...]) -> None:
     configs: list[str] = []
     for row in rows:
         config = str(row["config"])
@@ -353,7 +385,7 @@ def write_runtime_breakdown_svg(path: Path, rows: list[dict[str, object]]) -> No
     bar_gap = 5
     group_gap = 34
     left, right, top, bottom = 90, 285, 70, 122
-    group_w = len(VARIANTS) * bar_w + (len(VARIANTS) - 1) * bar_gap
+    group_w = len(variants) * bar_w + (len(variants) - 1) * bar_gap
     plot_w = len(configs) * group_w + (len(configs) - 1) * group_gap
     width, height = left + plot_w + right, 680
     plot_h = height - top - bottom
@@ -389,7 +421,7 @@ def write_runtime_breakdown_svg(path: Path, rows: list[dict[str, object]]) -> No
             f'<text class="label" x="{group_center:.1f}" y="{top + plot_h + 76}" '
             f'text-anchor="middle">{html.escape(config)}</text>'
         )
-        for vi, variant in enumerate(VARIANTS):
+        for vi, variant in enumerate(variants):
             x = sx(ci, vi)
             accum = 0.0
             for component, label, color in COMPONENTS:
@@ -432,7 +464,7 @@ def write_runtime_breakdown_svg(path: Path, rows: list[dict[str, object]]) -> No
         lines.append(f'<text class="legend" x="{legend_x + 24}" y="{y + 1}">{html.escape(label)}</text>')
     variant_y = legend_y + len(COMPONENTS) * 21 + 42
     lines.append(f'<text class="legend" x="{legend_x}" y="{variant_y - 16}">Variant order</text>')
-    for i, variant in enumerate(VARIANTS):
+    for i, variant in enumerate(variants):
         y = variant_y + i * 19
         lines.append(f'<text class="legend" x="{legend_x}" y="{y}">{html.escape(SHORT_LABELS[variant])}: {html.escape(LABELS[variant])}</text>')
     lines.append("</svg>")
@@ -464,7 +496,7 @@ def update_markdown_plots(summary_csv: Path,
         start,
         "## Generated plots",
         "",
-        f"![Speedup over legacy C]({speedup_svg.name})",
+        f"![Speedup curve]({speedup_svg.name})",
         "",
         f"![Training-loop component breakdown]({runtime_breakdown_svg.name})",
         "",
@@ -564,11 +596,12 @@ def main() -> int:
     runtime_breakdown_csv = args.output_dir / f"stm32n6_training_component_breakdown_{args.date}{output_tag}.csv"
     runtime_breakdown_svg = args.output_dir / f"stm32n6_training_component_breakdown_{args.date}{output_tag}.svg"
     elf_svg = args.output_dir / f"stm32n6_elf_component_breakdown_{args.date}{output_tag}.svg"
+    active_variants = active_variants_from_summary(summary_rows)
 
     speedup_rows = write_speedup_csv(speedup_csv, summary_rows)
     write_speedup_svg(speedup_svg, speedup_rows)
-    runtime_breakdown_rows = write_runtime_breakdown_csv(runtime_breakdown_csv, summary_rows)
-    write_runtime_breakdown_svg(runtime_breakdown_svg, runtime_breakdown_rows)
+    runtime_breakdown_rows = write_runtime_breakdown_csv(runtime_breakdown_csv, summary_rows, active_variants)
+    write_runtime_breakdown_svg(runtime_breakdown_svg, runtime_breakdown_rows, active_variants)
     trace_rows = read_trace_rows(summary_rows, project_root)
     write_convergence_csv(convergence_csv, trace_rows)
     write_convergence_svg(convergence_svg, trace_rows, args.convergence_config)

@@ -106,7 +106,17 @@ std::filesystem::path baseline_log_path() {
     if (const char* path = std::getenv("EDGE_C_BASELINE_BENCHMARK_LOG")) {
         return path;
     }
-    return "/tmp/edgelearning_c_baseline_008581_benchmark.txt";
+    return std::filesystem::temp_directory_path() / "edgelearning_c_baseline_008581_benchmark.txt";
+}
+
+std::string display_baseline_log_path(const std::filesystem::path& path) {
+    if (std::getenv("EDGE_C_BASELINE_BENCHMARK_LOG")) {
+        return "${EDGE_C_BASELINE_BENCHMARK_LOG}";
+    }
+    if (path.filename() == "edgelearning_c_baseline_008581_benchmark.txt") {
+        return "${TMPDIR}/edgelearning_c_baseline_008581_benchmark.txt";
+    }
+    return path.filename().string();
 }
 
 } // namespace
@@ -162,7 +172,7 @@ int main() {
     if (std::filesystem::exists(c_log)) {
         report << "## Old C Baseline Local Measurements\n\n";
         report << "Source checkout location used for this run: temporary directory outside this repository.\n\n";
-        report << "Raw baseline benchmark log: `" << c_log.string()
+        report << "Raw baseline benchmark log: `" << display_baseline_log_path(c_log)
                << "` (not committed to this repository).\n\n";
         report << "Selected result blocks:\n\n";
         report << "```text\n";
@@ -177,7 +187,7 @@ int main() {
         report << "```\n\n";
     } else {
         report << "## Old C Baseline Local Measurements\n\n";
-        report << "No old-C benchmark log was found at `" << c_log.string()
+        report << "No old-C benchmark log was found at `" << display_baseline_log_path(c_log)
                << "`. Set `EDGE_C_BASELINE_BENCHMARK_LOG` to a local benchmark output file to include "
                   "measured C baseline rows in the generated report.\n\n";
     }

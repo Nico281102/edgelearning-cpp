@@ -38,8 +38,8 @@ Total                    1688
 ### old_c_baseline
 
 - Compiler: `Apple clang version 17.0.0 (clang-1700.0.13.5)`
-- Flags: `-Os -ffunction-sections -fdata-sections -I /tmp/edgelearning_c_baseline_008581_git -I /tmp/edgelearning_c_baseline_008581_git/Inc -Wl,-dead_strip -lm`
-- Binary measured: `/var/folders/3g/xwdvc9p17csdz7hmpf2v91s80000gn/T/edgelearning_c_code_size_mz2b4rpx/c_code_size_regression`
+- Flags: `-Os -ffunction-sections -fdata-sections -I ${EDGE_C_BASELINE_DIR} -I ${EDGE_C_BASELINE_DIR}/Inc -Wl,-dead_strip -lm`
+- Binary measured: `<temporary build>/c_code_size_regression`
 
 ```text
 __text                   6168
@@ -50,4 +50,3 @@ __got                    96
 __bss                    8
 Total                    6824
 ```
-

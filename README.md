@@ -1,28 +1,18 @@
 # EdgeLearning++
 
-EdgeLearning++ (`edgelearning-cpp`) started from an embedded systems project where the first runtime was written in C for deterministic, static-memory neural-network training on constrained targets. The C implementation made the core ideas concrete: sample-wise execution, explicit memory ownership, flat parameter layout, and a small training path that could run without a host framework.
+EdgeLearning++ (`edgelearning-cpp`) is a C++20 training runtime for small neural
+networks on constrained targets. It keeps the embedded assumptions of the
+original C runtime: static memory, flat parameter buffers, sample-wise training,
+and no heap allocation in the training path.
 
-This C++20 version is a new implementation inspired by that C design, built to make the framework more generic, more type-safe, and easier to extend. Modern C++ templates let the model topology, layer shapes, activation policies, optimizer state, and memory requirements become compile-time facts instead of runtime descriptors. The redesign was also an opportunity to learn and iterate faster with modern AI coding tools, while keeping the embedded constraints explicit.
+The C++ implementation uses templates and policies where they remove runtime
+descriptors: model topology, tensor specs, layer sizes, precision types, backend
+selection, and arena size are compile-time facts. Modern agentic AI tools make
+it easier to study language features such as templates, concepts, and
+`constexpr`; this project uses those features only where they give a concrete
+embedded benefit.
 
-The framework is sample-wise by design: it processes one sample at a time, accumulates gradients, and applies an optimizer step according to the configured batch policy. This keeps activation memory bounded by one sample rather than by the whole batch, following the same broad motivation as memory-efficient large-batch and edge-training work such as Piao et al. (2023) and Re-Forward-style memory-efficient backpropagation for edge reinforcement learning.
-
-The v0.1 implementation fully supports Dense layers, direct Conv2D layers, Flatten, shape-aware custom layers, custom activations, custom losses, custom initializers, and model-level precision policies on the generic scalar backend. It does not include PPO, reinforcement learning applications, CarRacing, Pendulum, STM32N6 application code, STAI integration, host-MCU protocols, private datasets, generated models, or post-baseline optimized kernels. The old C baseline is referenced for methodology and regression measurements only; its source is not vendored in this repository.
-
-Current custom-layer limitations and future work are documented in `docs/limitations.md`. In short, layer inputs and outputs now carry compile-time `TensorSpec` metadata, while graph-style multi-input layers, stateful recurrent layers, and richer backend dispatch remain future work.
-
-## Why C++
-
-The C baseline was the right starting point for an embedded runtime: it made memory ownership, arena sizing, deterministic execution, and low-level performance explicit. EdgeLearning++ keeps those constraints, but uses C++20 where the language gives a concrete technical advantage rather than cosmetic abstraction.
-
-The main reason is genericity. Model topology, layer shapes, activation policies, precision policy, optimizer state, and arena requirements can be expressed as types and constants. For example, a model can switch from FP32 to a custom precision policy without changing layer code, a Dense layer can use a custom activation, and a project can add a custom vector layer by implementing `initialize`, `forward`, and `backward` with typed `TensorView`s. Conv2D follows the same idea: the input geometry, kernel geometry, stride, padding, parameter count, output size, and activation cache are compile-time facts. See `Easy Utilization`, `Memory Planning`, `Custom Layer`, `Conv2D`, and `docs/architecture.md` for the concrete APIs.
-
-The second reason is low runtime overhead. Most structural decisions are resolved at compile time: layer order, feature counts, parameter offsets, cache size, workspace size, backend policy, and precision types. The runtime path does not need virtual dispatch, heap allocation, runtime shape descriptors, or a dynamic graph interpreter. The compiler sees the full model type and can inline and simplify aggressively.
-
-The third reason is API quality. The public API can stay compact and expressive while still being strict. A user writes `edge::Model<edge::InputVector<8>, edge::Dense<32, edge::ReLU>, edge::Dense<1>>`, and the compiler rejects inconsistent shapes, insufficient static arenas, or missing custom-layer contracts. Typed views such as `TensorView<const T, N>` make read-only and mutable buffers explicit without falling back to `void* + size_t`.
-
-The fourth reason is performance. C++ does not automatically make the code faster than C, and claims must be measured. The point is that template-based static polymorphism can produce C-like code with little abstraction cost, while still allowing specialization by backend and type. In some cases it can be faster than a more runtime-driven C design because the compiler sees more constants and can remove dispatch, fold offsets, inline activation policies, and specialize hot paths. The benchmark methodology is kept separate from the old C source; only measurements and methodology should be published here.
-
-## Build
+## Quick Start
 
 ```sh
 cmake -S . -B build
@@ -30,47 +20,99 @@ cmake --build build --parallel
 ctest --test-dir build --output-on-failure
 ```
 
-The CMake target `edge::edgelearning` is header-only. For GNU/Clang builds, CMake applies `-fno-exceptions` and `-fno-rtti`. On AppleClang installations where libc++ headers live only in the macOS SDK, CMake adds the SDK `usr/include/c++/v1` path when detected.
-
-## Easy Utilization
+Minimal supervised training step:
 
 ```cpp
 #include <array>
-
 #include <edge/edge.hpp>
 
 using Model = edge::Model<
     edge::InputVector<8>,
     edge::Dense<32, edge::ReLU>,
-    edge::Dense<16, edge::ReLU>,
     edge::Dense<1>>;
 
 int main() {
     edge::Trainer<Model, edge::MSE, edge::Adam> trainer(
         edge::AdamConfig{.learning_rate = 1.0e-3F});
-
     trainer.model().initialize(edge::InitConfig{.seed = 42U});
 
     std::array<float, 8> input{0.0F, 1.0F, 0.5F, -0.5F, 0.25F, 0.75F, -1.0F, 0.1F};
     std::array<float, 1> target{0.25F};
-
     return edge::is_ok(trainer.train_step(input, target)) ? 0 : 1;
 }
 ```
 
-The input dimension of each Dense layer is inferred from the previous layer. Backend selection is model-level:
+See [examples/README.md](examples/README.md) for focused examples covering
+minimal regression, static external arenas, custom layers, Conv2D + Flatten,
+backend policies, and precision policies.
+
+## Current Scope
+
+| Component | Status | Notes |
+|---|---:|---|
+| Dense | Yes | Forward, backward, gradients, initialization, serialization |
+| Conv2D | Yes | Direct CHW reference implementation |
+| Flatten | Yes | Explicit shaped-to-vector boundary |
+| Custom layer | Yes | Shape-aware sequential `Instance<InputSpec>` layers |
+| Custom activation/loss/initializer | Yes | Policy-based extension points |
+| Precision policy | Yes | Model-level arithmetic/storage type bundle |
+| Backend policy | Yes | Generic backend plus M55 policy/fallback hooks |
+| Dropout, LayerNorm, stateful recurrent layers | No | Future layer work |
+| General graph model | No | Future planner work |
+
+Layer inputs and outputs carry compile-time tensor metadata:
 
 ```cpp
-using M = edge::Model<
-    edge::Backend::Generic,
+using ImageModel = edge::Model<
+    edge::Input<edge::CHW<1, 28, 28>>,
+    edge::Conv2D<4, edge::Kernel<3>, edge::ReLU>,
+    edge::Flatten,
+    edge::Dense<10>>;
+```
+
+For the design details, see [docs/architecture.md](docs/architecture.md). For
+current topology limits and future graph/stateful layers, see
+[docs/limitations.md](docs/limitations.md).
+
+## Static Memory
+
+A default model owns one arena sized by `Model::required_memory`:
+
+```cpp
+static Model model;
+```
+
+For linker-controlled placement, provide the arena explicitly:
+
+```cpp
+alignas(Model::alignment)
+static std::array<std::byte, Model::required_memory> arena;
+
+static Model model{edge::external_arena(arena)};
+```
+
+The planner computes parameter, gradient, optimizer, activation, cache, and
+workspace sizes from the model type. External arenas whose size is known in the
+type are rejected at compile time if they are too small; alignment is checked at
+construction. See [docs/memory_model.md](docs/memory_model.md).
+
+## Policies
+
+Backend selection is part of the model type:
+
+```cpp
+using M55Model = edge::Model<
+    edge::Backend::M55,
     edge::InputVector<8>,
-    edge::Dense<32, edge::ReLU>,
+    edge::Dense<16, edge::ReLU>,
     edge::Dense<1>>;
 ```
 
-`Backend::M55` is available as a model-level policy. On host builds it falls back to the generic implementation. On Cortex-M55/MVE float builds, EdgeLearning++ exposes original FP32 Dense hooks for the hot forward/backward loops; Conv2D currently uses the generic direct implementation. Vendor STM32 headers are not included by public generic headers.
+`Backend::M55` falls back to generic code on host builds. On Cortex-M55/MVE FP32
+builds, supported Dense paths can use M55 hooks. Unsupported operations compile
+through the generic path unless a backend disables fallback.
 
-Precision is also a model-level policy. The default is `edge::precision::FP32`, but a project can define its own policy:
+Precision is also a model-level policy:
 
 ```cpp
 struct DoublePrecision {
@@ -89,225 +131,40 @@ using DoubleModel = edge::Model<
     edge::Dense<1>>;
 ```
 
-The same syntax can be combined with an explicit backend:
+For extension points, see [docs/custom_extensions.md](docs/custom_extensions.md).
 
-```cpp
-using M = edge::Model<
-    edge::Backend::Generic,
-    DoublePrecision,
-    edge::InputVector<8>,
-    edge::Dense<1>>;
-```
+## STM32N6 Preview
 
-See `examples/custom_precision.cpp` for a compilable example.
+The checked-in STM32N6 sweep compares one static firmware ELF per topology and
+variant. The table below uses RLTools generic as the baseline and reports
+`RLTools cycles / EdgeLearning++ M55 cycles`; higher is better for
+EdgeLearning++ M55.
 
-## Current Support
+| Hidden | EdgeLearning++ M55 speedup vs RLTools | M55 required memory | RLTools static state |
+|---|---:|---:|---:|
+| `8x8` | 1.36x | 2,048 B | 2,092 B |
+| `16x8` | 1.33x | 3,648 B | 3,756 B |
+| `16x16` | 1.69x | 6,016 B | 6,124 B |
+| `32x16` | 2.42x | 11,264 B | 11,500 B |
+| `32x32` | 3.03x | 20,096 B | 20,332 B |
+| `64x32` | 4.08x | 38,784 B | 39,276 B |
 
-| Component | v0.1 status | Notes |
-|---|---:|---|
-| Dense layer | Yes | Forward, backward, gradient accumulation, initialization, serialization |
-| Conv2D layer | Yes | Direct CHW convolution, stride/padding, forward/backward, generic CPU reference |
-| Flatten layer | Yes | Converts any compile-time tensor spec into a flat vector spec |
-| Dropout layer | No | Future layer type |
-| LayerNorm layer | No | Future layer type |
-| Custom layer | Yes | Shape-aware `Instance<InputSpec>` layers with compile-time output spec, parameter, cache, and workspace counts |
-| Custom activation | Yes | Generic backend supports user activation policies |
-| Custom loss | Yes | Loss computes `value` and `dLoss/dOutput` through the training loss API |
-| Custom initializer | Yes | User initializers can fill Dense weights with the model parameter type |
-| Custom precision policy | Yes | Model-level type bundle for parameters, activations, gradients, accumulators, optimizer state, and loss |
-
-See `docs/limitations.md` for the current limits of the custom-layer interface and the planned path toward shape-rich custom layers.
-
-## Memory Planning
-
-The default model owns one internal arena sized by `Model::required_memory`:
-
-```cpp
-Model model;
-```
-
-That arena is a member of the `Model` object, so its storage class follows the object:
-
-```cpp
-void task_entry() {
-    Model model;        // arena is on this task/function stack
-}
-
-static Model model;     // arena is in static storage, normally .bss
-```
-
-For embedded firmware, prefer static storage for non-trivial models:
-
-```cpp
-static Model model;
-```
-
-This avoids consuming task stack with activations, gradients, optimizer state, and workspace. If two static models are declared, they are two distinct objects with two distinct internal arenas.
-
-The model exposes:
-
-```cpp
-Model::parameter_bytes;
-Model::gradient_bytes;
-Model::optimizer_bytes;
-Model::activation_bytes;
-Model::workspace_bytes;
-Model::total_bytes;
-Model::required_memory;
-Model::alignment;
-```
-
-External arenas are checked at compile time because the size is part of the type:
-
-```cpp
-alignas(Model::alignment)
-static std::array<std::byte, Model::required_memory> arena;
-
-Model model{edge::external_arena(arena)};
-```
-
-This is the recommended form when firmware needs explicit placement in a linker-controlled memory region, such as DTCM or a dedicated SRAM bank. The `Model` object may be local or static; the large arena remains in the static storage object supplied by the user.
-
-`std::span<std::byte, N>` and `std::byte (&)[N]` are also supported. A future `void* + size_t` API, if added, must return `Status` and be documented as runtime-checked only.
-
-The planner is compile-time because the model topology and precision policy are types. For a given `Model`, the compiler knows every layer input/output size, parameter count, activation cache requirement, optimizer state count, and the byte size/alignment of each precision type. The arena is then split into typed sections:
-
-- parameters: `Model::parameter_type`
-- gradients: `Model::gradient_type`
-- optimizer state: `Model::optimizer_state_type`
-- activations and layer caches: `Model::activation_type`
-- temporary backward workspace: `Model::accumulator_type`
-
-This is strong for embedded and RTOS targets because the framework does not allocate from the heap at runtime. If the external arena is too small, typed arena APIs fail at compile time; if the storage is not correctly aligned, construction reports `Status::UnalignedArena`. The shared RTOS heap is not touched by the training path.
-
-For the full C++20 planner formula, static assertion examples, and the commit history of this mechanism, see `docs/memory_model.md`.
-
-## Training
-
-```cpp
-edge::Trainer<Model, edge::MSE, edge::Adam> trainer(
-    edge::AdamConfig{.learning_rate = 1.0e-3F});
-trainer.model().initialize(edge::InitConfig{.seed = 42U});
-
-std::array<float, 8> input{};
-std::array<float, 1> target{};
-edge::Status status = trainer.train_step(input, target);
-```
-
-Training is sample-wise. Gradients accumulate until `TrainerConfig::batch_size` samples are seen, then the optimizer step runs. `GradientReduction::Mean` is the default and divides once before the optimizer step. Call `flush()` to update on an incomplete final batch.
-
-The low-level API also supports:
-
-```cpp
-model.forward(input);
-model.backward(output_gradient);
-```
-
-## Custom Loss
-
-Custom losses provide `value` and `evaluate`:
-
-```cpp
-struct MyLoss {
-    template<typename Prediction, typename Target>
-    static auto value(const Prediction& y, const Target& t);
-
-    template<typename Prediction, typename Target, typename Gradient>
-    static auto evaluate(const Prediction& y, const Target& t, Gradient& g);
-};
-```
-
-Returning `float` is valid, but a loss can also return the policy loss type or another arithmetic type compatible with it.
-
-## Custom Activation
-
-```cpp
-struct MyActivation {
-    static constexpr edge::ActivationStorage storage =
-        edge::ActivationStorage::OutputAndPreActivation;
-
-    template<typename T>
-    static T forward(T z);
-
-    template<typename T>
-    static T derivative(T z, T a);
-};
-```
-
-Built-ins are `Linear`, `ReLU`, `Tanh`, and `Sigmoid`.
-
-## Custom Layer
-
-A custom layer provides a nested `Instance<InputSpec>` with compile-time input/output specs and memory counts, plus typed `initialize`, `forward`, and `backward` functions:
-
-```cpp
-struct TrainableScale {
-    template<typename InputSpec>
-    struct Instance {
-        static_assert(InputSpec::layout == edge::Layout::Flat);
-
-        using input_spec = InputSpec;
-        using output_spec = edge::Vector<InputSpec::elements>;
-
-        static constexpr std::size_t in_features = input_spec::elements;
-        static constexpr std::size_t out_features = output_spec::elements;
-        static constexpr std::size_t parameter_count = in_features;
-        static constexpr std::size_t cache_count = 0;
-        static constexpr std::size_t workspace_count = 0;
-
-        template<typename Types>
-        static void initialize(edge::TensorView<typename Types::ParameterT, parameter_count> p,
-                               edge::DeterministicRng& rng,
-                               const edge::InitConfig& config) noexcept;
-
-        template<typename Types>
-        static void forward(edge::TensorView<const typename Types::ActivationT, in_features> x,
-                            edge::TensorView<typename Types::ActivationT, out_features> y,
-                            edge::TensorView<const typename Types::ParameterT, parameter_count> p,
-                            edge::TensorView<typename Types::ActivationT, cache_count> cache,
-                            edge::TensorView<typename Types::AccumulatorT, workspace_count> work) noexcept;
-
-        template<bool PropagateInputGradient, typename Types>
-        static void backward(edge::TensorView<const typename Types::ActivationT, in_features> x,
-                             edge::TensorView<const typename Types::ActivationT, out_features> y,
-                             edge::TensorView<const typename Types::AccumulatorT, out_features> dy,
-                             edge::TensorView<typename Types::AccumulatorT,
-                                              PropagateInputGradient ? in_features : 0U> dx,
-                             edge::TensorView<const typename Types::ParameterT, parameter_count> p,
-                             edge::TensorView<typename Types::GradientT, parameter_count> dp,
-                             edge::TensorView<const typename Types::ActivationT, cache_count> cache,
-                             edge::TensorView<typename Types::AccumulatorT, workspace_count> work) noexcept;
-    };
-};
-
-using M = edge::Model<edge::InputVector<4>, TrainableScale, edge::Dense<1>>;
-```
-
-`TensorView` is passed by value because it is a small typed view, similar to `std::span<T, N>`. Data that the layer must not modify is exposed through `TensorView<const T, N>`. `PropagateInputGradient` tells the layer whether it must write `dLoss/dInput`; the model sets it to `false` for the first layer during ordinary training. Backend code can still use `view.data()` when a contiguous pointer is needed for an optimized kernel. See `examples/custom_layer.cpp` for a full implementation.
-
-## Conv2D
-
-Conv2D is implemented as a direct portable kernel, so it works on any CPU supported by the C++ compiler. It is intentionally a correctness/reference implementation first; target backends can later replace the inner loops with CMSIS-NN, MVE, im2col+GEMM, or another specialized kernel without changing the model API.
-
-The layout is channel-first flattened `CHW`. Parameters are laid out as filters `[OutC][InC][KH][KW]`, followed by one bias per output channel:
-
-```cpp
-using MnistShapeModel = edge::Model<
-    edge::Input<edge::CHW<1, 28, 28>>,
-    edge::Conv2D<
-        4,             // output channels
-        edge::Kernel<3, 3>,
-        edge::ReLU,
-        edge::DefaultInitializer,
-        edge::Stride<1, 1>,
-        edge::Padding<1, 1>>,
-    edge::Flatten,
-    edge::Dense<10>>;
-```
-
-See `examples/conv2d_mnist_shape.cpp` and `tests/test_conv2d_mnist_shape.cpp` for a host-side MNIST-shaped smoke test that does not depend on downloading the MNIST dataset.
+Source report:
+[firmware/el_cvscpp_ablation/results/stm32n6_sweep_2026-06-26_input3_10seed.md](firmware/el_cvscpp_ablation/results/stm32n6_sweep_2026-06-26_input3_10seed.md).
+Methodology and scripts:
+[firmware/el_cvscpp_ablation/README.md](firmware/el_cvscpp_ablation/README.md).
+The public firmware sweep can be reproduced without the legacy C checkout by
+running the C++ and RLTools variants. Legacy-C rows in the generated report are
+author measurements from a private external checkout.
 
 ## Benchmarks
+
+Host and firmware benchmark methodology lives in
+[docs/benchmarking.md](docs/benchmarking.md). The generated result files under
+`benchmarks/results/` and `firmware/el_cvscpp_ablation/results/` are the
+authoritative source for checked-in measurements.
+
+Run host benchmarks with:
 
 ```sh
 cmake -S . -B build -DEDGE_BUILD_BENCHMARKS=ON
@@ -317,32 +174,24 @@ cmake --build build --parallel
 ./build/benchmarks/benchmark_regression_vs_c_baseline
 ```
 
-The regression benchmark generates `benchmarks/results/host_regression_report.md`. It records methodology for comparing against the old C baseline at commit `0085814908ca1b57ece4fe367361d084fd74aa3e` without vendoring or republishing that C source.
-
-The mixed precision benchmark compares the FP32 baseline with `edge::precision::MixedFP16`, a policy that keeps FP32 master parameters, gradients, accumulators, optimizer state, and loss values while using FP16 activation storage when the compiler provides `_Float16`. The current host measurement was run on a MacBook M2 with a deterministic synthetic regression task:
-
-![Mixed precision convergence](benchmarks/results/mixed_precision_convergence.svg)
-
-Detailed measurements are recorded in `benchmarks/results/mixed_precision_report.md`. Treat these as host measurements: they show convergence behavior, activation-memory impact, and scalar CPU timing on MacBook M2, not a universal claim about MCU or accelerator performance.
-
-Code size is measured with a separate target. Set `EDGE_C_BASELINE_DIR` to a local checkout of the old C repository at the baseline commit:
-
-```sh
-EDGE_C_BASELINE_DIR=/path/to/EdgeLearning-at-0085814908ca1b57ece4fe367361d084fd74aa3e \
-cmake --build build --target benchmark_code_size
-```
-
-This writes `benchmarks/results/code_size_report.md` and `.csv`. The host report is useful for relative C vs C++ tracking. Firmware size should be measured again with the embedded toolchain, for example `arm-none-eabi-size`, because host Mach-O/ELF metadata is not the MCU image.
-
 ## STM32 Toolchain Notes
 
-The core is C++20 and avoids exceptions, RTTI, heap allocation, virtual functions, and `std::function`. For STM32CubeIDE or `arm-none-eabi-g++`, use flags equivalent to:
+The public core is C++20 and avoids exceptions, RTTI, heap allocation, virtual
+functions, and `std::function`. For STM32CubeIDE or `arm-none-eabi-g++`, use
+flags equivalent to:
 
 ```sh
 arm-none-eabi-g++ -std=c++20 -ffreestanding -fno-exceptions -fno-rtti
 ```
 
-Include `edgelearning-cpp/include` in the CubeIDE project include paths. Firmware execution tests are outside v0.1.
+Include `edgelearning-cpp/include` in the firmware project include paths.
+
+## Provenance
+
+The old C baseline is used only for methodology and local regression
+measurement. Its source is not vendored in this repository. The independent
+redesign boundary is documented in
+[docs/independent_redesign.md](docs/independent_redesign.md).
 
 ## References
 

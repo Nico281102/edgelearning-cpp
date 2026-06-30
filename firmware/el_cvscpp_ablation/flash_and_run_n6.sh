@@ -51,7 +51,7 @@ JOBS=${EL_CVSCPP_JOBS:-7}
 INPUT_FEATURES=${EL_CVSCPP_INPUT_FEATURES:-3}
 H1="8"
 H2="8"
-VARIANT="all"
+VARIANT="cpp_m55"
 SKIP_BUILD="0"
 SKIP_FLASH="0"
 SKIP_FSBL="0"
@@ -83,7 +83,8 @@ Options:
   --serial-baudrate N     Default: $SERIAL_BAUDRATE
   --serial-timeout SEC    Default: $SERIAL_TIMEOUT
   --project-root PATH     CubeIDE EL_C_vsCpp project root.
-  --edge-c-root PATH      External legacy EdgeLearning checkout.
+  --edge-c-root PATH      External legacy EdgeLearning checkout. Required only for all, legacy_c,
+                          and cpp_direct_c_backend.
   --rltools-root PATH     External RLTools checkout.
   --toolchain-bin PATH    Directory containing arm-none-eabi tools.
   --stlink-gdbserver PATH ST-LINK_gdbserver executable.
@@ -114,6 +115,13 @@ fail() {
 
 require_arg() {
   [ "$#" -ge 2 ] || fail "Option $1 requires a value."
+}
+
+variant_requires_legacy_c() {
+  case "$1" in
+    all|legacy_c|cpp_direct_c_backend) return 0 ;;
+    *) return 1 ;;
+  esac
 }
 
 while [ $# -gt 0 ]; do
@@ -166,7 +174,6 @@ while [ $# -gt 0 ]; do
 done
 
 [ -n "$PROJECT_ROOT" ] || fail "EL_CVSCPP_PROJECT_ROOT is required in $ENV_FILE or via --project-root"
-[ -n "$EDGE_C_ROOT" ] || fail "EL_CVSCPP_EDGE_C_ROOT is required in $ENV_FILE or via --edge-c-root"
 [ -n "$TOOLCHAIN_BIN" ] || fail "EL_CVSCPP_TOOLCHAIN_BIN is required in $ENV_FILE or via --toolchain-bin"
 [ -n "$STLINK_GDBSERVER" ] || fail "EL_CVSCPP_STLINK_GDBSERVER is required in $ENV_FILE or via --stlink-gdbserver"
 [ -n "$CUBEPROG_BIN" ] || fail "EL_CVSCPP_CUBEPROG_BIN is required in $ENV_FILE or via --cubeprog-bin"
@@ -175,6 +182,11 @@ case "$VARIANT" in
   all|legacy_c|cpp_direct_c_backend|cpp_m55|cpp_generic|rltools_generic) ;;
   *) fail "--variant must be one of: all legacy_c cpp_direct_c_backend cpp_m55 cpp_generic rltools_generic" ;;
 esac
+
+if variant_requires_legacy_c "$VARIANT"; then
+  [ -n "$EDGE_C_ROOT" ] || fail "EL_CVSCPP_EDGE_C_ROOT is required in $ENV_FILE or via --edge-c-root for variant $VARIANT"
+  [ -f "$EDGE_C_ROOT/Inc/edgelearning.h" ] || fail "Legacy C header not found: $EDGE_C_ROOT/Inc/edgelearning.h"
+fi
 
 case "$VARIANT" in
   all|rltools_generic)
@@ -281,6 +293,7 @@ gdb_load_fsbl() {
 log "env_file=$ENV_FILE"
 log "config=${INPUT_FEATURES}-${H1}x${H2}-1"
 log "variant=$VARIANT"
+log "edge_c_root=$EDGE_C_ROOT"
 log "rltools_root=$RLTOOLS_ROOT"
 log "app_elf=$APP_ELF"
 log "fsbl_elf=$FSBL_ELF"

@@ -63,7 +63,7 @@ Each layer specification creates a typed layer instance for the input size produ
 
 Backward propagation uses two accumulator slots that are reused in ping-pong fashion. For each layer, one slot holds `dLoss/dLayerOutput` and the other slot holds `dLoss/dLayerInput` only when the model asks that layer to propagate an input gradient. During ordinary training the first layer receives `PropagateInputGradient=false`, so the planner does not reserve a downstream buffer for the external input sample.
 
-The important C++ pieces are:
+The relevant C++ pieces are:
 
 ```cpp
 template<typename InputSpec, typename DenseSpec>
@@ -122,7 +122,9 @@ required_memory  = align_up(workspace_offset + workspace_bytes, Model::alignment
 
 `sizeof(T)` returns how many bytes one object of type `T` occupies. `alignof(T)` returns the address alignment that type requires. `align_up(...)` inserts padding between arena sections so each typed pointer is correctly aligned.
 
-The important point is that no runtime descriptor is needed to discover how much memory the model needs. The runtime constructor only binds pointers into the already-sized arena and checks the address alignment.
+No runtime descriptor is needed to discover how much memory the model needs. The
+runtime constructor binds pointers into the already-sized arena and checks the
+address alignment.
 
 This also means external arenas can be statically checked when their size is part of the type:
 
@@ -134,7 +136,10 @@ Model model{edge::external_arena(arena)};
 static_assert(decltype(edge::external_arena(arena))::size == Model::required_memory);
 ```
 
-The key is the `N` in `std::array<std::byte, N>`. Because `N` is part of the type, `external_arena(arena)` returns `ExternalArena<N>`, and the model constructor can compare `N` against `Model::required_memory` with `static_assert`.
+The byte count `N` in `std::array<std::byte, N>` is part of the type.
+`external_arena(arena)` therefore returns `ExternalArena<N>`, and the model
+constructor can compare `N` against `Model::required_memory` with
+`static_assert`.
 
 If the buffer is too small, compilation fails:
 
@@ -158,8 +163,6 @@ The full flow is:
 6. `ModelImpl` computes aligned section offsets and `Model::required_memory`.
 7. The internal arena uses `std::array<std::byte, Model::required_memory>`.
 8. External arenas use `std::array`, fixed-extent `std::span`, or C array references so the constructor can reject undersized buffers at compile time.
-
-This compile-time planner was introduced with the initial EdgeLearning++ C++20 runtime on 2026-06-23 in commit `533ce92`. It was extended on 2026-06-23 in commit `2fb0842` so precision policies and custom layers feed the same planner. The embedded storage guidance for static internal arenas and linker-placeable external arenas was documented on 2026-06-23 in commit `6d5b137`.
 
 The planner also accounts for the model precision policy. For example, if `ParameterT` is `double`, `parameter_bytes` is `parameter_count * sizeof(double)`. If a policy keeps activations as `float` but accumulates in a wider type, `activation_bytes` and `workspace_bytes` are computed independently and aligned independently.
 

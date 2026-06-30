@@ -10,10 +10,6 @@
 
 #include <edge/edge.hpp>
 
-extern "C" {
-#include "edgelearning.h"
-}
-
 #ifndef EL_CVSCPP_H1
 #error "EL_CVSCPP_H1 must be defined"
 #endif
@@ -38,10 +34,24 @@ extern "C" {
 #define EL_CVSCPP_VARIANT_RLTOOLS_GENERIC 5
 
 #if EL_CVSCPP_VARIANT == EL_CVSCPP_VARIANT_ALL || \
+    EL_CVSCPP_VARIANT == EL_CVSCPP_VARIANT_LEGACY_C || \
+    EL_CVSCPP_VARIANT == EL_CVSCPP_VARIANT_CPP_DIRECT_C_BACKEND
+#define EL_CVSCPP_ENABLE_LEGACY_C 1
+#else
+#define EL_CVSCPP_ENABLE_LEGACY_C 0
+#endif
+
+#if EL_CVSCPP_VARIANT == EL_CVSCPP_VARIANT_ALL || \
     EL_CVSCPP_VARIANT == EL_CVSCPP_VARIANT_RLTOOLS_GENERIC
 #define EL_CVSCPP_ENABLE_RLTOOLS 1
 #else
 #define EL_CVSCPP_ENABLE_RLTOOLS 0
+#endif
+
+#if EL_CVSCPP_ENABLE_LEGACY_C
+extern "C" {
+#include "edgelearning.h"
+}
 #endif
 
 #if EL_CVSCPP_ENABLE_RLTOOLS
@@ -130,6 +140,7 @@ using M55Model = edge::Model<
     edge::Dense<kHidden2, edge::ReLU>,
     edge::Dense<kOutputFeatures, edge::Linear>>;
 
+#if EL_CVSCPP_ENABLE_LEGACY_C
 struct LegacyCLinear {};
 struct LegacyCReLU {};
 
@@ -319,6 +330,13 @@ using DirectCBackendModel = edge::Model<
     LegacyCDense<kOutputFeatures, LegacyCLinear>>;
 
 static_assert(M55Model::parameter_count == DirectCBackendModel::parameter_count);
+constexpr std::size_t kDirectCRequiredMemory = DirectCBackendModel::required_memory;
+constexpr std::size_t kDirectCModelObjectBytes = sizeof(DirectCBackendModel);
+#else
+constexpr std::size_t kDirectCRequiredMemory = 0;
+constexpr std::size_t kDirectCModelObjectBytes = 0;
+#endif
+
 static_assert(M55Model::parameter_count == GenericModel::parameter_count);
 static_assert(M55Model::input_size == kInputFeatures);
 static_assert(M55Model::output_size == kOutputFeatures);
@@ -588,6 +606,7 @@ std::uint32_t& cpp_direct_c_adam_step() {
     return step;
 }
 
+#if EL_CVSCPP_ENABLE_LEGACY_C
 el_adam_config_t legacy_adam_config() {
     return el_adam_config_t{
         .beta1 = kAdamBeta1,
@@ -595,6 +614,7 @@ el_adam_config_t legacy_adam_config() {
         .epsilon = kAdamEpsilon,
     };
 }
+#endif
 
 template<typename Model>
 int prepare_cpp_static_model(const std::array<float, Model::parameter_count>& initial_params) {
@@ -674,6 +694,7 @@ int train_cpp_static_batch(const RegressionDataset& dataset,
     return 0;
 }
 
+#if EL_CVSCPP_ENABLE_LEGACY_C
 template<typename Model, bool Trace = false>
 int train_cpp_direct_c_backend_static_batch(const RegressionDataset& dataset,
                                             const TraceMeta* trace = nullptr,
@@ -761,6 +782,7 @@ int train_cpp_direct_c_backend_static_batch(const RegressionDataset& dataset,
     }
     return 0;
 }
+#endif
 
 template<typename Model>
 int export_cpp_static_params(std::array<float, Model::parameter_count>& trained_params) {
@@ -938,6 +960,7 @@ int export_rltools_static_params(std::array<float, kRltoolsParameterCount>& trai
 }
 #endif
 
+#if EL_CVSCPP_ENABLE_LEGACY_C
 constexpr std::size_t legacy_c_align_up(std::size_t value) noexcept {
     return (value + (EL_ALIGNMENT_BYTES - 1U)) &
            ~(static_cast<std::size_t>(EL_ALIGNMENT_BYTES) - 1U);
@@ -1085,6 +1108,10 @@ int export_legacy_c_static_params(std::array<float, ParamCount>& trained_params)
                ? 0
                : -3;
 }
+#else
+constexpr std::size_t kLegacyCArenaBytes = 0;
+constexpr std::size_t kLegacyCControlBytes = 0;
+#endif
 
 template<typename Fn>
 RunStats timed(Fn&& fn) {
@@ -1271,8 +1298,8 @@ void emit_begin() {
                 static_cast<unsigned>(M55Model::parameter_count),
                 static_cast<unsigned>(kLegacyCArenaBytes),
                 static_cast<unsigned>(kLegacyCControlBytes),
-                static_cast<unsigned>(DirectCBackendModel::required_memory),
-                static_cast<unsigned>(sizeof(DirectCBackendModel)),
+                static_cast<unsigned>(kDirectCRequiredMemory),
+                static_cast<unsigned>(kDirectCModelObjectBytes),
                 static_cast<unsigned>(M55Model::required_memory),
                 static_cast<unsigned>(sizeof(M55Model)),
                 static_cast<unsigned>(GenericModel::required_memory),
@@ -1286,6 +1313,7 @@ void emit_begin() {
                 edge::detail::m55_mve_available ? 1 : 0);
 }
 
+#if EL_CVSCPP_ENABLE_LEGACY_C
 template<std::size_t ParamCount>
 RunStats run_legacy_c_once(const std::array<float, ParamCount>& initial_params,
                            const RegressionDataset& dataset,
@@ -1387,6 +1415,7 @@ RunStats run_cpp_direct_c_backend_once(const std::array<float, Model::parameter_
     }
     return stats;
 }
+#endif
 
 template<typename Model>
 RunStats run_cpp_native_once(const std::array<float, Model::parameter_count>& initial_params,

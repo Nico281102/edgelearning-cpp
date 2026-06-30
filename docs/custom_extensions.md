@@ -171,7 +171,9 @@ static void forward(edge::TensorView<const typename Types::ActivationT, in_featu
 }
 ```
 
-`if constexpr` is important: it is a compile-time branch. When the model backend is not `M55`, the M55 branch is discarded during compilation. The binary does not need a runtime backend switch for that layer path.
+`if constexpr` is a compile-time branch. When the model backend is not `M55`,
+the M55 branch is discarded during compilation, so the layer does not need a
+runtime backend switch.
 
 The optimized hook can live in a backend header, for example `include/edge/backends/m55.hpp`. The current Dense/M55 path follows this shape: the hook is compiled only when the backend, precision, and target feature checks match. On host builds `Backend::M55::falls_back_to_generic` lets the same model type use the generic implementation without requiring Cortex-M55/MVE headers or instructions.
 
@@ -185,7 +187,10 @@ if constexpr (!std::is_same_v<typename Types::BackendT, edge::Backend::Generic> 
 }
 ```
 
-Here is a trimmed example for a fused Dense+ReLU forward path. In production, if the public semantics are still "Dense followed by ReLU", prefer specializing `edge::Dense<Out, edge::ReLU>` internally. A visible `FusedReLUDense` type is useful when the fusion is a deliberate layer abstraction exposed to users.
+Here is a trimmed example for a fused Dense+ReLU forward path. If the public
+semantics are still "Dense followed by ReLU", specialize
+`edge::Dense<Out, edge::ReLU>` internally. Expose a `FusedReLUDense` type only
+when the fusion is part of the user-facing layer model.
 
 The backend hook is target-specific and can live in `include/edge/backends/m55.hpp`:
 
@@ -295,7 +300,9 @@ generic_my_layer_backward<PropagateInputGradient>(
     input, output, upstream, downstream, params, gradients, cache, workspace);
 ```
 
-The recommended rule is: keep the public layer semantic, and specialize the implementation inside `forward` and `backward`. For example, prefer `Dense` with an M55 fast path over a separate `M55Dense` layer in the user-facing model. The model then stays portable:
+Keep the public layer semantic and specialize the implementation inside
+`forward` and `backward`. For example, prefer `Dense` with an M55 fast path over
+a user-facing `M55Dense` layer. The model then stays portable:
 
 ```cpp
 using GenericModel = edge::Model<edge::Backend::Generic, edge::InputVector<8>, edge::Dense<16>>;

@@ -1,11 +1,12 @@
 set(EDGE_EXAMPLES
-    simple_regression
-    external_arena
+    minimal_regression
+    external_arena_static
+    backend_policy
     custom_loss
     custom_activation
-    custom_precision
-    custom_layer
-    conv2d_mnist_shape
+    precision_policy
+    custom_layer_scale
+    conv2d_flatten_dense
 )
 
 foreach(example_name IN LISTS EDGE_EXAMPLES)

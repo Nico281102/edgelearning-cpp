@@ -56,14 +56,17 @@ firmware toolchain.
 `firmware/el_cvscpp_ablation/` contains the on-target STM32N6 experiment. It is
 separate from the host CMake benchmarks because it builds firmware images,
 flashes the board, captures UART output, and measures training work with the
-DWT cycle counter on the MCU.
+DWT cycle counter on the MCU. The public firmware path compares EdgeLearning++
+M55, EdgeLearning++ generic, and RLTools generic. Legacy-C rows require a
+private external C checkout and are not fully reproducible from this repository
+alone.
 
 The current firmware sweep uses:
 
 - topology: `InputVector<3>, Dense<H1, ReLU>, Dense<H2, ReLU>, Dense<1, Linear>`
 - hidden pairs: `8x8`, `16x8`, `16x16`, `32x16`, `32x32`, `64x32`
-- variants: legacy C M55, C++ direct legacy-C backend, C++ native M55,
-  C++ generic, RLTools generic
+- public variants: C++ native M55, C++ generic, RLTools generic
+- private legacy-C variants: legacy C M55 and C++ direct legacy-C backend
 - storage: static C arena/control for C, static compile-time model storage for
   C++, and static RLTools runtime/model state for RLTools
 - training: Adam, batch 256, 1024 rollout samples, 2 epochs, 8 optimizer
@@ -81,25 +84,6 @@ and RLTools variants split `zero_grad`, optional `input_copy`, `forward`, `loss`
 `backward`, and `adam_update`; legacy C reports its API-level
 `sample_train_step` for the combined forward/loss/backward work.
 
-The 2026-06-26 input-3 ten-seed run is consistent with the expected RLTools
-behavior for small static networks on this firmware path: RLTools is faster than
-legacy C on `8x8` and `16x8`, then slower from `16x16` upward. The C++ direct
-legacy-C-backend variant stays close to the legacy C baseline on the smaller
-and mid-size cases, then exposes adapter/layout overhead on the larger cases.
-The native C++ M55 backend is faster than legacy C across the measured sweep.
-
-Cycle ratios below are variant cycles divided by legacy C cycles; values below
-`1.0` are faster than legacy C.
-
-| Hidden | Direct C backend | C++ M55 | C++ Generic | RLTools Generic |
-|---|---:|---:|---:|---:|
-| `8x8` | 0.951 | 0.457 | 0.441 | 0.621 |
-| `16x8` | 0.976 | 0.631 | 0.646 | 0.858 |
-| `16x16` | 0.991 | 0.705 | 0.822 | 1.195 |
-| `32x16` | 1.005 | 0.878 | 1.030 | 2.122 |
-| `32x32` | 1.232 | 0.975 | 1.256 | 2.953 |
-| `64x32` | 1.188 | 0.876 | 1.311 | 3.475 |
-
 Model footprint is measured separately from runtime. For C, the model-state
 number is the static arena plus control state. For C++ variants, the report
 records the compile-time required memory and static model object size. For
@@ -108,21 +92,17 @@ size is measured from one separate ELF per variant and topology with
 `arm-none-eabi-size`; each ELF still includes the common benchmark harness and
 static rollout buffers.
 
-| Variant | Model-state bytes across sweep | ELF `dec` bytes across sweep |
-|---|---:|---:|
-| Legacy C M55 | 3,296-40,160 | 80,884-135,820 |
-| C++ direct legacy-C backend | 2,080-38,944 | 78,140-132,988 |
-| C++ native M55 | 2,080-38,944 | 72,492-127,916 |
-| C++ generic | 1,976-38,840 | 74,996-132,964 |
-| RLTools generic | 1,948-38,684 | 76,868-134,292 |
+The checked-in generated report is the source of record for firmware numbers:
+`firmware/el_cvscpp_ablation/results/stm32n6_sweep_2026-06-26_input3_10seed.md`.
+It includes private legacy-C rows measured by the project author. Users without
+the C checkout can regenerate the C++/RLTools rows by running the default public
+sweep. The accompanying CSV contains raw cycle averages, model-state fields,
+ELF paths, and status columns. Plot CSV/SVG files in the same directory provide
+speedup, convergence, training-loop component breakdown, and ELF section
+breakdown.
 
-Generated artifacts for this run are under
-`firmware/el_cvscpp_ablation/results/`, including the ten-seed sweep table, the
-per-variant ELF/model-size table, the speedup/convergence CSV/SVG files, the
-training-loop component-breakdown CSV/SVG, and the ELF component-breakdown
-CSV/SVG. The ELF component-breakdown plot uses the firmware ELF `text`, `data`,
-and `bss` sections. The legacy C source and RLTools source are referenced
-through local paths and are not vendored into this repository.
+README.md includes a short RLTools-baseline preview. Avoid copying the full
+firmware tables into multiple documents; regenerate or link the report instead.
 
 For fair comparisons, use the same compiler family, optimization flags, topology, flat parameter layout, initial weights, synthetic samples, optimizer, batch policy, and iteration count.
 

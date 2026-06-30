@@ -1,6 +1,9 @@
 # Current Limitations and Future Work
 
-EdgeLearning++ v0.1 keeps the core training path intentionally small: static model topology, explicit arena ownership, no heap allocation in the training path, and compile-time memory planning. That makes the current implementation useful for embedded experiments, but it also means some higher-level layer interfaces are deliberately limited.
+EdgeLearning++ v0.1 keeps the core training path narrow: static model topology,
+explicit arena ownership, no heap allocation in the training path, and
+compile-time memory planning. That scope is useful for embedded experiments,
+but it limits some higher-level layer interfaces.
 
 ## Shape-Aware Sequential Layers
 
@@ -41,7 +44,44 @@ With that information, the model computes:
 
 all at compile time.
 
-The main v0.1 limitation is now topology, not shape vocabulary: models are sequential single-input/single-output chains. `Dense` requires a flat `Vector<N>` input, `Conv2D` requires `CHW<C,H,W>`, and `Flatten` explicitly converts a shaped tensor into a vector before Dense.
+The main v0.1 limitation is topology, not shape vocabulary: models are
+sequential single-input/single-output chains. `Dense` requires a flat
+`Vector<N>` input, `Conv2D` requires `CHW<C,H,W>`, and `Flatten` explicitly
+converts a shaped tensor into a vector before Dense.
+
+## Sequential Model Boundary
+
+The current `edge::Model` is a sequential model:
+
+```cpp
+Input -> Layer0 -> Layer1 -> ... -> LayerN -> Output
+```
+
+Its planner propagates one tensor spec at a time:
+
+```cpp
+CurrentSpec -> Layer::Instance<CurrentSpec> -> output_spec -> next layer
+```
+
+Custom layers therefore receive one `InputSpec` and return one `output_spec`.
+The limitation is in the model topology contract, not in
+`TensorSpec`, `TensorView`, precision policies, or backend policies.
+
+Many graph-like operations can still be implemented today as composite
+sequential layers. For example, a residual block can be represented as one layer
+that internally computes `Block(input) + input`, as long as the whole block has
+one input tensor and one output tensor from the model planner's point of view.
+
+A general graph model would be a separate planner rather than a small extension
+of the current sequential recursion. It would need named or indexed nodes,
+multiple input edges per node, multiple consumers of the same activation,
+gradient accumulation at merge points, topological forward order, reverse
+backward order, and activation lifetime analysis. A future `GraphModel` could
+reuse the existing layer kernels, tensor specs, precision policies, backend
+policies, and static arena rules.
+
+Keeping this boundary in the API lets `Model` stay small and predictable while
+graph support can use a DAG planner.
 
 ## Input-Gradient Policy
 
@@ -99,7 +139,9 @@ using output_spec = TensorSpec<Shape<32, 128>, Layout::TokenFeature>;
 static constexpr std::size_t workspace_count = 32 * 32; // example attention-score buffer
 ```
 
-These examples are intentionally static. If a future layer needs runtime sequence length, the embedded-friendly version should usually expose a compile-time maximum and a runtime active length:
+These examples are static. If a future layer needs runtime sequence length, the
+embedded version should usually expose a compile-time maximum and a runtime
+active length:
 
 ```cpp
 MaxTokens = 64
@@ -125,7 +167,9 @@ using inputs = TypeList<QuerySpec, KeySpec, ValueSpec>;
 using outputs = TypeList<OutputSpec>;
 ```
 
-That is future work. The current recommendation is to keep v0.1 custom layers single-input/single-output and use explicit `Flatten` boundaries when moving from shaped tensors to Dense layers.
+That is future work. For v0.1, keep custom layers single-input/single-output and
+use explicit `Flatten` boundaries when moving from shaped tensors to Dense
+layers.
 
 ## Backend Specialization
 
@@ -143,7 +187,7 @@ The backend should not discover shape from runtime strings or descriptors. Shape
 
 ## Summary
 
-The current design is intentionally conservative:
+Current v0.1 boundaries:
 
 - Dense and Conv2D are supported as built-in layers.
 - Flatten is the explicit boundary from shaped tensors to vector Dense layers.

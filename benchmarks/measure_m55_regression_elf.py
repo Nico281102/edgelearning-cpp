@@ -164,7 +164,7 @@ def write_reports(results: list[SizeResult], result_dir: Path, size_tool: str) -
                     r.other,
                     r.total,
                     r.file_bytes,
-                    r.binary,
+                    portable_path(r.binary),
                 ]
             )
 
@@ -185,6 +185,14 @@ def write_reports(results: list[SizeResult], result_dir: Path, size_tool: str) -
             )
     print(f"Wrote {csv_path}")
     print(f"Wrote {md_path}")
+
+
+def portable_path(path: Path) -> str:
+    cwd = Path.cwd().resolve()
+    try:
+        return path.resolve().relative_to(cwd).as_posix()
+    except ValueError:
+        return path.name
 
 
 def parse_binary_arg(value: str) -> tuple[str, Path]:

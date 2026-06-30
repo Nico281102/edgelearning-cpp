@@ -78,21 +78,21 @@ def read_rows(path: Path) -> list[dict[str, object]]:
     with path.open("r", encoding="utf-8", newline="") as f:
         for summary in csv.DictReader(f):
             for variant in VARIANTS:
-                rows.append(
-                    {
-                        "config": summary.get("config", ""),
-                        "input_features": to_int(summary.get("input_features")),
-                        "variant": variant,
-                        "model_size_kind": summary.get(f"{variant}_model_size_kind", ""),
-                        "model_state_bytes": to_int(summary.get(f"{variant}_model_state_bytes")),
-                        "cycles_avg": to_int(summary.get(f"{variant}_cycles_avg")),
-                        "elf_text": to_int(summary.get(f"{variant}_elf_text")),
-                        "elf_data": to_int(summary.get(f"{variant}_elf_data")),
-                        "elf_bss": to_int(summary.get(f"{variant}_elf_bss")),
-                        "elf_dec": to_int(summary.get(f"{variant}_elf_dec")),
-                        "elf_file_bytes": to_int(summary.get(f"{variant}_elf_file_bytes")),
-                    }
-                )
+                row = {
+                    "config": summary.get("config", ""),
+                    "input_features": to_int(summary.get("input_features")),
+                    "variant": variant,
+                    "model_size_kind": summary.get(f"{variant}_model_size_kind", ""),
+                    "model_state_bytes": to_int(summary.get(f"{variant}_model_state_bytes")),
+                    "cycles_avg": to_int(summary.get(f"{variant}_cycles_avg")),
+                    "elf_text": to_int(summary.get(f"{variant}_elf_text")),
+                    "elf_data": to_int(summary.get(f"{variant}_elf_data")),
+                    "elf_bss": to_int(summary.get(f"{variant}_elf_bss")),
+                    "elf_dec": to_int(summary.get(f"{variant}_elf_dec")),
+                    "elf_file_bytes": to_int(summary.get(f"{variant}_elf_file_bytes")),
+                }
+                if to_int(row["elf_dec"]) > 0 or to_int(row["cycles_avg"]) > 0:
+                    rows.append(row)
     return rows
 
 
@@ -152,11 +152,22 @@ def row_for(rows: list[dict[str, object]], config: str, variant: str) -> dict[st
 
 
 def write_svg(path: Path, rows: list[dict[str, object]]) -> None:
+    if not rows:
+        lines = svg_header(1100, 420)
+        lines.append('<text class="title" x="82" y="34">STM32N6 firmware ELF component breakdown unavailable</text>')
+        lines.append("</svg>")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        return
+
     configs: list[str] = []
     for row in rows:
         config = str(row["config"])
         if config not in configs:
             configs.append(config)
+    variants = tuple(
+        variant for variant in VARIANTS if any(row["variant"] == variant for row in rows)
+    )
 
     bar_w = 16
     bar_gap = 5
@@ -165,7 +176,7 @@ def write_svg(path: Path, rows: list[dict[str, object]]) -> None:
     right = 275
     top = 66
     bottom = 112
-    group_w = len(VARIANTS) * bar_w + (len(VARIANTS) - 1) * bar_gap
+    group_w = len(variants) * bar_w + (len(variants) - 1) * bar_gap
     plot_w = len(configs) * group_w + (len(configs) - 1) * group_gap
     width = left + plot_w + right
     height = 650
@@ -203,7 +214,7 @@ def write_svg(path: Path, rows: list[dict[str, object]]) -> None:
             f'<text class="label" x="{group_center:.1f}" y="{top + plot_h + 72}" '
             f'text-anchor="middle">{html.escape(config)}</text>'
         )
-        for vi, variant in enumerate(VARIANTS):
+        for vi, variant in enumerate(variants):
             row = row_for(rows, config, variant)
             if row is None:
                 continue
@@ -247,7 +258,7 @@ def write_svg(path: Path, rows: list[dict[str, object]]) -> None:
         lines.append(f'<text class="legend" x="{legend_x + 24}" y="{y + 1}">{label}</text>')
     variant_y = legend_y + 92
     lines.append(f'<text class="legend" x="{legend_x}" y="{variant_y - 16}">Variant order</text>')
-    for i, variant in enumerate(VARIANTS):
+    for i, variant in enumerate(variants):
         y = variant_y + i * 19
         lines.append(f'<text class="legend" x="{legend_x}" y="{y}">{html.escape(VARIANT_SHORT[variant])}: {html.escape(VARIANT_LABELS[variant])}</text>')
     lines.append("</svg>")
@@ -287,8 +298,6 @@ def main() -> int:
     summary_csv = args.summary_csv or latest_summary_csv(args.output_dir)
     output_tag = infer_output_tag(summary_csv, args.output_tag)
     rows = read_rows(summary_csv)
-    if not rows:
-        raise SystemExit(f"No rows found in {summary_csv}")
     out_csv = args.output_dir / f"stm32n6_elf_component_breakdown_{args.date}{output_tag}.csv"
     out_svg = args.output_dir / f"stm32n6_elf_component_breakdown_{args.date}{output_tag}.svg"
     write_breakdown_csv(out_csv, rows)

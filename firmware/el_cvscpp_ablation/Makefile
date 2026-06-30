@@ -14,10 +14,6 @@ ifeq ($(strip $(PROJECT_ROOT)),)
 $(error PROJECT_ROOT is required; set it in firmware/el_cvscpp_ablation/.env or pass PROJECT_ROOT=/path/to/EL_C_vsCpp)
 endif
 
-ifeq ($(strip $(EDGE_C_ROOT)),)
-$(error EDGE_C_ROOT is required; set it in firmware/el_cvscpp_ablation/.env or pass EDGE_C_ROOT=/path/to/legacy/EdgeLearning)
-endif
-
 ifeq ($(strip $(TOOLCHAIN_BIN)),)
 $(error TOOLCHAIN_BIN is required; set it in firmware/el_cvscpp_ablation/.env or pass TOOLCHAIN_BIN=/path/to/arm-none-eabi/bin)
 endif
@@ -26,11 +22,18 @@ H1 ?= 8
 H2 ?= 8
 INPUT_FEATURES ?= 3
 CONFIG_SUFFIX := $(INPUT_FEATURES)_$(H1)x$(H2)_1
-VARIANT ?= all
+VARIANT ?= cpp_m55
 SUPPORTED_VARIANTS := all legacy_c cpp_direct_c_backend cpp_m55 cpp_generic rltools_generic
+LEGACY_C_REQUIRED_VARIANTS := all legacy_c cpp_direct_c_backend
 
 ifeq ($(filter $(VARIANT),$(SUPPORTED_VARIANTS)),)
 $(error VARIANT must be one of: $(SUPPORTED_VARIANTS))
+endif
+
+ifneq ($(filter $(VARIANT),$(LEGACY_C_REQUIRED_VARIANTS)),)
+ifeq ($(strip $(EDGE_C_ROOT)),)
+$(error EDGE_C_ROOT is required for VARIANT=$(VARIANT); set EL_CVSCPP_EDGE_C_ROOT in firmware/el_cvscpp_ablation/.env or pass EDGE_C_ROOT=/path/to/legacy/EdgeLearning)
+endif
 endif
 
 VARIANT_ID := 0
@@ -106,8 +109,7 @@ COMMON_INCS := \
   -I$(PROJECT_ROOT)/Drivers/CMSIS/Device/ST/STM32N6xx/Include \
   -I$(PROJECT_ROOT)/Drivers/CMSIS/Include \
   -I$(PROJECT_ROOT)/Drivers/DSP/Include \
-  -I$(EDGE_C_ROOT) \
-  -I$(EDGE_C_ROOT)/Inc \
+  $(if $(strip $(EDGE_C_ROOT)),-I$(EDGE_C_ROOT) -I$(EDGE_C_ROOT)/Inc,) \
   $(if $(strip $(RLTOOLS_ROOT)),-I$(RLTOOLS_ROOT)/include,)
 
 CPU_FLAGS := -mcpu=cortex-m55 -mfpu=auto -mfloat-abi=hard -mthumb -mcmse
@@ -147,7 +149,9 @@ C_SRCS := \
   $(PROJECT_ROOT)/Drivers/DSP/Source/BasicMathFunctions/arm_add_f32.c \
   $(PROJECT_ROOT)/Drivers/DSP/Source/MatrixFunctions/arm_mat_init_f32.c \
   $(PROJECT_ROOT)/Drivers/DSP/Source/MatrixFunctions/arm_mat_vec_mult_f32.c \
-  $(PROJECT_ROOT)/Drivers/DSP/Source/SupportFunctions/arm_fill_f32.c \
+  $(PROJECT_ROOT)/Drivers/DSP/Source/SupportFunctions/arm_fill_f32.c
+
+LEGACY_C_SRCS := \
   $(EDGE_C_ROOT)/0_Common/el_config.c \
   $(EDGE_C_ROOT)/0_Common/el_platform_stm32n657xx.c \
   $(EDGE_C_ROOT)/0_Common/el_system.c \
@@ -158,6 +162,10 @@ C_SRCS := \
   $(EDGE_C_ROOT)/2_Network/el_network.c \
   $(EDGE_C_ROOT)/2_Network/el_network_factory.c \
   $(EDGE_C_ROOT)/2_Network/el_network_params.c
+
+ifneq ($(filter $(VARIANT),$(LEGACY_C_REQUIRED_VARIANTS)),)
+C_SRCS += $(LEGACY_C_SRCS)
+endif
 
 CPP_SRCS := \
   $(REPO_ROOT)/firmware/el_cvscpp_ablation/el_cvscpp_ablation_run.cpp

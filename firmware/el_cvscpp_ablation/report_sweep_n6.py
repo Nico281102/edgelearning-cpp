@@ -12,6 +12,7 @@ from pathlib import Path
 
 DEFAULT_CONFIGS = ("8x8", "16x8", "16x16", "32x16", "32x32", "64x32")
 VARIANTS = ("legacy_c", "cpp_direct_c_backend", "cpp_m55", "cpp_generic", "rltools_generic")
+PUBLIC_VARIANTS = ("cpp_m55", "cpp_generic", "rltools_generic")
 VARIANT_LABELS = {
     "legacy_c": "C M55",
     "cpp_direct_c_backend": "Direct C-backend",
@@ -41,7 +42,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--appli-project-name")
     parser.add_argument("--input-features", type=int)
     parser.add_argument("--configs", nargs="+", default=list(DEFAULT_CONFIGS))
-    parser.add_argument("--variants", nargs="+", default=list(VARIANTS))
+    parser.add_argument(
+        "--variants",
+        nargs="+",
+        default=None,
+        help="Variants to include. Defaults to EL_CVSCPP_SWEEP_VARIANTS or the public C++/RLTools set.",
+    )
     parser.add_argument(
         "--output-stem",
         type=Path,
@@ -62,6 +68,18 @@ def load_env(path: Path) -> dict[str, str]:
         key, value = line.split("=", 1)
         values[key.strip()] = value.strip().strip('"').strip("'")
     return values
+
+
+def resolve_variants(args: argparse.Namespace, env: dict[str, str]) -> tuple[str, ...]:
+    raw_variants = args.variants
+    if raw_variants is None:
+        env_value = os.environ.get("EL_CVSCPP_SWEEP_VARIANTS", env.get("EL_CVSCPP_SWEEP_VARIANTS", ""))
+        raw_variants = env_value.split() if env_value else list(PUBLIC_VARIANTS)
+    variants = tuple(raw_variants)
+    unknown = [variant for variant in variants if variant not in VARIANTS]
+    if unknown:
+        raise SystemExit(f"unknown variant(s): {' '.join(unknown)}")
+    return variants
 
 
 def parse_kv_line(line: str) -> tuple[str, dict[str, str]]:
@@ -319,7 +337,8 @@ def first_value(rows: dict[str, dict[str, object]], key: str, default: object = 
 
 
 def build_summary_row(config: str,
-                      variant_rows: dict[str, dict[str, object]]) -> dict[str, object]:
+                      variant_rows: dict[str, dict[str, object]],
+                      active_variants: tuple[str, ...]) -> dict[str, object]:
     legacy = row_for_variant(variant_rows, "legacy_c")
     direct = row_for_variant(variant_rows, "cpp_direct_c_backend")
     m55 = row_for_variant(variant_rows, "cpp_m55")
@@ -410,7 +429,7 @@ def build_summary_row(config: str,
         to_int(row_for_variant(variant_rows, variant).get("runtime_status"), -999) == 0
         and to_int(row_for_variant(variant_rows, variant).get("done_status"), -999) == 0
         and to_int(row_for_variant(variant_rows, variant).get("cycles_avg")) > 0
-        for variant in VARIANTS
+        for variant in active_variants
     ) else -1
     return row
 
@@ -437,6 +456,10 @@ def elf_cell(row: dict[str, object], variant: str) -> str:
         f"{fmt_int(row[f'{variant}_elf_file_bytes'])} "
         f"({fmt_ratio(row[f'{variant}_elf_dec_over_c'])}x)"
     )
+
+
+def elf_cell_plain(row: dict[str, object], variant: str) -> str:
+    return f"{fmt_int(row[f'{variant}_elf_dec'])}/{fmt_int(row[f'{variant}_elf_file_bytes'])}"
 
 
 def write_csv(path: Path, rows: list[dict[str, object]]) -> None:
@@ -521,7 +544,10 @@ def write_csv(path: Path, rows: list[dict[str, object]]) -> None:
         writer.writerows(rows)
 
 
-def write_markdown(path: Path, rows: list[dict[str, object]], input_features: int) -> None:
+def write_markdown(path: Path,
+                   rows: list[dict[str, object]],
+                   input_features: int,
+                   active_variants: tuple[str, ...]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     all_done = all(int(row["status"]) == 0 for row in rows)
     with path.open("w", encoding="utf-8") as f:
@@ -533,44 +559,82 @@ def write_markdown(path: Path, rows: list[dict[str, object]], input_features: in
         f.write("Warm-up: 2 full training runs per seed, with model and optimizer reset before the measured run.\n")
         f.write("Timing: pre-generated rollout hot path only; setup, import/export, reset, sample generation, warm-up, traces, and serial I/O are outside DWT.\n")
         f.write("Profiling: training-loop component counters are collected in a separate equivalent pass with the same initial parameters and dataset, then averaged over seeds.\n")
-        f.write("Legacy C exposes `sample_train_step` as one combined forward/loss/backward component because those operations are encapsulated by the C API.\n")
+        if "legacy_c" in active_variants:
+            f.write("Legacy C exposes `sample_train_step` as one combined forward/loss/backward component because those operations are encapsulated by the C API.\n")
         f.write("Convergence trace: seed 0, minibatch MSE after each Adam update, emitted by an untimed diagnostic pass.\n")
-        f.write("Build: static C arena and static C++ model, all firmware objects compiled with `-Ofast`.\n")
+        if "legacy_c" in active_variants:
+            f.write("Build: static C arena and static C++ model, all firmware objects compiled with `-Ofast`.\n")
+        else:
+            f.write("Build: static C++/RLTools model storage, all firmware objects compiled with `-Ofast`.\n")
         f.write("ELF size columns are from the same per-variant image used for the runtime row.\n\n")
+        if "legacy_c" in active_variants:
+            f.write("This report includes private legacy-C ablation rows from an external checkout.\n\n")
+        else:
+            f.write("This report uses the public C++/RLTools variant set and does not require the legacy C checkout.\n\n")
         if all_done:
             f.write("All per-variant runs completed with `DONE status=0`.\n\n")
         else:
             f.write("At least one per-variant run did not complete with `DONE status=0`.\n\n")
-        f.write(
-            "| Config | Input | Seeds | Warm-ups | Params | C M55 avg | Direct C-backend avg | Direct/C | "
-            "C++ M55 avg | M55/C | C++ Generic avg | Generic/C | RLTools Generic avg | RLTools/C |\n"
-        )
-        f.write("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|\n")
-        for row in rows:
+        if "legacy_c" in active_variants:
             f.write(
-                f"| {row['config']} | {row['input_features']} | {row['seeds']} | {row['warmups']} | {row['params']} | "
-                f"{row['legacy_c_cycles_avg']} | {row['cpp_direct_c_backend_cycles_avg']} | "
-                f"{fmt_ratio(row['direct_over_c'])} | {row['cpp_m55_cycles_avg']} | "
-                f"{fmt_ratio(row['m55_over_c'])} | {row['cpp_generic_cycles_avg']} | "
-                f"{fmt_ratio(row['generic_over_c'])} | {row['rltools_generic_cycles_avg']} | "
-                f"{fmt_ratio(row['rltools_over_c'])} |\n"
+                "| Config | Input | Seeds | Warm-ups | Params | C M55 avg | Direct C-backend avg | Direct/C | "
+                "C++ M55 avg | M55/C | C++ Generic avg | Generic/C | RLTools Generic avg | RLTools/C |\n"
             )
-        f.write("\n")
-        f.write(
-            "| Config | C model | Direct req/obj | M55 req/obj | Generic req/obj | "
-            "RLTools state/obj | C ELF dec/file | Direct ELF dec/file | M55 ELF dec/file | "
-            "Generic ELF dec/file | RLTools ELF dec/file |\n"
-        )
-        f.write("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|\n")
-        for row in rows:
+            f.write("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|\n")
+            for row in rows:
+                f.write(
+                    f"| {row['config']} | {row['input_features']} | {row['seeds']} | {row['warmups']} | {row['params']} | "
+                    f"{row['legacy_c_cycles_avg']} | {row['cpp_direct_c_backend_cycles_avg']} | "
+                    f"{fmt_ratio(row['direct_over_c'])} | {row['cpp_m55_cycles_avg']} | "
+                    f"{fmt_ratio(row['m55_over_c'])} | {row['cpp_generic_cycles_avg']} | "
+                    f"{fmt_ratio(row['generic_over_c'])} | {row['rltools_generic_cycles_avg']} | "
+                    f"{fmt_ratio(row['rltools_over_c'])} |\n"
+                )
+            f.write("\n")
             f.write(
-                f"| {row['config']} | {model_cell(row, 'legacy_c')} | "
-                f"{model_cell(row, 'cpp_direct_c_backend')} | {model_cell(row, 'cpp_m55')} | "
-                f"{model_cell(row, 'cpp_generic')} | {model_cell(row, 'rltools_generic')} | "
-                f"{elf_cell(row, 'legacy_c')} | {elf_cell(row, 'cpp_direct_c_backend')} | "
-                f"{elf_cell(row, 'cpp_m55')} | {elf_cell(row, 'cpp_generic')} | "
-                f"{elf_cell(row, 'rltools_generic')} |\n"
+                "| Config | C model | Direct req/obj | M55 req/obj | Generic req/obj | "
+                "RLTools state/obj | C ELF dec/file | Direct ELF dec/file | M55 ELF dec/file | "
+                "Generic ELF dec/file | RLTools ELF dec/file |\n"
             )
+            f.write("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|\n")
+            for row in rows:
+                f.write(
+                    f"| {row['config']} | {model_cell(row, 'legacy_c')} | "
+                    f"{model_cell(row, 'cpp_direct_c_backend')} | {model_cell(row, 'cpp_m55')} | "
+                    f"{model_cell(row, 'cpp_generic')} | {model_cell(row, 'rltools_generic')} | "
+                    f"{elf_cell(row, 'legacy_c')} | {elf_cell(row, 'cpp_direct_c_backend')} | "
+                    f"{elf_cell(row, 'cpp_m55')} | {elf_cell(row, 'cpp_generic')} | "
+                    f"{elf_cell(row, 'rltools_generic')} |\n"
+                )
+        else:
+            f.write(
+                "| Config | Input | Seeds | Warm-ups | Params | C++ M55 avg | C++ Generic avg | "
+                "Generic/M55 | RLTools Generic avg | RLTools/M55 | M55 speedup vs RLTools |\n"
+            )
+            f.write("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|\n")
+            for row in rows:
+                m55 = to_int(row["cpp_m55_cycles_avg"])
+                generic = to_int(row["cpp_generic_cycles_avg"])
+                rltools = to_int(row["rltools_generic_cycles_avg"])
+                f.write(
+                    f"| {row['config']} | {row['input_features']} | {row['seeds']} | {row['warmups']} | {row['params']} | "
+                    f"{m55} | {generic} | {fmt_ratio(ratio(generic, m55))} | "
+                    f"{rltools} | {fmt_ratio(ratio(rltools, m55))} | "
+                    f"{fmt_ratio(ratio(rltools, m55))}x |\n"
+                )
+            f.write("\n")
+            f.write(
+                "| Config | M55 req/obj | Generic req/obj | RLTools state/obj | "
+                "M55 ELF dec/file | Generic ELF dec/file | RLTools ELF dec/file |\n"
+            )
+            f.write("|---|---:|---:|---:|---:|---:|---:|\n")
+            for row in rows:
+                f.write(
+                    f"| {row['config']} | {model_cell(row, 'cpp_m55')} | "
+                    f"{model_cell(row, 'cpp_generic')} | {model_cell(row, 'rltools_generic')} | "
+                    f"{elf_cell_plain(row, 'cpp_m55')} | {elf_cell_plain(row, 'cpp_generic')} | "
+                    f"{elf_cell_plain(row, 'rltools_generic')} |\n"
+                )
         f.write("\n")
         f.write("Raw UART logs, `.size.txt` files, and ELF paths are referenced in the CSV.\n")
 
@@ -578,6 +642,7 @@ def write_markdown(path: Path, rows: list[dict[str, object]], input_features: in
 def main() -> int:
     args = parse_args()
     env = load_env(args.env_file)
+    active_variants = resolve_variants(args, env)
     project_root = args.project_root or Path(
         os.environ.get("EL_CVSCPP_PROJECT_ROOT", env.get("EL_CVSCPP_PROJECT_ROOT", ""))
     )
@@ -610,12 +675,12 @@ def main() -> int:
                 config,
                 variant,
             )
-            for variant in args.variants
+            for variant in active_variants
         }
-        rows.append(build_summary_row(config, variant_rows))
+        rows.append(build_summary_row(config, variant_rows, active_variants))
 
     write_csv(output_stem.with_suffix(".csv"), rows)
-    write_markdown(output_stem.with_suffix(".md"), rows, input_features)
+    write_markdown(output_stem.with_suffix(".md"), rows, input_features, active_variants)
     print(output_stem.with_suffix(".csv"))
     print(output_stem.with_suffix(".md"))
     return 0

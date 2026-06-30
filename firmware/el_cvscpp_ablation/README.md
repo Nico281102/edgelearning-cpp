@@ -1,8 +1,10 @@
-# EL_C_vsCpp STM32N6 Ablation
+# STM32N6 C++/RLTools Benchmark and Private C Ablation
 
-This directory contains the firmware-side launcher for the C versus C++ M55
-ablation. It intentionally does not vendor the legacy C EdgeLearning source:
-point `EL_CVSCPP_EDGE_C_ROOT` at a private checkout in the local `.env`.
+This directory contains the firmware-side launcher for the STM32N6 benchmark.
+The public path compares EdgeLearning++ M55, EdgeLearning++ generic, and
+RLTools generic. The legacy-C rows are a private ablation: they are reproducible
+only when `EL_CVSCPP_EDGE_C_ROOT` points at an external legacy C checkout. The
+legacy C source is not vendored, copied, or published in this repository.
 RLTools is also referenced only by local path through `EL_CVSCPP_RLTOOLS_ROOT`;
 no RLTools sources are copied into this directory.
 
@@ -31,25 +33,28 @@ Edit `firmware/el_cvscpp_ablation/.env` with the local paths. The file is
 ignored by git. Use `ls /dev/tty.usbmodem* /dev/cu.usbmodem*` to identify the
 ST-LINK UART and put it in `EL_CVSCPP_SERIAL_PORT`.
 
+`EL_CVSCPP_EDGE_C_ROOT` is optional for public runs. Set it only for `all`,
+`legacy_c`, or `cpp_direct_c_backend`.
+
 ## Run One Case
 
 ```sh
 sh firmware/el_cvscpp_ablation/flash_and_run_n6.sh --config 8x8
 ```
 
-By default this builds the combined `all` firmware, which runs the C baseline
-and all C++ variants in one image so numerical comparisons are emitted in the
-same UART log. This is useful as a smoke/regression run. To build and run one
-isolated deployable variant instead:
+By default this builds the public `cpp_m55` isolated deployable variant. Choose
+another public variant explicitly when needed:
 
 ```sh
-sh firmware/el_cvscpp_ablation/flash_and_run_n6.sh --config 8x8 --variant cpp_m55
+sh firmware/el_cvscpp_ablation/flash_and_run_n6.sh --config 8x8 --variant rltools_generic
 ```
 
 Valid variants are `all`, `legacy_c`, `cpp_direct_c_backend`, `cpp_m55`,
-`cpp_generic`, and `rltools_generic`. The script builds one static application
-ELF, flashes it through the external loader, launches the FSBL, and captures UART until the firmware
-prints `DONE test=EL_C_vsCpp`.
+`cpp_generic`, and `rltools_generic`. The public variants are `cpp_m55`,
+`cpp_generic`, and `rltools_generic`; `all`, `legacy_c`, and
+`cpp_direct_c_backend` require `EL_CVSCPP_EDGE_C_ROOT`. The script builds one
+static application ELF, flashes it through the external loader, launches the
+FSBL, and captures UART until the firmware prints `DONE test=EL_C_vsCpp`.
 
 Output files are written under:
 
@@ -78,15 +83,28 @@ sh firmware/el_cvscpp_ablation/flash_and_run_n6.sh --config 8x8 --skip-flash --s
 sh firmware/el_cvscpp_ablation/run_sweep_n6.sh
 ```
 
-The default sweep builds, flashes, and measures one isolated firmware image for
-each variant and network size. Runtime cycles, component profiling, convergence
-traces, and ELF sizes in the generated report therefore come from the same
-deployable firmware image.
+The default sweep is public and builds, flashes, and measures one isolated
+firmware image for each C++/RLTools variant and network size:
+
+```text
+cpp_m55 cpp_generic rltools_generic
+```
+
+Runtime cycles, component profiling, convergence traces, and ELF sizes in the
+generated report therefore come from the same deployable firmware image.
 
 To run only the combined same-firmware comparison smoke test:
 
 ```sh
 EL_CVSCPP_SWEEP_VARIANTS=all sh firmware/el_cvscpp_ablation/run_sweep_n6.sh
+```
+
+To reproduce the private legacy-C ablation, set `EL_CVSCPP_EDGE_C_ROOT` in the
+local `.env` and run:
+
+```sh
+EL_CVSCPP_SWEEP_VARIANTS="legacy_c cpp_direct_c_backend cpp_m55 cpp_generic rltools_generic" \
+  sh firmware/el_cvscpp_ablation/run_sweep_n6.sh
 ```
 
 To build every per-variant ELF for a footprint-only check without touching the
@@ -96,7 +114,7 @@ board:
 sh firmware/el_cvscpp_ablation/run_sweep_n6.sh --skip-flash --skip-fsbl --skip-capture
 ```
 
-Each firmware run measures:
+The full private ablation measures:
 
 - legacy C model using the legacy C M55 backend;
 - C++ static model calling the same legacy C backend kernels directly;
@@ -168,29 +186,16 @@ static rollout buffers in each variant image.
 
 ## Current Measurement Snapshot
 
-The 2026-06-26 input-3 ten-seed sweep shows the expected small-network RLTools
-profile on the firmware path: RLTools generic is faster than legacy C on `8x8`
-and `16x8`, then slower from `16x16` upward. The C++ direct legacy-C backend
-remains close to the legacy C baseline, with normal per-topology variation,
-while the native C++ M55 backend is faster than legacy C across the measured
-sweep.
-
-Runtime ratios below are variant cycles divided by legacy C cycles:
+The checked-in 2026-06-26 input-3 ten-seed run is recorded in:
 
 ```text
-hidden   direct-C-backend   cpp-m55   cpp-generic   rltools-generic
-8x8              0.955       0.457        0.439             0.621
-16x8             0.969       0.632        0.642             0.838
-16x16            0.984       0.702        0.818             1.187
-32x16            1.001       0.876        1.027             2.120
-32x32            0.941       0.903        1.165             2.734
-64x32            1.107       0.875        1.283             3.563
+firmware/el_cvscpp_ablation/results/stm32n6_sweep_2026-06-26_input3_10seed.md
 ```
 
-Model footprint is reported in the generated tables as C arena/control bytes,
-C++ compile-time required-memory/object bytes, and RLTools static
-runtime/model-object bytes. Per-variant ELF size is measured from separate
-firmware images with `arm-none-eabi-size`.
+That generated report is the source of record for runtime ratios, model-state
+bytes, per-variant ELF sizes, status columns, artifact paths, and generated
+plots. Keep summary text in this README method-focused; do not duplicate full
+result tables here.
 
 ## Report
 
@@ -199,6 +204,14 @@ min/max, model sizes, per-variant ELF sizes, and artifact paths:
 
 ```sh
 python3 firmware/el_cvscpp_ablation/report_sweep_n6.py
+```
+
+By default the report includes the public C++/RLTools variants. For the private
+legacy-C ablation, pass the same variant set used for the sweep:
+
+```sh
+python3 firmware/el_cvscpp_ablation/report_sweep_n6.py \
+  --variants legacy_c cpp_direct_c_backend cpp_m55 cpp_generic rltools_generic
 ```
 
 The default report paths are:

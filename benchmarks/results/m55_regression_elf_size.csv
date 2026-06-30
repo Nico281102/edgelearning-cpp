@@ -1,7 +1,7 @@
 target,case,text_bytes,rodata_bytes,data_bytes,bss_bytes,other_section_bytes,total_section_bytes,file_bytes,binary
-test_m55_regression_16x16,16x16,10300,1207,80,27408,96,39091,38520,/Users/domenicososta/projects/edgelearning-cpp/build-codex-shape/tests/test_m55_regression_16x16
-test_m55_regression_16x8,16x8,11196,1206,80,22672,96,35250,39016,/Users/domenicososta/projects/edgelearning-cpp/build-codex-shape/tests/test_m55_regression_16x8
-test_m55_regression_32x16,32x16,10260,1207,80,52752,96,64395,38376,/Users/domenicososta/projects/edgelearning-cpp/build-codex-shape/tests/test_m55_regression_32x16
-test_m55_regression_32x32,32x32,10056,1207,80,70416,96,81855,36632,/Users/domenicososta/projects/edgelearning-cpp/build-codex-shape/tests/test_m55_regression_32x32
-test_m55_regression_64x32,64x32,10628,1207,80,137488,96,149499,36728,/Users/domenicososta/projects/edgelearning-cpp/build-codex-shape/tests/test_m55_regression_64x32
-test_m55_regression_8x8,8x8,12240,1205,80,12048,96,25669,54520,/Users/domenicososta/projects/edgelearning-cpp/build-codex-shape/tests/test_m55_regression_8x8
+test_m55_regression_16x16,16x16,10300,1207,80,27408,96,39091,38520,build-codex-shape/tests/test_m55_regression_16x16
+test_m55_regression_16x8,16x8,11196,1206,80,22672,96,35250,39016,build-codex-shape/tests/test_m55_regression_16x8
+test_m55_regression_32x16,32x16,10260,1207,80,52752,96,64395,38376,build-codex-shape/tests/test_m55_regression_32x16
+test_m55_regression_32x32,32x32,10056,1207,80,70416,96,81855,36632,build-codex-shape/tests/test_m55_regression_32x32
+test_m55_regression_64x32,64x32,10628,1207,80,137488,96,149499,36728,build-codex-shape/tests/test_m55_regression_64x32
+test_m55_regression_8x8,8x8,12240,1205,80,12048,96,25669,54520,build-codex-shape/tests/test_m55_regression_8x8

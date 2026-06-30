@@ -4,7 +4,7 @@
 
 `benchmark_regression_vs_c_baseline` generates `benchmarks/results/host_regression_report.md`. It does not include the old C implementation. To compare against the C baseline, check out `Nico281102/EdgeLearning` at commit `0085814908ca1b57ece4fe367361d084fd74aa3e` outside this repository and run the same topology, seed, synthetic samples, optimizer, batch policy, compiler, and flags.
 
-If the old C benchmark output exists at `/tmp/edgelearning_c_baseline_008581_benchmark.txt`, or if `EDGE_C_BASELINE_BENCHMARK_LOG` points to another local output file, the regression report includes selected measurement blocks. The log itself is not committed.
+If the old C benchmark output exists at `${TMPDIR}/edgelearning_c_baseline_008581_benchmark.txt`, or if `EDGE_C_BASELINE_BENCHMARK_LOG` points to another local output file, the regression report includes selected measurement blocks. The log itself is not committed.
 
 `benchmark_code_size` builds the C++ minimal regression-training target and writes `benchmarks/results/code_size_report.md` plus `.csv`. If `EDGE_C_BASELINE_DIR` points to a local old-C checkout at the baseline commit, it also builds a temporary C harness outside this repository and records the old-C section sizes. The old C source and temporary harness are not committed.
 
@@ -39,9 +39,10 @@ Use `-DEDGE_LEGACY_C_BACKEND=m55` for the firmware/Cortex-M55 comparison, plus
 `results/m55_regression_elf_size.csv` and `.md`. Set `EDGE_SIZE_TOOL` to force a
 specific size tool, for example `arm-none-eabi-size`.
 
-The on-target STM32N6 firmware experiment, including C, C++ M55, C++ generic,
-C++ direct legacy-C backend, and RLTools generic variants, lives under
-`firmware/el_cvscpp_ablation/`. See `docs/benchmarking.md` for the firmware
+The on-target STM32N6 firmware experiment lives under
+`firmware/el_cvscpp_ablation/`. Its public sweep compares C++ M55, C++ generic,
+and RLTools generic. Legacy C and C++ direct legacy-C backend variants require a
+private external C checkout. See `docs/benchmarking.md` for the firmware
 methodology, cycle-ratio summary, model-state measurement, and per-variant ELF
 size notes.
 

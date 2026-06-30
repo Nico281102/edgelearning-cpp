@@ -61,7 +61,7 @@ int main(void) {
 @dataclass
 class SizeResult:
     implementation: str
-    binary: Path
+    binary: str
     compiler: str
     flags: str
     commit: str
@@ -217,7 +217,7 @@ def measure_binary(
     text, rodata, data, bss, other, total = categorize(sections)
     return SizeResult(
         implementation=implementation,
-        binary=binary,
+        binary=str(binary),
         compiler=compiler,
         flags=flags,
         commit=commit,
@@ -230,6 +230,19 @@ def measure_binary(
         file_bytes=binary.stat().st_size,
         sections=sections,
     )
+
+
+def portable_path(path: Path, repo: Path) -> str:
+    try:
+        return path.resolve().relative_to(repo.resolve()).as_posix()
+    except ValueError:
+        return path.name
+
+
+def sanitize_flags(flags: str, baseline_dir: Path | None) -> str:
+    if baseline_dir is None:
+        return flags
+    return flags.replace(str(baseline_dir), "${EDGE_C_BASELINE_DIR}")
 
 
 def build_c_baseline(path: Path, cc: str, cflags: list[str], size_tool: str) -> SizeResult:
@@ -267,14 +280,16 @@ def build_c_baseline(path: Path, cc: str, cflags: list[str], size_tool: str) -> 
             "-lm",
         ]
         run(cmd)
-        return measure_binary(
+        result = measure_binary(
             "old_c_baseline",
             binary,
             compiler_version(cc),
-            " ".join(flags + link_options() + ["-lm"]),
+            sanitize_flags(" ".join(flags + link_options() + ["-lm"]), path),
             commit,
             size_tool,
         )
+        result.binary = "<temporary build>/c_code_size_regression"
+        return result
 
 
 def write_reports(results: list[SizeResult], result_dir: Path) -> None:
@@ -361,17 +376,17 @@ def main() -> int:
     args = parser.parse_args()
 
     size_tool = find_llvm_size()
-    results = [
-        measure_binary(
-            "edgelearning_cpp",
-            args.cpp_bin,
-            compiler_version(os.environ.get("CXX", "c++")),
-            "-Os -ffunction-sections -fdata-sections -fno-exceptions -fno-rtti "
-            + " ".join(link_options()),
-            cpp_commit(args.repo),
-            size_tool,
-        )
-    ]
+    cpp_result = measure_binary(
+        "edgelearning_cpp",
+        args.cpp_bin,
+        compiler_version(os.environ.get("CXX", "c++")),
+        "-Os -ffunction-sections -fdata-sections -fno-exceptions -fno-rtti "
+        + " ".join(link_options()),
+        cpp_commit(args.repo),
+        size_tool,
+    )
+    cpp_result.binary = portable_path(args.cpp_bin, args.repo)
+    results = [cpp_result]
 
     baseline_dir = args.c_baseline_dir or (
         Path(os.environ["EDGE_C_BASELINE_DIR"]) if os.environ.get("EDGE_C_BASELINE_DIR") else None
