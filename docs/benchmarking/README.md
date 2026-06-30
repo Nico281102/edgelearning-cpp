@@ -53,7 +53,7 @@ firmware toolchain.
 
 ## STM32N6 firmware C/C++/RLTools experiment
 
-`firmware/el_cvscpp_ablation/` contains the on-target STM32N6 experiment. It is
+`benchmarks/firmware/stm32n6/el_cvscpp_ablation/` contains the on-target STM32N6 experiment. It is
 separate from the host CMake benchmarks because it builds firmware images,
 flashes the board, captures UART output, and measures training work with the
 DWT cycle counter on the MCU. The public firmware path compares EdgeLearning++

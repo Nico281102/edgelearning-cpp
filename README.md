@@ -159,7 +159,7 @@ object sizes, and ELF sections separately.
 Source report:
 [benchmarks/firmware/stm32n6/el_cvscpp_ablation/results/stm32n6_sweep_2026-06-30_input3_10seed.md](benchmarks/firmware/stm32n6/el_cvscpp_ablation/results/stm32n6_sweep_2026-06-30_input3_10seed.md).
 Methodology and scripts:
-[firmware/el_cvscpp_ablation/README.md](firmware/el_cvscpp_ablation/README.md).
+[benchmarks/firmware/stm32n6/el_cvscpp_ablation/README.md](benchmarks/firmware/stm32n6/el_cvscpp_ablation/README.md).
 The public firmware sweep can be reproduced without the legacy C checkout by
 running the C++ and RLTools variants. Legacy-C rows in the generated report are
 author measurements from a private external checkout.

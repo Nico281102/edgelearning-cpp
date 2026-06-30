@@ -42,7 +42,7 @@ committed.
 `arm-none-eabi-size`.
 
 The on-target STM32N6 firmware launcher lives under
-`firmware/el_cvscpp_ablation/`. Its public sweep compares C++ M55, C++ generic,
+`benchmarks/firmware/stm32n6/el_cvscpp_ablation/`. Its public sweep compares C++ M55, C++ generic,
 and RLTools generic with static batch-256 tensors. Legacy C and C++ direct
 legacy-C backend variants require a private external C checkout. The generated
 reports live under

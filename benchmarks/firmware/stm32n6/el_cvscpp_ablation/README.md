@@ -27,10 +27,10 @@ no RLTools sources are copied into this directory.
 ## Local Configuration
 
 ```sh
-cp firmware/el_cvscpp_ablation/.env.example firmware/el_cvscpp_ablation/.env
+cp benchmarks/firmware/stm32n6/el_cvscpp_ablation/.env.example benchmarks/firmware/stm32n6/el_cvscpp_ablation/.env
 ```
 
-Edit `firmware/el_cvscpp_ablation/.env` with the local paths. The file is
+Edit `benchmarks/firmware/stm32n6/el_cvscpp_ablation/.env` with the local paths. The file is
 ignored by git. Use `ls /dev/tty.usbmodem* /dev/cu.usbmodem*` to identify the
 ST-LINK UART and put it in `EL_CVSCPP_SERIAL_PORT`.
 
@@ -40,14 +40,14 @@ ST-LINK UART and put it in `EL_CVSCPP_SERIAL_PORT`.
 ## Run One Case
 
 ```sh
-sh firmware/el_cvscpp_ablation/flash_and_run_n6.sh --config 8x8
+sh benchmarks/firmware/stm32n6/el_cvscpp_ablation/flash_and_run_n6.sh --config 8x8
 ```
 
 By default this builds the public `cpp_m55` isolated deployable variant. Choose
 another public variant explicitly when needed:
 
 ```sh
-sh firmware/el_cvscpp_ablation/flash_and_run_n6.sh --config 8x8 --variant rltools_generic
+sh benchmarks/firmware/stm32n6/el_cvscpp_ablation/flash_and_run_n6.sh --config 8x8 --variant rltools_generic
 ```
 
 Valid variants are `all`, `legacy_c`, `cpp_direct_c_backend`, `cpp_m55`,
@@ -75,13 +75,13 @@ The important artifacts are `serial.log`, the `.elf`, the `.map`, and
 For a build-only check without touching the board:
 
 ```sh
-sh firmware/el_cvscpp_ablation/flash_and_run_n6.sh --config 8x8 --skip-flash --skip-fsbl --skip-capture
+sh benchmarks/firmware/stm32n6/el_cvscpp_ablation/flash_and_run_n6.sh --config 8x8 --skip-flash --skip-fsbl --skip-capture
 ```
 
 ## Full Sweep
 
 ```sh
-sh firmware/el_cvscpp_ablation/run_sweep_n6.sh
+sh benchmarks/firmware/stm32n6/el_cvscpp_ablation/run_sweep_n6.sh
 ```
 
 The default sweep is public and builds, flashes, and measures one isolated
@@ -97,7 +97,7 @@ generated report therefore come from the same deployable firmware image.
 To run only the combined same-firmware comparison smoke test:
 
 ```sh
-EL_CVSCPP_SWEEP_VARIANTS=all sh firmware/el_cvscpp_ablation/run_sweep_n6.sh
+EL_CVSCPP_SWEEP_VARIANTS=all sh benchmarks/firmware/stm32n6/el_cvscpp_ablation/run_sweep_n6.sh
 ```
 
 To reproduce the private legacy-C ablation, set `EL_CVSCPP_EDGE_C_ROOT` in the
@@ -105,14 +105,14 @@ local `.env` and run:
 
 ```sh
 EL_CVSCPP_SWEEP_VARIANTS="legacy_c cpp_direct_c_backend cpp_m55 cpp_generic rltools_generic" \
-  sh firmware/el_cvscpp_ablation/run_sweep_n6.sh
+  sh benchmarks/firmware/stm32n6/el_cvscpp_ablation/run_sweep_n6.sh
 ```
 
 To build every per-variant ELF for a footprint-only check without touching the
 board:
 
 ```sh
-sh firmware/el_cvscpp_ablation/run_sweep_n6.sh --skip-flash --skip-fsbl --skip-capture
+sh benchmarks/firmware/stm32n6/el_cvscpp_ablation/run_sweep_n6.sh --skip-flash --skip-fsbl --skip-capture
 ```
 
 The full private ablation measures:
@@ -208,14 +208,14 @@ After a sweep, generate the single CSV and Markdown report with cycle averages,
 min/max, model sizes, per-variant ELF sizes, and artifact paths:
 
 ```sh
-python3 firmware/el_cvscpp_ablation/report_sweep_n6.py
+python3 benchmarks/firmware/stm32n6/el_cvscpp_ablation/report_sweep_n6.py
 ```
 
 By default the report includes the public C++/RLTools variants. For the private
 legacy-C ablation, pass the same variant set used for the sweep:
 
 ```sh
-python3 firmware/el_cvscpp_ablation/report_sweep_n6.py \
+python3 benchmarks/firmware/stm32n6/el_cvscpp_ablation/report_sweep_n6.py \
   --variants legacy_c cpp_direct_c_backend cpp_m55 cpp_generic rltools_generic
 ```
 
@@ -232,7 +232,7 @@ With the default input size this resolves to
 Generate public CSV/SVG curves for speedup and convergence with:
 
 ```sh
-python3 firmware/el_cvscpp_ablation/plot_sweep_n6.py
+python3 benchmarks/firmware/stm32n6/el_cvscpp_ablation/plot_sweep_n6.py
 ```
 
 The default plot paths are:
@@ -255,7 +255,7 @@ report when it exists.
 Generate the ELF component-breakdown graph from the same sweep CSV with:
 
 ```sh
-python3 firmware/el_cvscpp_ablation/plot_elf_component_breakdown_n6.py
+python3 benchmarks/firmware/stm32n6/el_cvscpp_ablation/plot_elf_component_breakdown_n6.py
 ```
 
 The default output paths are:

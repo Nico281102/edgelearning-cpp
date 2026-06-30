@@ -660,7 +660,7 @@ def main() -> int:
         raise SystemExit("project root missing; pass --project-root or set EL_CVSCPP_PROJECT_ROOT")
 
     script_dir = Path(__file__).resolve().parent
-    repo_root = script_dir.parent.parent
+    repo_root = script_dir.parents[3]
     output_stem = args.output_stem or (
         repo_root
         / "benchmarks"

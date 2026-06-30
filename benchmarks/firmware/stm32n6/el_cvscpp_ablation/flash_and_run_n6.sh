@@ -66,7 +66,7 @@ Usage: $(basename "$0") [options]
 
 Build, flash, boot, and capture one EL_C_vsCpp ablation firmware case.
 
-Configuration is read from firmware/el_cvscpp_ablation/.env by default. Copy
+Configuration is read from benchmarks/firmware/stm32n6/el_cvscpp_ablation/.env by default. Copy
 .env.example to .env and adjust the local paths. Environment variables may also
 be set directly; CLI options override both.
 

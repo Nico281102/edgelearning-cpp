@@ -6,9 +6,7 @@ cmake-build-*/
 .env.local
 __pycache__/
 *.pyc
-firmware/el_cvscpp_ablation/.env
-firmware/el_cvscpp_ablation/.env.local
-firmware/el_cvscpp_ablation/results.backup_*/
+benchmarks/firmware/stm32n6/el_cvscpp_ablation/results.backup_*/
 *.o
 *.a
 *.elf

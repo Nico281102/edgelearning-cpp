@@ -36,7 +36,7 @@ COMPONENTS = (
 
 def parse_args() -> argparse.Namespace:
     script_dir = Path(__file__).resolve().parent
-    repo_root = script_dir.parent.parent
+    repo_root = script_dir.parents[3]
     default_results_dir = repo_root / "benchmarks" / "firmware" / "stm32n6" / "el_cvscpp_ablation" / "results"
     today = dt.date.today().isoformat()
     parser = argparse.ArgumentParser()

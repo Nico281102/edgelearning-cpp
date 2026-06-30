@@ -1,7 +1,7 @@
 SHELL := /bin/sh
 
 THIS_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
-REPO_ROOT := $(abspath $(THIS_DIR)/../..)
+REPO_ROOT := $(abspath $(THIS_DIR)/../../../..)
 
 PROJECT_ROOT ?=
 EDGE_C_ROOT ?=
@@ -11,11 +11,11 @@ APPLI_PROJECT_NAME ?= EL_C_vsCpp_Appli
 BUILD_CONFIG ?= EL_C_vsCpp_Ablation_DEBUG
 
 ifeq ($(strip $(PROJECT_ROOT)),)
-$(error PROJECT_ROOT is required; set it in firmware/el_cvscpp_ablation/.env or pass PROJECT_ROOT=/path/to/EL_C_vsCpp)
+$(error PROJECT_ROOT is required; set it in benchmarks/firmware/stm32n6/el_cvscpp_ablation/.env or pass PROJECT_ROOT=/path/to/EL_C_vsCpp)
 endif
 
 ifeq ($(strip $(TOOLCHAIN_BIN)),)
-$(error TOOLCHAIN_BIN is required; set it in firmware/el_cvscpp_ablation/.env or pass TOOLCHAIN_BIN=/path/to/arm-none-eabi/bin)
+$(error TOOLCHAIN_BIN is required; set it in benchmarks/firmware/stm32n6/el_cvscpp_ablation/.env or pass TOOLCHAIN_BIN=/path/to/arm-none-eabi/bin)
 endif
 
 H1 ?= 8
@@ -32,7 +32,7 @@ endif
 
 ifneq ($(filter $(VARIANT),$(LEGACY_C_REQUIRED_VARIANTS)),)
 ifeq ($(strip $(EDGE_C_ROOT)),)
-$(error EDGE_C_ROOT is required for VARIANT=$(VARIANT); set EL_CVSCPP_EDGE_C_ROOT in firmware/el_cvscpp_ablation/.env or pass EDGE_C_ROOT=/path/to/legacy/EdgeLearning)
+$(error EDGE_C_ROOT is required for VARIANT=$(VARIANT); set EL_CVSCPP_EDGE_C_ROOT in benchmarks/firmware/stm32n6/el_cvscpp_ablation/.env or pass EDGE_C_ROOT=/path/to/legacy/EdgeLearning)
 endif
 endif
 
@@ -56,7 +56,7 @@ endif
 RLTOOLS_REQUIRED_VARIANTS := all rltools_generic
 ifneq ($(filter $(VARIANT),$(RLTOOLS_REQUIRED_VARIANTS)),)
 ifeq ($(strip $(RLTOOLS_ROOT)),)
-$(error RLTOOLS_ROOT is required for VARIANT=$(VARIANT); set EL_CVSCPP_RLTOOLS_ROOT in firmware/el_cvscpp_ablation/.env or pass RLTOOLS_ROOT=/path/to/rl-tools)
+$(error RLTOOLS_ROOT is required for VARIANT=$(VARIANT); set EL_CVSCPP_RLTOOLS_ROOT in benchmarks/firmware/stm32n6/el_cvscpp_ablation/.env or pass RLTOOLS_ROOT=/path/to/rl-tools)
 endif
 endif
 
@@ -100,7 +100,7 @@ COMMON_DEFS := \
   -DUSE_FULL_LL_DRIVER
 
 COMMON_INCS := \
-  -I$(REPO_ROOT)/firmware/el_cvscpp_ablation \
+  -I$(REPO_ROOT)/benchmarks/firmware/stm32n6/el_cvscpp_ablation \
   -I$(REPO_ROOT)/include \
   -I$(PROJECT_ROOT)/Appli/Core/Inc \
   -I$(PROJECT_ROOT)/Secure_nsclib \
@@ -168,7 +168,7 @@ C_SRCS += $(LEGACY_C_SRCS)
 endif
 
 CPP_SRCS := \
-  $(REPO_ROOT)/firmware/el_cvscpp_ablation/el_cvscpp_ablation_run.cpp
+  $(REPO_ROOT)/benchmarks/firmware/stm32n6/el_cvscpp_ablation/el_cvscpp_ablation_run.cpp
 
 S_SRCS := \
   $(APPLI_DIR)/Application/User/Startup/startup_stm32n657x0hxq.s
