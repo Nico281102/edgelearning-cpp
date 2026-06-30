@@ -1,16 +1,19 @@
 # EdgeLearning++
 
 EdgeLearning++ (`edgelearning-cpp`) is a C++20 training runtime for small neural
-networks on constrained targets. It keeps the embedded assumptions of the
-original C runtime: static memory, flat parameter buffers, sample-wise training,
-and no heap allocation in the training path.
+networks on constrained targets. The project grew out of an embedded-systems C
+library developed for on-device learning experiments, then was rewritten in C++
+as an independent implementation that keeps the same embedded principles:
+static memory, flat parameter buffers, sample-wise training, and no heap
+allocation in the training path.
 
 The C++ implementation uses templates and policies where they remove runtime
 descriptors: model topology, tensor specs, layer sizes, precision types, backend
 selection, and arena size are compile-time facts. Modern agentic AI tools make
 it easier to study language features such as templates, concepts, and
-`constexpr`; this project uses those features only where they give a concrete
-embedded benefit. The C++ redesign rationale is summarized in
+`constexpr`; this project uses those C++ features where they give a concrete
+embedded benefit: stronger static checks, less runtime interpretation, and
+clearer backend specialization. The C++ redesign rationale is summarized in
 [docs/design/cpp_redesign_rationale.md](docs/design/cpp_redesign_rationale.md).
 
 ## Quick Start
