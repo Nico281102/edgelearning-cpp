@@ -17,7 +17,7 @@ This report uses the public C++/RLTools variant set and does not require the leg
 
 All per-variant runs completed with `DONE status=0`.
 
-| Config | Input | Seeds | Warm-ups | Params | C++ M55 avg | C++ Generic avg | Generic/M55 | RLTools Batch avg | RLTools/M55 | RLTools/M55 runtime ratio |
+| Config | Input | Seeds | Warm-ups | Params | C++ M55 avg | C++ Generic avg | Generic/M55 | RLTools Generic avg | RLTools/M55 | RLTools/M55 runtime ratio |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | 8x8 | 3 | 10 | 2 | 113 | 2267825 | 2175636 | 0.959 | 3489739 | 1.539 | 1.539x |
 | 16x8 | 3 | 10 | 2 | 209 | 4060163 | 4119287 | 1.015 | 5996130 | 1.477 | 1.477x |

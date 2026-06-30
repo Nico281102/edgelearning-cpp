@@ -118,7 +118,7 @@ The STM32N6 report contains the rows needed for the main four-way comparison:
 | `legacy_c` | `EL-C M55`, the private legacy C runtime with the M55 backend |
 | `cpp_generic` | `EL++ generic scalar`, the public C++ model without specialized M55 kernels |
 | `cpp_m55` | `EL++ M55`, the same public C++ model using the M55 backend policy |
-| `rltools_generic` | `RLTools generic/static batch`, the external C++ baseline with static batch-256 tensors |
+| `rltools_generic` | `RLTools Generic`, the external C++ baseline using generic RLTools neural-network operations with static batch-256 tensors |
 
 The `cpp_direct_c_backend` row is an additional ablation: it keeps the C++ model
 layout while calling the legacy C backend kernels directly. It is useful for

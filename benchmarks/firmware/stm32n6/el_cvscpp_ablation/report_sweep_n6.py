@@ -18,7 +18,7 @@ VARIANT_LABELS = {
     "cpp_direct_c_backend": "Direct C-backend",
     "cpp_m55": "C++ M55",
     "cpp_generic": "C++ Generic",
-    "rltools_generic": "RLTools Generic Batch",
+    "rltools_generic": "RLTools Generic",
 }
 PROFILE_COMPONENTS = (
     "zero",
@@ -576,7 +576,7 @@ def write_markdown(path: Path,
         if "legacy_c" in active_variants:
             f.write(
                 "| Config | Input | Seeds | Warm-ups | Params | C M55 avg | Direct C-backend avg | Direct/C | "
-                "C++ M55 avg | M55/C | C++ Generic avg | Generic/C | RLTools Batch avg | RLTools/C |\n"
+                "C++ M55 avg | M55/C | C++ Generic avg | Generic/C | RLTools Generic avg | RLTools/C |\n"
             )
             f.write("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|\n")
             for row in rows:
@@ -607,7 +607,7 @@ def write_markdown(path: Path,
         else:
             f.write(
                 "| Config | Input | Seeds | Warm-ups | Params | C++ M55 avg | C++ Generic avg | "
-                "Generic/M55 | RLTools Batch avg | RLTools/M55 | RLTools/M55 runtime ratio |\n"
+                "Generic/M55 | RLTools Generic avg | RLTools/M55 | RLTools/M55 runtime ratio |\n"
             )
             f.write("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|\n")
             for row in rows:

@@ -28,9 +28,9 @@
 <rect x="103.0" y="463.5" width="16" height="29.9" fill="#4f9f68"><title>8x8 C++ generic bss: 30,072 bytes; ELF dec: 75,008; model state: 1,976</title></rect>
 <rect class="baroutline" x="103.0" y="463.5" width="16" height="74.5"/>
 <text class="tick" x="111.0" y="558" text-anchor="end" transform="rotate(-45 111.0 558)">Generic</text>
-<rect x="124.0" y="490.9" width="16" height="47.1" fill="#356bb0"><title>8x8 RLTools batch text: 47,392 bytes; ELF dec: 133,768; model state: 58,192</title></rect>
-<rect x="124.0" y="490.8" width="16" height="0.5" fill="#e0a22e"><title>8x8 RLTools batch data: 92 bytes; ELF dec: 133,768; model state: 58,192</title></rect>
-<rect x="124.0" y="405.1" width="16" height="85.7" fill="#4f9f68"><title>8x8 RLTools batch bss: 86,284 bytes; ELF dec: 133,768; model state: 58,192</title></rect>
+<rect x="124.0" y="490.9" width="16" height="47.1" fill="#356bb0"><title>8x8 RLTools Generic text: 47,392 bytes; ELF dec: 133,768; model state: 58,192</title></rect>
+<rect x="124.0" y="490.8" width="16" height="0.5" fill="#e0a22e"><title>8x8 RLTools Generic data: 92 bytes; ELF dec: 133,768; model state: 58,192</title></rect>
+<rect x="124.0" y="405.1" width="16" height="85.7" fill="#4f9f68"><title>8x8 RLTools Generic bss: 86,284 bytes; ELF dec: 133,768; model state: 58,192</title></rect>
 <rect class="baroutline" x="124.0" y="405.1" width="16" height="132.9"/>
 <text class="tick" x="132.0" y="558" text-anchor="end" transform="rotate(-45 132.0 558)">RLTools</text>
 <text class="label" x="203.0" y="610" text-anchor="middle">16x8</text>
@@ -44,9 +44,9 @@
 <rect x="195.0" y="462.4" width="16" height="32.2" fill="#4f9f68"><title>16x8 C++ generic bss: 32,440 bytes; ELF dec: 76,136; model state: 3,576</title></rect>
 <rect class="baroutline" x="195.0" y="462.4" width="16" height="75.6"/>
 <text class="tick" x="203.0" y="558" text-anchor="end" transform="rotate(-45 203.0 558)">Generic</text>
-<rect x="216.0" y="490.1" width="16" height="47.9" fill="#356bb0"><title>16x8 RLTools batch text: 48,200 bytes; ELF dec: 169,648; model state: 92,496</title></rect>
-<rect x="216.0" y="490.0" width="16" height="0.5" fill="#e0a22e"><title>16x8 RLTools batch data: 92 bytes; ELF dec: 169,648; model state: 92,496</title></rect>
-<rect x="216.0" y="369.5" width="16" height="120.6" fill="#4f9f68"><title>16x8 RLTools batch bss: 121,356 bytes; ELF dec: 169,648; model state: 92,496</title></rect>
+<rect x="216.0" y="490.1" width="16" height="47.9" fill="#356bb0"><title>16x8 RLTools Generic text: 48,200 bytes; ELF dec: 169,648; model state: 92,496</title></rect>
+<rect x="216.0" y="490.0" width="16" height="0.5" fill="#e0a22e"><title>16x8 RLTools Generic data: 92 bytes; ELF dec: 169,648; model state: 92,496</title></rect>
+<rect x="216.0" y="369.5" width="16" height="120.6" fill="#4f9f68"><title>16x8 RLTools Generic bss: 121,356 bytes; ELF dec: 169,648; model state: 92,496</title></rect>
 <rect class="baroutline" x="216.0" y="369.5" width="16" height="168.5"/>
 <text class="tick" x="224.0" y="558" text-anchor="end" transform="rotate(-45 224.0 558)">RLTools</text>
 <text class="label" x="295.0" y="610" text-anchor="middle">16x16</text>
@@ -60,9 +60,9 @@
 <rect x="287.0" y="456.8" width="16" height="35.7" fill="#4f9f68"><title>16x16 C++ generic bss: 35,960 bytes; ELF dec: 81,728; model state: 5,944</title></rect>
 <rect class="baroutline" x="287.0" y="456.8" width="16" height="81.2"/>
 <text class="tick" x="295.0" y="558" text-anchor="end" transform="rotate(-45 295.0 558)">Generic</text>
-<rect x="308.0" y="488.3" width="16" height="49.7" fill="#356bb0"><title>16x16 RLTools batch text: 49,984 bytes; ELF dec: 191,272; model state: 111,184</title></rect>
-<rect x="308.0" y="488.3" width="16" height="0.5" fill="#e0a22e"><title>16x16 RLTools batch data: 92 bytes; ELF dec: 191,272; model state: 111,184</title></rect>
-<rect x="308.0" y="348.0" width="16" height="140.3" fill="#4f9f68"><title>16x16 RLTools batch bss: 141,196 bytes; ELF dec: 191,272; model state: 111,184</title></rect>
+<rect x="308.0" y="488.3" width="16" height="49.7" fill="#356bb0"><title>16x16 RLTools Generic text: 49,984 bytes; ELF dec: 191,272; model state: 111,184</title></rect>
+<rect x="308.0" y="488.3" width="16" height="0.5" fill="#e0a22e"><title>16x16 RLTools Generic data: 92 bytes; ELF dec: 191,272; model state: 111,184</title></rect>
+<rect x="308.0" y="348.0" width="16" height="140.3" fill="#4f9f68"><title>16x16 RLTools Generic bss: 141,196 bytes; ELF dec: 191,272; model state: 111,184</title></rect>
 <rect class="baroutline" x="308.0" y="348.0" width="16" height="190.0"/>
 <text class="tick" x="316.0" y="558" text-anchor="end" transform="rotate(-45 316.0 558)">RLTools</text>
 <text class="label" x="387.0" y="610" text-anchor="middle">32x16</text>
@@ -76,9 +76,9 @@
 <rect x="379.0" y="448.5" width="16" height="43.5" fill="#4f9f68"><title>32x16 C++ generic bss: 43,768 bytes; ELF dec: 90,056; model state: 11,192</title></rect>
 <rect class="baroutline" x="379.0" y="448.5" width="16" height="89.5"/>
 <text class="tick" x="387.0" y="558" text-anchor="end" transform="rotate(-45 387.0 558)">Generic</text>
-<rect x="400.0" y="491.1" width="16" height="46.9" fill="#356bb0"><title>32x16 RLTools batch text: 47,196 bytes; ELF dec: 261,700; model state: 181,840</title></rect>
-<rect x="400.0" y="491.0" width="16" height="0.5" fill="#e0a22e"><title>32x16 RLTools batch data: 92 bytes; ELF dec: 261,700; model state: 181,840</title></rect>
-<rect x="400.0" y="278.0" width="16" height="213.0" fill="#4f9f68"><title>32x16 RLTools batch bss: 214,412 bytes; ELF dec: 261,700; model state: 181,840</title></rect>
+<rect x="400.0" y="491.1" width="16" height="46.9" fill="#356bb0"><title>32x16 RLTools Generic text: 47,196 bytes; ELF dec: 261,700; model state: 181,840</title></rect>
+<rect x="400.0" y="491.0" width="16" height="0.5" fill="#e0a22e"><title>32x16 RLTools Generic data: 92 bytes; ELF dec: 261,700; model state: 181,840</title></rect>
+<rect x="400.0" y="278.0" width="16" height="213.0" fill="#4f9f68"><title>32x16 RLTools Generic bss: 214,412 bytes; ELF dec: 261,700; model state: 181,840</title></rect>
 <rect class="baroutline" x="400.0" y="278.0" width="16" height="260.0"/>
 <text class="tick" x="408.0" y="558" text-anchor="end" transform="rotate(-45 408.0 558)">RLTools</text>
 <text class="label" x="479.0" y="610" text-anchor="middle">32x32</text>
@@ -92,9 +92,9 @@
 <rect x="471.0" y="435.7" width="16" height="56.6" fill="#4f9f68"><title>32x32 C++ generic bss: 56,952 bytes; ELF dec: 102,968; model state: 20,024</title></rect>
 <rect class="baroutline" x="471.0" y="435.7" width="16" height="102.3"/>
 <text class="tick" x="479.0" y="558" text-anchor="end" transform="rotate(-45 479.0 558)">Generic</text>
-<rect x="492.0" y="492.7" width="16" height="45.3" fill="#356bb0"><title>32x32 RLTools batch text: 45,628 bytes; ELF dec: 305,956; model state: 223,312</title></rect>
-<rect x="492.0" y="492.6" width="16" height="0.5" fill="#e0a22e"><title>32x32 RLTools batch data: 92 bytes; ELF dec: 305,956; model state: 223,312</title></rect>
-<rect x="492.0" y="234.1" width="16" height="258.5" fill="#4f9f68"><title>32x32 RLTools batch bss: 260,236 bytes; ELF dec: 305,956; model state: 223,312</title></rect>
+<rect x="492.0" y="492.7" width="16" height="45.3" fill="#356bb0"><title>32x32 RLTools Generic text: 45,628 bytes; ELF dec: 305,956; model state: 223,312</title></rect>
+<rect x="492.0" y="492.6" width="16" height="0.5" fill="#e0a22e"><title>32x32 RLTools Generic data: 92 bytes; ELF dec: 305,956; model state: 223,312</title></rect>
+<rect x="492.0" y="234.1" width="16" height="258.5" fill="#4f9f68"><title>32x32 RLTools Generic bss: 260,236 bytes; ELF dec: 305,956; model state: 223,312</title></rect>
 <rect class="baroutline" x="492.0" y="234.1" width="16" height="303.9"/>
 <text class="tick" x="500.0" y="558" text-anchor="end" transform="rotate(-45 500.0 558)">RLTools</text>
 <text class="label" x="571.0" y="610" text-anchor="middle">64x32</text>
@@ -108,9 +108,9 @@
 <rect x="563.0" y="406.0" width="16" height="84.3" fill="#4f9f68"><title>64x32 C++ generic bss: 84,856 bytes; ELF dec: 132,840; model state: 38,712</title></rect>
 <rect class="baroutline" x="563.0" y="406.0" width="16" height="132.0"/>
 <text class="tick" x="571.0" y="558" text-anchor="end" transform="rotate(-45 571.0 558)">Generic</text>
-<rect x="584.0" y="491.0" width="16" height="47.0" fill="#356bb0"><title>64x32 RLTools batch text: 47,308 bytes; ELF dec: 466,356; model state: 372,816</title></rect>
-<rect x="584.0" y="490.9" width="16" height="0.5" fill="#e0a22e"><title>64x32 RLTools batch data: 92 bytes; ELF dec: 466,356; model state: 372,816</title></rect>
-<rect x="584.0" y="74.7" width="16" height="416.2" fill="#4f9f68"><title>64x32 RLTools batch bss: 418,956 bytes; ELF dec: 466,356; model state: 372,816</title></rect>
+<rect x="584.0" y="491.0" width="16" height="47.0" fill="#356bb0"><title>64x32 RLTools Generic text: 47,308 bytes; ELF dec: 466,356; model state: 372,816</title></rect>
+<rect x="584.0" y="490.9" width="16" height="0.5" fill="#e0a22e"><title>64x32 RLTools Generic data: 92 bytes; ELF dec: 466,356; model state: 372,816</title></rect>
+<rect x="584.0" y="74.7" width="16" height="416.2" fill="#4f9f68"><title>64x32 RLTools Generic bss: 418,956 bytes; ELF dec: 466,356; model state: 372,816</title></rect>
 <rect class="baroutline" x="584.0" y="74.7" width="16" height="463.3"/>
 <text class="tick" x="592.0" y="558" text-anchor="end" transform="rotate(-45 592.0 558)">RLTools</text>
 <text class="label" transform="translate(24 302.0) rotate(-90)" text-anchor="middle">ELF size components</text>
@@ -124,5 +124,5 @@
 <text class="legend" x="644" y="150">Variant order</text>
 <text class="legend" x="644" y="166">M55: C++ M55</text>
 <text class="legend" x="644" y="185">Generic: C++ generic</text>
-<text class="legend" x="644" y="204">RLTools: RLTools batch</text>
+<text class="legend" x="644" y="204">RLTools: RLTools Generic</text>
 </svg>

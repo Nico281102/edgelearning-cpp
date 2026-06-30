@@ -137,7 +137,7 @@ For extension points, see [docs/api/custom_extensions.md](docs/api/custom_extens
 ## STM32N6 Preview
 
 The checked-in STM32N6 sweep compares one static firmware ELF per topology and
-variant. The ratio below is `RLTools batch cycles / EdgeLearning++ M55
+variant. The ratio below is `RLTools Generic cycles / EdgeLearning++ M55
 cycles`; values above `1.0x` mean the M55 backend completed the same measured
 training work in fewer cycles.
 
@@ -149,7 +149,7 @@ batch-256 input, target, output-gradient, activation, and backward buffers. The
 generated CSV also lists the lower-level arena/object fields and ELF sections
 separately.
 
-| Hidden | RLTools/M55 runtime ratio | EL++ M55 network state | RLTools network state |
+| Hidden | RLTools/M55 runtime ratio | EL++ M55 network state | RLTools Generic network state |
 |---|---:|---:|---:|
 | `8x8` | 1.54x | 2,080 B | 58,192 B |
 | `16x8` | 1.48x | 3,680 B | 92,496 B |

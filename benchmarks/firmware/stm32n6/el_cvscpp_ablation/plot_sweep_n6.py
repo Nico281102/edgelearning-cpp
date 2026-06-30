@@ -19,7 +19,7 @@ LABELS = {
     "cpp_direct_c_backend": "C++ direct C backend",
     "cpp_m55": "C++ M55",
     "cpp_generic": "C++ generic",
-    "rltools_generic": "RLTools batch",
+    "rltools_generic": "RLTools Generic",
 }
 COLORS = {
     "legacy_c": "#2f2f2f",
@@ -284,7 +284,7 @@ def write_speedup_svg(path: Path, rows: list[dict[str, object]]) -> None:
         return top + (1.0 - ((value - y_min) / (y_max - y_min))) * plot_h
 
     baseline_variant = str(rows[0].get("baseline_variant", "legacy_c")) if rows else "legacy_c"
-    baseline_label = "legacy C baseline" if baseline_variant == "legacy_c" else "RLTools batch baseline"
+    baseline_label = "legacy C baseline" if baseline_variant == "legacy_c" else "RLTools Generic baseline"
     active_variants = tuple(
         variant for variant in VARIANTS if any(str(row["variant"]) == variant for row in rows)
     )
@@ -534,6 +534,9 @@ def write_convergence_svg(path: Path, rows: list[dict[str, object]], config: str
         return
     x_values = sorted({int(row["sample_passes"]) for row in selected})
     y_values = [float(row["minibatch_mse"]) for row in selected]
+    active_variants = tuple(
+        variant for variant in VARIANTS if any(row["variant"] == variant for row in selected)
+    )
     x_min, x_max = min(x_values), max(x_values)
     y_min = min(y_values) * 0.80
     y_max = max(y_values) * 1.20
@@ -576,7 +579,7 @@ def write_convergence_svg(path: Path, rows: list[dict[str, object]], config: str
             lines.append(circle(x, y, COLORS[variant]))
     lines.append(f'<text class="label" x="{left + plot_w / 2:.1f}" y="{height - 18}" text-anchor="middle">Cumulative sample-passes</text>')
     lines.append(f'<text class="label" transform="translate(24 {top + plot_h / 2:.1f}) rotate(-90)" text-anchor="middle">minibatch MSE, log scale</text>')
-    draw_legend(lines, width - right + 34, top + 8, VARIANTS)
+    draw_legend(lines, width - right + 34, top + 8, active_variants)
     lines.append("</svg>")
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 

@@ -41,13 +41,6 @@
 <circle cx="276.4" cy="349.1" r="3.2" fill="#2f2f2f"/>
 <circle cx="465.2" cy="349.1" r="3.2" fill="#2f2f2f"/>
 <circle cx="865.0" cy="349.1" r="3.2" fill="#2f2f2f"/>
-<polyline points="82.0,340.5 115.3,343.1 165.3,346.2 276.4,349.1 465.2,341.0 865.0,371.3" fill="none" stroke="#177245" stroke-width="2.4"/>
-<circle cx="82.0" cy="340.5" r="3.2" fill="#177245"/>
-<circle cx="115.3" cy="343.1" r="3.2" fill="#177245"/>
-<circle cx="165.3" cy="346.2" r="3.2" fill="#177245"/>
-<circle cx="276.4" cy="349.1" r="3.2" fill="#177245"/>
-<circle cx="465.2" cy="341.0" r="3.2" fill="#177245"/>
-<circle cx="865.0" cy="371.3" r="3.2" fill="#177245"/>
 <polyline points="82.0,129.7 115.3,241.6 165.3,270.3 276.4,322.7 465.2,331.8 865.0,325.3" fill="none" stroke="#1f62b2" stroke-width="2.4"/>
 <circle cx="82.0" cy="129.7" r="3.2" fill="#1f62b2"/>
 <circle cx="115.3" cy="241.6" r="3.2" fill="#1f62b2"/>
@@ -73,12 +66,10 @@
 <text class="label" transform="translate(22 298.0) rotate(-90)" text-anchor="middle">baseline cycles / variant cycles</text>
 <line x1="899" y1="70" x2="923" y2="70" stroke="#2f2f2f" stroke-width="2.4"/>
 <text class="legend" x="931" y="74">C M55</text>
-<line x1="899" y1="90" x2="923" y2="90" stroke="#177245" stroke-width="2.4"/>
-<text class="legend" x="931" y="94">C++ direct C backend</text>
-<line x1="899" y1="110" x2="923" y2="110" stroke="#1f62b2" stroke-width="2.4"/>
-<text class="legend" x="931" y="114">C++ M55</text>
-<line x1="899" y1="130" x2="923" y2="130" stroke="#b24a1f" stroke-width="2.4"/>
-<text class="legend" x="931" y="134">C++ generic</text>
-<line x1="899" y1="150" x2="923" y2="150" stroke="#7a3db8" stroke-width="2.4"/>
-<text class="legend" x="931" y="154">RLTools batch</text>
+<line x1="899" y1="90" x2="923" y2="90" stroke="#1f62b2" stroke-width="2.4"/>
+<text class="legend" x="931" y="94">C++ M55</text>
+<line x1="899" y1="110" x2="923" y2="110" stroke="#b24a1f" stroke-width="2.4"/>
+<text class="legend" x="931" y="114">C++ generic</text>
+<line x1="899" y1="130" x2="923" y2="130" stroke="#7a3db8" stroke-width="2.4"/>
+<text class="legend" x="931" y="134">RLTools Generic</text>
 </svg>

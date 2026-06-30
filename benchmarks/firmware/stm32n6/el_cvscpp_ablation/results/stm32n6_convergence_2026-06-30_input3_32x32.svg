@@ -49,14 +49,10 @@
 <circle cx="865.0" cy="399.6" r="3.2" fill="#7a3db8"/>
 <text class="label" x="478.5" y="602" text-anchor="middle">Cumulative sample-passes</text>
 <text class="label" transform="translate(24 303.0) rotate(-90)" text-anchor="middle">minibatch MSE, log scale</text>
-<line x1="899" y1="70" x2="923" y2="70" stroke="#2f2f2f" stroke-width="2.4"/>
-<text class="legend" x="931" y="74">C M55</text>
-<line x1="899" y1="90" x2="923" y2="90" stroke="#177245" stroke-width="2.4"/>
-<text class="legend" x="931" y="94">C++ direct C backend</text>
-<line x1="899" y1="110" x2="923" y2="110" stroke="#1f62b2" stroke-width="2.4"/>
-<text class="legend" x="931" y="114">C++ M55</text>
-<line x1="899" y1="130" x2="923" y2="130" stroke="#b24a1f" stroke-width="2.4"/>
-<text class="legend" x="931" y="134">C++ generic</text>
-<line x1="899" y1="150" x2="923" y2="150" stroke="#7a3db8" stroke-width="2.4"/>
-<text class="legend" x="931" y="154">RLTools batch</text>
+<line x1="899" y1="70" x2="923" y2="70" stroke="#1f62b2" stroke-width="2.4"/>
+<text class="legend" x="931" y="74">C++ M55</text>
+<line x1="899" y1="90" x2="923" y2="90" stroke="#b24a1f" stroke-width="2.4"/>
+<text class="legend" x="931" y="94">C++ generic</text>
+<line x1="899" y1="110" x2="923" y2="110" stroke="#7a3db8" stroke-width="2.4"/>
+<text class="legend" x="931" y="114">RLTools Generic</text>
 </svg>
