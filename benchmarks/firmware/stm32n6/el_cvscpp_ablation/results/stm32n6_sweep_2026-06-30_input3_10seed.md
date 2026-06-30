@@ -10,6 +10,7 @@ Timing: pre-generated rollout hot path only; setup, import/export, reset, sample
 Profiling: training-loop component counters are collected in a separate equivalent pass with the same initial parameters and dataset, then averaged over seeds.
 Convergence trace: seed 0, minibatch MSE after each Adam update, emitted by an untimed diagnostic pass.
 Build: static C++/RLTools model storage, all firmware objects compiled with `-Ofast`.
+Network state is the comparable runtime-memory field: C uses arena plus control bytes, EdgeLearning++ uses the static model object, and RLTools uses the static runtime bundle needed to run the batch-256 network.
 ELF size columns are from the same per-variant image used for the runtime row.
 
 This report uses the public C++/RLTools variant set and does not require the legacy C checkout.
@@ -25,14 +26,14 @@ All per-variant runs completed with `DONE status=0`.
 | 32x32 | 3 | 10 | 2 | 1217 | 16836672 | 21718504 | 1.290 | 55400395 | 3.290 | 3.290x |
 | 64x32 | 3 | 10 | 2 | 2369 | 27601694 | 39899877 | 1.446 | 108121561 | 3.917 | 3.917x |
 
-| Config | M55 req/obj | Generic req/obj | RLTools state/obj | M55 ELF dec/file | Generic ELF dec/file | RLTools ELF dec/file |
+| Config | M55 network state | Generic network state | RLTools network state | M55 ELF dec/file | Generic ELF dec/file | RLTools ELF dec/file |
 |---|---:|---:|---:|---:|---:|---:|
-| 8x8 | 2,048/2,080 | 1,952/1,976 | 58,192/36,628 | 72,488/72,596 | 75,008/74,724 | 133,768/79,624 |
-| 16x8 | 3,648/3,680 | 3,552/3,576 | 92,496/54,548 | 74,656/72,608 | 76,136/73,588 | 169,648/80,016 |
-| 16x16 | 6,016/6,048 | 5,920/5,944 | 111,184/73,236 | 77,856/72,096 | 81,728/75,564 | 191,272/82,316 |
-| 32x16 | 11,264/11,296 | 11,168/11,192 | 181,840/111,124 | 85,360/71,980 | 90,056/76,220 | 261,700/79,016 |
-| 32x32 | 20,096/20,128 | 20,000/20,024 | 223,312/152,596 | 98,824/72,064 | 102,968/75,820 | 305,956/77,852 |
-| 64x32 | 38,784/38,816 | 38,688/38,712 | 372,816/236,564 | 127,792/73,324 | 132,840/77,916 | 466,356/79,112 |
+| 8x8 | 2,080 | 1,976 | 58,192 | 72,488/72,596 | 75,008/74,724 | 133,768/79,624 |
+| 16x8 | 3,680 | 3,576 | 92,496 | 74,656/72,608 | 76,136/73,588 | 169,648/80,016 |
+| 16x16 | 6,048 | 5,944 | 111,184 | 77,856/72,096 | 81,728/75,564 | 191,272/82,316 |
+| 32x16 | 11,296 | 11,192 | 181,840 | 85,360/71,980 | 90,056/76,220 | 261,700/79,016 |
+| 32x32 | 20,128 | 20,024 | 223,312 | 98,824/72,064 | 102,968/75,820 | 305,956/77,852 |
+| 64x32 | 38,816 | 38,712 | 372,816 | 127,792/73,324 | 132,840/77,916 | 466,356/79,112 |
 
 Raw UART logs, `.size.txt` files, and ELF paths are referenced in the CSV.
 

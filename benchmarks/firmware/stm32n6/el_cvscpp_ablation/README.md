@@ -176,7 +176,10 @@ seed:
 - `legacy_c_vs_cpp_generic`
 - `cpp_generic_vs_rltools_generic`
 
-It also prints model-size fields:
+It also prints model-size fields. The comparable summary metric is
+`*_model_state_bytes`: C uses arena plus control bytes, EdgeLearning++ uses the
+static model object, and RLTools uses the static runtime bundle needed to run
+the batch-256 network. The lower-level fields are:
 
 - `legacy_c_arena` and `legacy_c_control` for the C static arena/control state;
 - `cpp_*_required_memory` for each C++ compile-time arena requirement;

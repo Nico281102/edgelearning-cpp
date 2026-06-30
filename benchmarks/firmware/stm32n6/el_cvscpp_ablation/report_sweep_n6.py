@@ -443,11 +443,7 @@ def fmt_ratio(value: object) -> str:
 
 
 def model_cell(row: dict[str, object], variant: str) -> str:
-    if variant == "legacy_c":
-        return fmt_int(
-            to_int(row.get("legacy_c_arena_bytes")) + to_int(row.get("legacy_c_control_bytes"))
-        )
-    return f"{fmt_int(row[f'{variant}_arena_or_required_memory'])}/{fmt_int(row[f'{variant}_object_or_control_bytes'])}"
+    return fmt_int(row[f"{variant}_model_state_bytes"])
 
 
 def elf_cell(row: dict[str, object], variant: str) -> str:
@@ -567,6 +563,7 @@ def write_markdown(path: Path,
             f.write("Build: static C arena and static C++ model, all firmware objects compiled with `-Ofast`.\n")
         else:
             f.write("Build: static C++/RLTools model storage, all firmware objects compiled with `-Ofast`.\n")
+        f.write("Network state is the comparable runtime-memory field: C uses arena plus control bytes, EdgeLearning++ uses the static model object, and RLTools uses the static runtime bundle needed to run the batch-256 network.\n")
         f.write("ELF size columns are from the same per-variant image used for the runtime row.\n\n")
         if "legacy_c" in active_variants:
             f.write("This report includes private legacy-C ablation rows from an external checkout.\n\n")
@@ -593,8 +590,8 @@ def write_markdown(path: Path,
                 )
             f.write("\n")
             f.write(
-                "| Config | C model | Direct req/obj | M55 req/obj | Generic req/obj | "
-                "RLTools state/obj | C ELF dec/file | Direct ELF dec/file | M55 ELF dec/file | "
+                "| Config | C network state | Direct network state | M55 network state | Generic network state | "
+                "RLTools network state | C ELF dec/file | Direct ELF dec/file | M55 ELF dec/file | "
                 "Generic ELF dec/file | RLTools ELF dec/file |\n"
             )
             f.write("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|\n")
@@ -625,7 +622,7 @@ def write_markdown(path: Path,
                 )
             f.write("\n")
             f.write(
-                "| Config | M55 req/obj | Generic req/obj | RLTools state/obj | "
+                "| Config | M55 network state | Generic network state | RLTools network state | "
                 "M55 ELF dec/file | Generic ELF dec/file | RLTools ELF dec/file |\n"
             )
             f.write("|---|---:|---:|---:|---:|---:|---:|\n")

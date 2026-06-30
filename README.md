@@ -141,13 +141,15 @@ variant. The ratio below is `RLTools batch cycles / EdgeLearning++ M55
 cycles`; values above `1.0x` mean the M55 backend completed the same measured
 training work in fewer cycles.
 
-`EL++ M55 object` is `sizeof(Model)` for the owning static model. `RLTools
-runtime state` is the static runtime bundle used by the RLTools benchmark
-wrapper, including static batch-256 input, target, output-gradient, activation,
-and backward buffers. The generated report also lists arena requirements,
-object sizes, and ELF sections separately.
+`Network state` is the static memory owned by the network runtime in each
+variant. For EdgeLearning++ this is the static model object, which contains
+parameters, gradients, optimizer state, and layer workspaces. For RLTools this
+is the static runtime bundle used by the benchmark wrapper, including the
+batch-256 input, target, output-gradient, activation, and backward buffers. The
+generated CSV also lists the lower-level arena/object fields and ELF sections
+separately.
 
-| Hidden | RLTools/M55 runtime ratio | EL++ M55 object | RLTools runtime state |
+| Hidden | RLTools/M55 runtime ratio | EL++ M55 network state | RLTools network state |
 |---|---:|---:|---:|
 | `8x8` | 1.54x | 2,080 B | 58,192 B |
 | `16x8` | 1.48x | 3,680 B | 92,496 B |

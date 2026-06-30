@@ -88,11 +88,12 @@ variants split `zero_grad`, optional `input_copy`, `forward`, `loss`,
 `backward`, and `adam_update`; legacy C reports its API-level
 `sample_train_step` for the combined forward/loss/backward work.
 
-Model footprint is measured separately from runtime. For C, the model-state
-number is the static arena plus control state. For C++ variants, the report
-records the compile-time required memory and static model object size. For
-RLTools, it records the static runtime state plus model object. Firmware image
-size is measured from one separate ELF per variant and topology with
+Model footprint is measured separately from runtime. The primary comparable
+field is `*_model_state_bytes`: for C it is the static arena plus control
+state, for EdgeLearning++ it is the static model object, and for RLTools it is
+the static runtime bundle used to execute the batch-256 network. The CSV also
+keeps lower-level arena/object fields for auditability. Firmware image size is
+measured from one separate ELF per variant and topology with
 `arm-none-eabi-size`; each ELF still includes the common benchmark harness and
 static rollout buffers.
 
@@ -124,10 +125,9 @@ layout while calling the legacy C backend kernels directly. It is useful for
 debugging backend effects, but it is not required for the four-way public
 presentation.
 
-For runtime ratios, use `cycles_avg` from the CSV. For model size, use
-`legacy_c_arena_bytes + legacy_c_control_bytes` for `EL-C M55`,
-`cpp_*_model_object` for owning C++ models, and `rltools_static_state` for the
-RLTools runtime bundle. For deployable image footprint, use the per-variant
+For runtime ratios, use `cycles_avg` from the CSV. For network runtime memory,
+use `*_model_state_bytes`; it normalizes the variant-specific storage into one
+comparable field. For deployable image footprint, use the per-variant
 `*_elf_text`, `*_elf_data`, `*_elf_bss`, `*_elf_dec`, and `*_elf_file_bytes`
 columns.
 
