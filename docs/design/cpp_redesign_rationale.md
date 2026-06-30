@@ -30,8 +30,8 @@ This also makes ablation experiments cleaner:
 - `EL++ generic scalar` measures the public C++ API without specialized M55
   kernels;
 - `EL++ M55` measures the same public C++ API with the M55 backend policy;
-- `RLTools generic/static` provides an external TinyRL-style static C++
-  baseline.
+- `RLTools generic/static batch` provides an external TinyRL-style static C++
+  baseline with batch-256 tensors.
 
 The comparison separates language/runtime structure from backend specialization.
 If `EL++ generic scalar` is close to `EL-C M55`, the static C++ representation

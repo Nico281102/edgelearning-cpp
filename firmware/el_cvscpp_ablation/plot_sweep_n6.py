@@ -19,7 +19,7 @@ LABELS = {
     "cpp_direct_c_backend": "C++ direct C backend",
     "cpp_m55": "C++ M55",
     "cpp_generic": "C++ generic",
-    "rltools_generic": "RLTools generic",
+    "rltools_generic": "RLTools batch",
 }
 COLORS = {
     "legacy_c": "#2f2f2f",
@@ -284,7 +284,7 @@ def write_speedup_svg(path: Path, rows: list[dict[str, object]]) -> None:
         return top + (1.0 - ((value - y_min) / (y_max - y_min))) * plot_h
 
     baseline_variant = str(rows[0].get("baseline_variant", "legacy_c")) if rows else "legacy_c"
-    baseline_label = "legacy C baseline" if baseline_variant == "legacy_c" else "RLTools generic baseline"
+    baseline_label = "legacy C baseline" if baseline_variant == "legacy_c" else "RLTools batch baseline"
     active_variants = tuple(
         variant for variant in VARIANTS if any(str(row["variant"]) == variant for row in rows)
     )

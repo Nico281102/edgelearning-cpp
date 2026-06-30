@@ -65,7 +65,8 @@ The current firmware sweep uses:
 
 - topology: `InputVector<3>, Dense<H1, ReLU>, Dense<H2, ReLU>, Dense<1, Linear>`
 - hidden pairs: `8x8`, `16x8`, `16x16`, `32x16`, `32x32`, `64x32`
-- public variants: C++ native M55, C++ generic, RLTools generic
+- public variants: C++ native M55, C++ generic, RLTools generic with static
+  batch-256 tensors
 - private legacy-C variants: legacy C M55 and C++ direct legacy-C backend
 - storage: static C arena/control for C, static compile-time model storage for
   C++, and static RLTools runtime/model state for RLTools
@@ -76,11 +77,14 @@ The current firmware sweep uses:
 
 The timing window excludes setup, warm-up, convergence tracing, parameter
 import/export, serial printing, and numerical comparisons. Only the hot
-training work is measured: minibatch gradient reset, forward/backward sample
-passes, and Adam updates. Firmware runs also emit component profiling counters
-from a separate equivalent profiling pass with the same initial parameters and
-dataset, so the primary speedup timings are not polluted by internal probes. C++
-and RLTools variants split `zero_grad`, optional `input_copy`, `forward`, `loss`,
+training work is measured: minibatch gradient reset, forward/backward work, and
+Adam updates. EdgeLearning++ performs one forward/loss/backward pass per sample
+and applies Adam after accumulating 256 gradients. RLTools uses one static
+`[256, input_features]` input tensor and one forward/loss/backward/update per
+minibatch. Firmware runs also emit component profiling counters from a separate
+equivalent profiling pass with the same initial parameters and dataset, so the
+primary speedup timings are not polluted by internal probes. C++ and RLTools
+variants split `zero_grad`, optional `input_copy`, `forward`, `loss`,
 `backward`, and `adam_update`; legacy C reports its API-level
 `sample_train_step` for the combined forward/loss/backward work.
 
@@ -92,14 +96,14 @@ size is measured from one separate ELF per variant and topology with
 `arm-none-eabi-size`; each ELF still includes the common benchmark harness and
 static rollout buffers.
 
-The checked-in generated report is the source of record for firmware numbers:
-`benchmarks/firmware/stm32n6/el_cvscpp_ablation/results/stm32n6_sweep_2026-06-26_input3_10seed.md`.
-It includes private legacy-C rows measured by the project author. Users without
-the C checkout can regenerate the C++/RLTools rows by running the default public
-sweep. The accompanying CSV contains raw cycle averages, model-state fields,
-ELF paths, and status columns. Plot CSV/SVG files in the same directory provide
-speedup, convergence, training-loop component breakdown, and ELF section
-breakdown.
+The checked-in generated report is the source of record for public firmware
+numbers:
+`benchmarks/firmware/stm32n6/el_cvscpp_ablation/results/stm32n6_sweep_2026-06-30_input3_10seed.md`.
+Users can regenerate the C++/RLTools rows by running the default public sweep.
+Private legacy-C rows can be regenerated only with an external C checkout. The
+accompanying CSV contains raw cycle averages, model-state fields, ELF paths,
+and status columns. Plot CSV/SVG files in the same directory provide speedup,
+convergence, training-loop component breakdown, and ELF section breakdown.
 
 README.md includes a short RLTools-baseline preview. Avoid copying the full
 firmware tables into multiple documents; regenerate or link the report instead.
@@ -113,7 +117,7 @@ The STM32N6 report contains the rows needed for the main four-way comparison:
 | `legacy_c` | `EL-C M55`, the private legacy C runtime with the M55 backend |
 | `cpp_generic` | `EL++ generic scalar`, the public C++ model without specialized M55 kernels |
 | `cpp_m55` | `EL++ M55`, the same public C++ model using the M55 backend policy |
-| `rltools_generic` | `RLTools generic/static`, the external static C++ baseline |
+| `rltools_generic` | `RLTools generic/static batch`, the external C++ baseline with static batch-256 tensors |
 
 The `cpp_direct_c_backend` row is an additional ablation: it keeps the C++ model
 layout while calling the legacy C backend kernels directly. It is useful for

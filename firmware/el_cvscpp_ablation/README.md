@@ -2,9 +2,10 @@
 
 This directory contains the firmware-side launcher for the STM32N6 benchmark.
 The public path compares EdgeLearning++ M55, EdgeLearning++ generic, and
-RLTools generic. The legacy-C rows are a private ablation: they are reproducible
-only when `EL_CVSCPP_EDGE_C_ROOT` points at an external legacy C checkout. The
-legacy C source is not vendored, copied, or published in this repository.
+RLTools generic with static batch-256 tensors. The legacy-C rows are a private
+ablation: they are reproducible only when `EL_CVSCPP_EDGE_C_ROOT` points at an
+external legacy C checkout. The legacy C source is not vendored, copied, or
+published in this repository.
 RLTools is also referenced only by local path through `EL_CVSCPP_RLTOOLS_ROOT`;
 no RLTools sources are copied into this directory.
 
@@ -120,13 +121,17 @@ The full private ablation measures:
 - C++ static model calling the same legacy C backend kernels directly;
 - C++ static model using `edge::Backend::M55`;
 - C++ static model using `edge::Backend::Generic`.
-- RLTools C++ generic static model using only RLTools neural-network APIs.
+- RLTools C++ generic static model using only RLTools neural-network APIs and
+  static batch-256 tensors.
 
-All cases use input size 3 by default, batch size 256, one linear output neuron, static
-model or arena storage, 10 deterministic seeds, and deterministic synthetic
-linear-regression samples. The measured training protocol uses Adam
-(`lr=1e-3`, `beta1=0.9`, `beta2=0.999`, `eps=1e-8`), a 1024-sample rollout, 2
-epochs, 4 minibatches per epoch, 8 Adam optimizer steps, and 2048
+All cases use input size 3 by default, batch size 256, one linear output
+neuron, static model or arena storage, 10 deterministic seeds, and
+deterministic synthetic linear-regression samples. EdgeLearning++ implements
+batch 256 by accumulating 256 per-sample gradients before one Adam update;
+RLTools uses a static `[256, input_features]` input tensor and one
+forward/loss/backward/update per minibatch. The measured training protocol uses
+Adam (`lr=1e-3`, `beta1=0.9`, `beta2=0.999`, `eps=1e-8`), a 1024-sample
+rollout, 2 epochs, 4 minibatches per epoch, 8 Adam optimizer steps, and 2048
 sample-passes. The firmware Makefile compiles both C and C++ with `-Ofast`,
 `-ffunction-sections`, `-fdata-sections`, and linker `--gc-sections`.
 Override the input dimension with `EL_CVSCPP_INPUT_FEATURES` or
@@ -186,10 +191,10 @@ static rollout buffers in each variant image.
 
 ## Current Measurement Snapshot
 
-The checked-in 2026-06-26 input-3 ten-seed run is recorded in:
+The checked-in 2026-06-30 input-3 ten-seed run is recorded in:
 
 ```text
-benchmarks/firmware/stm32n6/el_cvscpp_ablation/results/stm32n6_sweep_2026-06-26_input3_10seed.md
+benchmarks/firmware/stm32n6/el_cvscpp_ablation/results/stm32n6_sweep_2026-06-30_input3_10seed.md
 ```
 
 That generated report is the source of record for runtime ratios, model-state

@@ -18,7 +18,7 @@ VARIANT_LABELS = {
     "cpp_direct_c_backend": "C++ direct C backend",
     "cpp_m55": "C++ M55",
     "cpp_generic": "C++ generic",
-    "rltools_generic": "RLTools generic",
+    "rltools_generic": "RLTools batch",
 }
 VARIANT_SHORT = {
     "legacy_c": "C",

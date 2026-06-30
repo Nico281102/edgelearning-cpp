@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="620" viewBox="0 0 1100 620">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<style>text{font-family:Arial,Helvetica,sans-serif;fill:#202020}.axis{stroke:#222;stroke-width:1.2}.grid{stroke:#dddddd;stroke-width:1}.label{font-size:13px}.title{font-size:20px;font-weight:700}.tick{font-size:11px}.legend{font-size:12px}</style>
+<text class="title" x="82" y="34">Speedup over RLTools batch baseline</text>
+<line class="axis" x1="82" y1="534" x2="865" y2="534"/>
+<line class="axis" x1="82" y1="62" x2="82" y2="534"/>
+<line class="grid" x1="82" y1="534.0" x2="865" y2="534.0"/>
+<text class="tick" x="72" y="538.0" text-anchor="end">0.00x</text>
+<line class="grid" x1="82" y1="439.6" x2="865" y2="439.6"/>
+<text class="tick" x="72" y="443.6" text-anchor="end">0.88x</text>
+<line class="grid" x1="82" y1="345.2" x2="865" y2="345.2"/>
+<text class="tick" x="72" y="349.2" text-anchor="end">1.75x</text>
+<line class="grid" x1="82" y1="250.8" x2="865" y2="250.8"/>
+<text class="tick" x="72" y="254.8" text-anchor="end">2.63x</text>
+<line class="grid" x1="82" y1="156.4" x2="865" y2="156.4"/>
+<text class="tick" x="72" y="160.4" text-anchor="end">3.51x</text>
+<line class="grid" x1="82" y1="62.0" x2="865" y2="62.0"/>
+<text class="tick" x="72" y="66.0" text-anchor="end">4.39x</text>
+<line class="grid" x1="82.0" y1="62" x2="82.0" y2="534"/>
+<text class="tick" x="82.0" y="554" text-anchor="middle">8x8</text>
+<text class="tick" x="82.0" y="570" text-anchor="middle">113</text>
+<line class="grid" x1="115.3" y1="62" x2="115.3" y2="534"/>
+<text class="tick" x="115.3" y="554" text-anchor="middle">16x8</text>
+<text class="tick" x="115.3" y="570" text-anchor="middle">209</text>
+<line class="grid" x1="165.3" y1="62" x2="165.3" y2="534"/>
+<text class="tick" x="165.3" y="554" text-anchor="middle">16x16</text>
+<text class="tick" x="165.3" y="570" text-anchor="middle">353</text>
+<line class="grid" x1="276.4" y1="62" x2="276.4" y2="534"/>
+<text class="tick" x="276.4" y="554" text-anchor="middle">32x16</text>
+<text class="tick" x="276.4" y="570" text-anchor="middle">673</text>
+<line class="grid" x1="465.2" y1="62" x2="465.2" y2="534"/>
+<text class="tick" x="465.2" y="554" text-anchor="middle">32x32</text>
+<text class="tick" x="465.2" y="570" text-anchor="middle">1217</text>
+<line class="grid" x1="865.0" y1="62" x2="865.0" y2="534"/>
+<text class="tick" x="865.0" y="554" text-anchor="middle">64x32</text>
+<text class="tick" x="865.0" y="570" text-anchor="middle">2369</text>
+<polyline points="82.0,368.4 115.3,375.1 165.3,324.8 276.4,218.0 465.2,180.0 865.0,112.6" fill="none" stroke="#1f62b2" stroke-width="2.4"/>
+<circle cx="82.0" cy="368.4" r="3.2" fill="#1f62b2"/>
+<circle cx="115.3" cy="375.1" r="3.2" fill="#1f62b2"/>
+<circle cx="165.3" cy="324.8" r="3.2" fill="#1f62b2"/>
+<circle cx="276.4" cy="218.0" r="3.2" fill="#1f62b2"/>
+<circle cx="465.2" cy="180.0" r="3.2" fill="#1f62b2"/>
+<circle cx="865.0" cy="112.6" r="3.2" fill="#1f62b2"/>
+<polyline points="82.0,361.4 115.3,377.4 165.3,354.2 276.4,264.7 465.2,259.6 865.0,242.5" fill="none" stroke="#b24a1f" stroke-width="2.4"/>
+<circle cx="82.0" cy="361.4" r="3.2" fill="#b24a1f"/>
+<circle cx="115.3" cy="377.4" r="3.2" fill="#b24a1f"/>
+<circle cx="165.3" cy="354.2" r="3.2" fill="#b24a1f"/>
+<circle cx="276.4" cy="264.7" r="3.2" fill="#b24a1f"/>
+<circle cx="465.2" cy="259.6" r="3.2" fill="#b24a1f"/>
+<circle cx="865.0" cy="242.5" r="3.2" fill="#b24a1f"/>
+<polyline points="82.0,426.4 115.3,426.4 165.3,426.4 276.4,426.4 465.2,426.4 865.0,426.4" fill="none" stroke="#7a3db8" stroke-width="2.4"/>
+<circle cx="82.0" cy="426.4" r="3.2" fill="#7a3db8"/>
+<circle cx="115.3" cy="426.4" r="3.2" fill="#7a3db8"/>
+<circle cx="165.3" cy="426.4" r="3.2" fill="#7a3db8"/>
+<circle cx="276.4" cy="426.4" r="3.2" fill="#7a3db8"/>
+<circle cx="465.2" cy="426.4" r="3.2" fill="#7a3db8"/>
+<circle cx="865.0" cy="426.4" r="3.2" fill="#7a3db8"/>
+<text class="label" x="473.5" y="602" text-anchor="middle">Network config and parameter count</text>
+<text class="label" transform="translate(22 298.0) rotate(-90)" text-anchor="middle">baseline cycles / variant cycles</text>
+<line x1="899" y1="70" x2="923" y2="70" stroke="#1f62b2" stroke-width="2.4"/>
+<text class="legend" x="931" y="74">C++ M55</text>
+<line x1="899" y1="90" x2="923" y2="90" stroke="#b24a1f" stroke-width="2.4"/>
+<text class="legend" x="931" y="94">C++ generic</text>
+<line x1="899" y1="110" x2="923" y2="110" stroke="#7a3db8" stroke-width="2.4"/>
+<text class="legend" x="931" y="114">RLTools batch</text>
+</svg>

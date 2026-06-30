@@ -1,0 +1,198 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="911" height="680" viewBox="0 0 911 680">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<style>text{font-family:Arial,Helvetica,sans-serif;fill:#202020}.axis{stroke:#222;stroke-width:1.2}.grid{stroke:#dddddd;stroke-width:1}.label{font-size:13px}.title{font-size:20px;font-weight:700}.tick{font-size:11px}.legend{font-size:12px}</style>
+<text class="title" x="90" y="34">Training-loop component breakdown</text>
+<text class="label" x="90" y="54">Average DWT cycles per measured run; setup, warm-up, trace, export, and serial I/O excluded.</text>
+<line class="axis" x1="90" y1="558" x2="626" y2="558"/>
+<line class="axis" x1="90" y1="70" x2="90" y2="558"/>
+<line class="grid" x1="90" y1="558.0" x2="626" y2="558.0"/>
+<text class="tick" x="80" y="562.0" text-anchor="end">0M</text>
+<line class="grid" x1="90" y1="460.4" x2="626" y2="460.4"/>
+<text class="tick" x="80" y="464.4" text-anchor="end">22M</text>
+<line class="grid" x1="90" y1="362.8" x2="626" y2="362.8"/>
+<text class="tick" x="80" y="366.8" text-anchor="end">44M</text>
+<line class="grid" x1="90" y1="265.2" x2="626" y2="265.2"/>
+<text class="tick" x="80" y="269.2" text-anchor="end">66M</text>
+<line class="grid" x1="90" y1="167.6" x2="626" y2="167.6"/>
+<text class="tick" x="80" y="171.6" text-anchor="end">88M</text>
+<line class="grid" x1="90" y1="70.0" x2="626" y2="70.0"/>
+<text class="tick" x="80" y="74.0" text-anchor="end">110M</text>
+<text class="label" x="120.5" y="634" text-anchor="middle">8x8</text>
+<rect x="90.0" y="557.9" width="17" height="0.6" fill="#4f6f8f"><title>8x8 C++ M55 zero grad: 25,482 cycles; total: 2,368,413</title></rect>
+<rect x="90.0" y="552.4" width="17" height="5.5" fill="#2f7f5f"><title>8x8 C++ M55 forward: 1,246,945 cycles; total: 2,368,413</title></rect>
+<rect x="90.0" y="552.3" width="17" height="0.6" fill="#d08a2f"><title>8x8 C++ M55 loss/grad: 10,316 cycles; total: 2,368,413</title></rect>
+<rect x="90.0" y="548.0" width="17" height="4.3" fill="#b64b4b"><title>8x8 C++ M55 backward: 968,829 cycles; total: 2,368,413</title></rect>
+<rect x="90.0" y="547.8" width="17" height="0.6" fill="#2f64b0"><title>8x8 C++ M55 Adam update: 50,804 cycles; total: 2,368,413</title></rect>
+<rect x="90.0" y="547.5" width="17" height="0.6" fill="#c9c9c9"><title>8x8 C++ M55 other/gap: 66,037 cycles; total: 2,368,413</title></rect>
+<rect x="90.0" y="547.5" width="17" height="10.5" fill="none" stroke="#222" stroke-width=".45" opacity=".55"/>
+<text class="tick" x="98.5" y="580" text-anchor="end" transform="rotate(-45 98.5 580)">M55</text>
+<rect x="112.0" y="557.9" width="17" height="0.6" fill="#4f6f8f"><title>8x8 C++ generic zero grad: 25,466 cycles; total: 2,270,119</title></rect>
+<rect x="112.0" y="554.1" width="17" height="3.7" fill="#2f7f5f"><title>8x8 C++ generic forward: 843,524 cycles; total: 2,270,119</title></rect>
+<rect x="112.0" y="554.0" width="17" height="0.6" fill="#d08a2f"><title>8x8 C++ generic loss/grad: 26,836 cycles; total: 2,270,119</title></rect>
+<rect x="112.0" y="548.4" width="17" height="5.6" fill="#b64b4b"><title>8x8 C++ generic backward: 1,270,122 cycles; total: 2,270,119</title></rect>
+<rect x="112.0" y="548.2" width="17" height="0.6" fill="#2f64b0"><title>8x8 C++ generic Adam update: 50,555 cycles; total: 2,270,119</title></rect>
+<rect x="112.0" y="547.9" width="17" height="0.6" fill="#c9c9c9"><title>8x8 C++ generic other/gap: 53,616 cycles; total: 2,270,119</title></rect>
+<rect x="112.0" y="547.9" width="17" height="10.1" fill="none" stroke="#222" stroke-width=".45" opacity=".55"/>
+<text class="tick" x="120.5" y="580" text-anchor="end" transform="rotate(-45 120.5 580)">Generic</text>
+<rect x="134.0" y="557.9" width="17" height="0.6" fill="#4f6f8f"><title>8x8 RLTools batch zero grad: 15,673 cycles; total: 3,502,217</title></rect>
+<rect x="134.0" y="557.7" width="17" height="0.6" fill="#7c5aa6"><title>8x8 RLTools batch input copy: 47,061 cycles; total: 3,502,217</title></rect>
+<rect x="134.0" y="553.5" width="17" height="4.2" fill="#2f7f5f"><title>8x8 RLTools batch forward: 944,414 cycles; total: 3,502,217</title></rect>
+<rect x="134.0" y="553.5" width="17" height="0.6" fill="#d08a2f"><title>8x8 RLTools batch loss/grad: 12,273 cycles; total: 3,502,217</title></rect>
+<rect x="134.0" y="543.4" width="17" height="10.1" fill="#b64b4b"><title>8x8 RLTools batch backward: 2,278,677 cycles; total: 3,502,217</title></rect>
+<rect x="134.0" y="542.9" width="17" height="0.6" fill="#2f64b0"><title>8x8 RLTools batch Adam update: 109,648 cycles; total: 3,502,217</title></rect>
+<rect x="134.0" y="542.5" width="17" height="0.6" fill="#c9c9c9"><title>8x8 RLTools batch other/gap: 94,471 cycles; total: 3,502,217</title></rect>
+<rect x="134.0" y="542.5" width="17" height="15.5" fill="none" stroke="#222" stroke-width=".45" opacity=".55"/>
+<text class="tick" x="142.5" y="580" text-anchor="end" transform="rotate(-45 142.5 580)">RLTools</text>
+<text class="label" x="215.5" y="634" text-anchor="middle">16x8</text>
+<rect x="185.0" y="557.8" width="17" height="0.6" fill="#4f6f8f"><title>16x8 C++ M55 zero grad: 47,001 cycles; total: 4,142,470</title></rect>
+<rect x="185.0" y="548.6" width="17" height="9.2" fill="#2f7f5f"><title>16x8 C++ M55 forward: 2,063,702 cycles; total: 4,142,470</title></rect>
+<rect x="185.0" y="548.6" width="17" height="0.6" fill="#d08a2f"><title>16x8 C++ M55 loss/grad: 10,247 cycles; total: 4,142,470</title></rect>
+<rect x="185.0" y="540.3" width="17" height="8.3" fill="#b64b4b"><title>16x8 C++ M55 backward: 1,866,270 cycles; total: 4,142,470</title></rect>
+<rect x="185.0" y="539.9" width="17" height="0.6" fill="#2f64b0"><title>16x8 C++ M55 Adam update: 87,203 cycles; total: 4,142,470</title></rect>
+<rect x="185.0" y="539.6" width="17" height="0.6" fill="#c9c9c9"><title>16x8 C++ M55 other/gap: 68,047 cycles; total: 4,142,470</title></rect>
+<rect x="185.0" y="539.6" width="17" height="18.4" fill="none" stroke="#222" stroke-width=".45" opacity=".55"/>
+<text class="tick" x="193.5" y="580" text-anchor="end" transform="rotate(-45 193.5 580)">M55</text>
+<rect x="207.0" y="557.8" width="17" height="0.6" fill="#4f6f8f"><title>16x8 C++ generic zero grad: 46,960 cycles; total: 4,183,992</title></rect>
+<rect x="207.0" y="550.4" width="17" height="7.4" fill="#2f7f5f"><title>16x8 C++ generic forward: 1,672,350 cycles; total: 4,183,992</title></rect>
+<rect x="207.0" y="550.2" width="17" height="0.6" fill="#d08a2f"><title>16x8 C++ generic loss/grad: 32,787 cycles; total: 4,183,992</title></rect>
+<rect x="207.0" y="540.1" width="17" height="10.1" fill="#b64b4b"><title>16x8 C++ generic backward: 2,283,231 cycles; total: 4,183,992</title></rect>
+<rect x="207.0" y="539.7" width="17" height="0.6" fill="#2f64b0"><title>16x8 C++ generic Adam update: 86,908 cycles; total: 4,183,992</title></rect>
+<rect x="207.0" y="539.4" width="17" height="0.6" fill="#c9c9c9"><title>16x8 C++ generic other/gap: 61,756 cycles; total: 4,183,992</title></rect>
+<rect x="207.0" y="539.4" width="17" height="18.6" fill="none" stroke="#222" stroke-width=".45" opacity=".55"/>
+<text class="tick" x="215.5" y="580" text-anchor="end" transform="rotate(-45 215.5 580)">Generic</text>
+<rect x="229.0" y="557.9" width="17" height="0.6" fill="#4f6f8f"><title>16x8 RLTools batch zero grad: 17,468 cycles; total: 5,997,690</title></rect>
+<rect x="229.0" y="557.7" width="17" height="0.6" fill="#7c5aa6"><title>16x8 RLTools batch input copy: 48,805 cycles; total: 5,997,690</title></rect>
+<rect x="229.0" y="548.0" width="17" height="9.7" fill="#2f7f5f"><title>16x8 RLTools batch forward: 2,188,629 cycles; total: 5,997,690</title></rect>
+<rect x="229.0" y="547.9" width="17" height="0.6" fill="#d08a2f"><title>16x8 RLTools batch loss/grad: 12,623 cycles; total: 5,997,690</title></rect>
+<rect x="229.0" y="532.3" width="17" height="15.6" fill="#b64b4b"><title>16x8 RLTools batch backward: 3,515,952 cycles; total: 5,997,690</title></rect>
+<rect x="229.0" y="531.7" width="17" height="0.7" fill="#2f64b0"><title>16x8 RLTools batch Adam update: 150,128 cycles; total: 5,997,690</title></rect>
+<rect x="229.0" y="531.4" width="17" height="0.6" fill="#c9c9c9"><title>16x8 RLTools batch other/gap: 64,085 cycles; total: 5,997,690</title></rect>
+<rect x="229.0" y="531.4" width="17" height="26.6" fill="none" stroke="#222" stroke-width=".45" opacity=".55"/>
+<text class="tick" x="237.5" y="580" text-anchor="end" transform="rotate(-45 237.5 580)">RLTools</text>
+<text class="label" x="310.5" y="634" text-anchor="middle">16x16</text>
+<rect x="280.0" y="557.6" width="17" height="0.6" fill="#4f6f8f"><title>16x16 C++ M55 zero grad: 79,255 cycles; total: 5,861,327</title></rect>
+<rect x="280.0" y="545.2" width="17" height="12.4" fill="#2f7f5f"><title>16x16 C++ M55 forward: 2,799,987 cycles; total: 5,861,327</title></rect>
+<rect x="280.0" y="545.2" width="17" height="0.6" fill="#d08a2f"><title>16x16 C++ M55 loss/grad: 16,391 cycles; total: 5,861,327</title></rect>
+<rect x="280.0" y="532.9" width="17" height="12.2" fill="#b64b4b"><title>16x16 C++ M55 backward: 2,752,460 cycles; total: 5,861,327</title></rect>
+<rect x="280.0" y="532.3" width="17" height="0.6" fill="#2f64b0"><title>16x16 C++ M55 Adam update: 141,030 cycles; total: 5,861,327</title></rect>
+<rect x="280.0" y="532.0" width="17" height="0.6" fill="#c9c9c9"><title>16x16 C++ M55 other/gap: 72,204 cycles; total: 5,861,327</title></rect>
+<rect x="280.0" y="532.0" width="17" height="26.0" fill="none" stroke="#222" stroke-width=".45" opacity=".55"/>
+<text class="tick" x="288.5" y="580" text-anchor="end" transform="rotate(-45 288.5 580)">M55</text>
+<rect x="302.0" y="557.6" width="17" height="0.6" fill="#4f6f8f"><title>16x16 C++ generic zero grad: 79,228 cycles; total: 6,803,089</title></rect>
+<rect x="302.0" y="545.6" width="17" height="12.0" fill="#2f7f5f"><title>16x16 C++ generic forward: 2,710,894 cycles; total: 6,803,089</title></rect>
+<rect x="302.0" y="545.4" width="17" height="0.6" fill="#d08a2f"><title>16x16 C++ generic loss/grad: 40,980 cycles; total: 6,803,089</title></rect>
+<rect x="302.0" y="528.7" width="17" height="16.8" fill="#b64b4b"><title>16x16 C++ generic backward: 3,780,862 cycles; total: 6,803,089</title></rect>
+<rect x="302.0" y="528.0" width="17" height="0.6" fill="#2f64b0"><title>16x16 C++ generic Adam update: 143,651 cycles; total: 6,803,089</title></rect>
+<rect x="302.0" y="527.8" width="17" height="0.6" fill="#c9c9c9"><title>16x16 C++ generic other/gap: 47,474 cycles; total: 6,803,089</title></rect>
+<rect x="302.0" y="527.8" width="17" height="30.2" fill="none" stroke="#222" stroke-width=".45" opacity=".55"/>
+<text class="tick" x="310.5" y="580" text-anchor="end" transform="rotate(-45 310.5 580)">Generic</text>
+<rect x="324.0" y="557.9" width="17" height="0.6" fill="#4f6f8f"><title>16x16 RLTools batch zero grad: 15,401 cycles; total: 11,226,709</title></rect>
+<rect x="324.0" y="557.7" width="17" height="0.6" fill="#7c5aa6"><title>16x16 RLTools batch input copy: 49,799 cycles; total: 11,226,709</title></rect>
+<rect x="324.0" y="541.8" width="17" height="15.9" fill="#2f7f5f"><title>16x16 RLTools batch forward: 3,580,696 cycles; total: 11,226,709</title></rect>
+<rect x="324.0" y="541.8" width="17" height="0.6" fill="#d08a2f"><title>16x16 RLTools batch loss/grad: 12,262 cycles; total: 11,226,709</title></rect>
+<rect x="324.0" y="509.5" width="17" height="32.2" fill="#b64b4b"><title>16x16 RLTools batch backward: 7,266,584 cycles; total: 11,226,709</title></rect>
+<rect x="324.0" y="508.6" width="17" height="0.9" fill="#2f64b0"><title>16x16 RLTools batch Adam update: 208,896 cycles; total: 11,226,709</title></rect>
+<rect x="324.0" y="508.2" width="17" height="0.6" fill="#c9c9c9"><title>16x16 RLTools batch other/gap: 93,071 cycles; total: 11,226,709</title></rect>
+<rect x="324.0" y="508.2" width="17" height="49.8" fill="none" stroke="#222" stroke-width=".45" opacity=".55"/>
+<text class="tick" x="332.5" y="580" text-anchor="end" transform="rotate(-45 332.5 580)">RLTools</text>
+<text class="label" x="405.5" y="634" text-anchor="middle">32x16</text>
+<rect x="375.0" y="557.3" width="17" height="0.7" fill="#4f6f8f"><title>32x16 C++ M55 zero grad: 151,079 cycles; total: 10,548,921</title></rect>
+<rect x="375.0" y="537.1" width="17" height="20.2" fill="#2f7f5f"><title>32x16 C++ M55 forward: 4,555,068 cycles; total: 10,548,921</title></rect>
+<rect x="375.0" y="536.8" width="17" height="0.6" fill="#d08a2f"><title>32x16 C++ M55 loss/grad: 70,550 cycles; total: 10,548,921</title></rect>
+<rect x="375.0" y="512.9" width="17" height="24.0" fill="#b64b4b"><title>32x16 C++ M55 backward: 5,400,149 cycles; total: 10,548,921</title></rect>
+<rect x="375.0" y="511.5" width="17" height="1.3" fill="#2f64b0"><title>32x16 C++ M55 Adam update: 299,742 cycles; total: 10,548,921</title></rect>
+<rect x="375.0" y="511.2" width="17" height="0.6" fill="#c9c9c9"><title>32x16 C++ M55 other/gap: 72,333 cycles; total: 10,548,921</title></rect>
+<rect x="375.0" y="511.2" width="17" height="46.8" fill="none" stroke="#222" stroke-width=".45" opacity=".55"/>
+<text class="tick" x="383.5" y="580" text-anchor="end" transform="rotate(-45 383.5 580)">M55</text>
+<rect x="397.0" y="557.3" width="17" height="0.7" fill="#4f6f8f"><title>32x16 C++ generic zero grad: 155,094 cycles; total: 12,388,564</title></rect>
+<rect x="397.0" y="538.3" width="17" height="19.0" fill="#2f7f5f"><title>32x16 C++ generic forward: 4,282,773 cycles; total: 12,388,564</title></rect>
+<rect x="397.0" y="538.1" width="17" height="0.6" fill="#d08a2f"><title>32x16 C++ generic loss/grad: 39,430 cycles; total: 12,388,564</title></rect>
+<rect x="397.0" y="504.6" width="17" height="33.6" fill="#b64b4b"><title>32x16 C++ generic backward: 7,563,672 cycles; total: 12,388,564</title></rect>
+<rect x="397.0" y="503.3" width="17" height="1.3" fill="#2f64b0"><title>32x16 C++ generic Adam update: 287,370 cycles; total: 12,388,564</title></rect>
+<rect x="397.0" y="503.0" width="17" height="0.6" fill="#c9c9c9"><title>32x16 C++ generic other/gap: 60,225 cycles; total: 12,388,564</title></rect>
+<rect x="397.0" y="503.0" width="17" height="55.0" fill="none" stroke="#222" stroke-width=".45" opacity=".55"/>
+<text class="tick" x="405.5" y="580" text-anchor="end" transform="rotate(-45 405.5 580)">Generic</text>
+<rect x="419.0" y="557.4" width="17" height="0.6" fill="#4f6f8f"><title>32x16 RLTools batch zero grad: 135,481 cycles; total: 30,341,278</title></rect>
+<rect x="419.0" y="557.2" width="17" height="0.6" fill="#7c5aa6"><title>32x16 RLTools batch input copy: 50,052 cycles; total: 30,341,278</title></rect>
+<rect x="419.0" y="508.6" width="17" height="48.6" fill="#2f7f5f"><title>32x16 RLTools batch forward: 10,959,843 cycles; total: 30,341,278</title></rect>
+<rect x="419.0" y="508.5" width="17" height="0.6" fill="#d08a2f"><title>32x16 RLTools batch loss/grad: 11,183 cycles; total: 30,341,278</title></rect>
+<rect x="419.0" y="425.3" width="17" height="83.2" fill="#b64b4b"><title>32x16 RLTools batch backward: 18,757,722 cycles; total: 30,341,278</title></rect>
+<rect x="419.0" y="423.8" width="17" height="1.5" fill="#2f64b0"><title>32x16 RLTools batch Adam update: 337,754 cycles; total: 30,341,278</title></rect>
+<rect x="419.0" y="423.4" width="17" height="0.6" fill="#c9c9c9"><title>32x16 RLTools batch other/gap: 89,243 cycles; total: 30,341,278</title></rect>
+<rect x="419.0" y="423.4" width="17" height="134.6" fill="none" stroke="#222" stroke-width=".45" opacity=".55"/>
+<text class="tick" x="427.5" y="580" text-anchor="end" transform="rotate(-45 427.5 580)">RLTools</text>
+<text class="label" x="500.5" y="634" text-anchor="middle">32x32</text>
+<rect x="470.0" y="556.8" width="17" height="1.2" fill="#4f6f8f"><title>32x32 C++ M55 zero grad: 273,552 cycles; total: 17,084,305</title></rect>
+<rect x="470.0" y="526.7" width="17" height="30.1" fill="#2f7f5f"><title>32x32 C++ M55 forward: 6,777,111 cycles; total: 17,084,305</title></rect>
+<rect x="470.0" y="526.5" width="17" height="0.6" fill="#d08a2f"><title>32x32 C++ M55 loss/grad: 57,955 cycles; total: 17,084,305</title></rect>
+<rect x="470.0" y="484.8" width="17" height="41.6" fill="#b64b4b"><title>32x32 C++ M55 backward: 9,386,971 cycles; total: 17,084,305</title></rect>
+<rect x="470.0" y="482.5" width="17" height="2.3" fill="#2f64b0"><title>32x32 C++ M55 Adam update: 517,938 cycles; total: 17,084,305</title></rect>
+<rect x="470.0" y="482.2" width="17" height="0.6" fill="#c9c9c9"><title>32x32 C++ M55 other/gap: 70,778 cycles; total: 17,084,305</title></rect>
+<rect x="470.0" y="482.2" width="17" height="75.8" fill="none" stroke="#222" stroke-width=".45" opacity=".55"/>
+<text class="tick" x="478.5" y="580" text-anchor="end" transform="rotate(-45 478.5 580)">M55</text>
+<rect x="492.0" y="556.8" width="17" height="1.2" fill="#4f6f8f"><title>32x32 C++ generic zero grad: 276,518 cycles; total: 22,708,645</title></rect>
+<rect x="492.0" y="522.1" width="17" height="34.7" fill="#2f7f5f"><title>32x32 C++ generic forward: 7,824,995 cycles; total: 22,708,645</title></rect>
+<rect x="492.0" y="521.5" width="17" height="0.6" fill="#d08a2f"><title>32x32 C++ generic loss/grad: 127,091 cycles; total: 22,708,645</title></rect>
+<rect x="492.0" y="459.9" width="17" height="61.6" fill="#b64b4b"><title>32x32 C++ generic backward: 13,875,450 cycles; total: 22,708,645</title></rect>
+<rect x="492.0" y="457.8" width="17" height="2.1" fill="#2f64b0"><title>32x32 C++ generic Adam update: 480,833 cycles; total: 22,708,645</title></rect>
+<rect x="492.0" y="457.3" width="17" height="0.6" fill="#c9c9c9"><title>32x32 C++ generic other/gap: 123,758 cycles; total: 22,708,645</title></rect>
+<rect x="492.0" y="457.3" width="17" height="100.7" fill="none" stroke="#222" stroke-width=".45" opacity=".55"/>
+<text class="tick" x="500.5" y="580" text-anchor="end" transform="rotate(-45 500.5 580)">Generic</text>
+<rect x="514.0" y="556.9" width="17" height="1.1" fill="#4f6f8f"><title>32x32 RLTools batch zero grad: 258,195 cycles; total: 55,442,041</title></rect>
+<rect x="514.0" y="556.6" width="17" height="0.6" fill="#7c5aa6"><title>32x32 RLTools batch input copy: 59,740 cycles; total: 55,442,041</title></rect>
+<rect x="514.0" y="458.9" width="17" height="97.7" fill="#2f7f5f"><title>32x32 RLTools batch forward: 22,013,032 cycles; total: 55,442,041</title></rect>
+<rect x="514.0" y="458.9" width="17" height="0.6" fill="#d08a2f"><title>32x32 RLTools batch loss/grad: 13,012 cycles; total: 55,442,041</title></rect>
+<rect x="514.0" y="315.4" width="17" height="143.5" fill="#b64b4b"><title>32x32 RLTools batch backward: 32,350,997 cycles; total: 55,442,041</title></rect>
+<rect x="514.0" y="312.1" width="17" height="3.3" fill="#2f64b0"><title>32x32 RLTools batch Adam update: 735,222 cycles; total: 55,442,041</title></rect>
+<rect x="514.0" y="312.0" width="17" height="0.6" fill="#c9c9c9"><title>32x32 RLTools batch other/gap: 11,843 cycles; total: 55,442,041</title></rect>
+<rect x="514.0" y="312.0" width="17" height="246.0" fill="none" stroke="#222" stroke-width=".45" opacity=".55"/>
+<text class="tick" x="522.5" y="580" text-anchor="end" transform="rotate(-45 522.5 580)">RLTools</text>
+<text class="label" x="595.5" y="634" text-anchor="middle">64x32</text>
+<rect x="565.0" y="555.6" width="17" height="2.4" fill="#4f6f8f"><title>64x32 C++ M55 zero grad: 539,888 cycles; total: 28,998,107</title></rect>
+<rect x="565.0" y="492.6" width="17" height="63.0" fill="#2f7f5f"><title>64x32 C++ M55 forward: 14,203,101 cycles; total: 28,998,107</title></rect>
+<rect x="565.0" y="492.5" width="17" height="0.6" fill="#d08a2f"><title>64x32 C++ M55 loss/grad: 31,820 cycles; total: 28,998,107</title></rect>
+<rect x="565.0" y="434.7" width="17" height="57.7" fill="#b64b4b"><title>64x32 C++ M55 backward: 13,010,396 cycles; total: 28,998,107</title></rect>
+<rect x="565.0" y="429.7" width="17" height="5.0" fill="#2f64b0"><title>64x32 C++ M55 Adam update: 1,135,956 cycles; total: 28,998,107</title></rect>
+<rect x="565.0" y="429.4" width="17" height="0.6" fill="#c9c9c9"><title>64x32 C++ M55 other/gap: 76,946 cycles; total: 28,998,107</title></rect>
+<rect x="565.0" y="429.4" width="17" height="128.6" fill="none" stroke="#222" stroke-width=".45" opacity=".55"/>
+<text class="tick" x="573.5" y="580" text-anchor="end" transform="rotate(-45 573.5 580)">M55</text>
+<rect x="587.0" y="555.6" width="17" height="2.4" fill="#4f6f8f"><title>64x32 C++ generic zero grad: 542,015 cycles; total: 39,352,454</title></rect>
+<rect x="587.0" y="486.2" width="17" height="69.4" fill="#2f7f5f"><title>64x32 C++ generic forward: 15,633,111 cycles; total: 39,352,454</title></rect>
+<rect x="587.0" y="485.4" width="17" height="0.9" fill="#d08a2f"><title>64x32 C++ generic loss/grad: 191,838 cycles; total: 39,352,454</title></rect>
+<rect x="587.0" y="388.8" width="17" height="96.6" fill="#b64b4b"><title>64x32 C++ generic backward: 21,765,570 cycles; total: 39,352,454</title></rect>
+<rect x="587.0" y="383.9" width="17" height="5.0" fill="#2f64b0"><title>64x32 C++ generic Adam update: 1,119,091 cycles; total: 39,352,454</title></rect>
+<rect x="587.0" y="383.4" width="17" height="0.6" fill="#c9c9c9"><title>64x32 C++ generic other/gap: 100,829 cycles; total: 39,352,454</title></rect>
+<rect x="587.0" y="383.4" width="17" height="174.6" fill="none" stroke="#222" stroke-width=".45" opacity=".55"/>
+<text class="tick" x="595.5" y="580" text-anchor="end" transform="rotate(-45 595.5 580)">Generic</text>
+<rect x="609.0" y="555.8" width="17" height="2.2" fill="#4f6f8f"><title>64x32 RLTools batch zero grad: 506,030 cycles; total: 108,211,135</title></rect>
+<rect x="609.0" y="555.5" width="17" height="0.6" fill="#7c5aa6"><title>64x32 RLTools batch input copy: 52,457 cycles; total: 108,211,135</title></rect>
+<rect x="609.0" y="359.4" width="17" height="196.1" fill="#2f7f5f"><title>64x32 RLTools batch forward: 44,213,507 cycles; total: 108,211,135</title></rect>
+<rect x="609.0" y="359.3" width="17" height="0.6" fill="#d08a2f"><title>64x32 RLTools batch loss/grad: 12,593 cycles; total: 108,211,135</title></rect>
+<rect x="609.0" y="84.7" width="17" height="274.6" fill="#b64b4b"><title>64x32 RLTools batch backward: 61,900,929 cycles; total: 108,211,135</title></rect>
+<rect x="609.0" y="78.0" width="17" height="6.7" fill="#2f64b0"><title>64x32 RLTools batch Adam update: 1,508,494 cycles; total: 108,211,135</title></rect>
+<rect x="609.0" y="77.9" width="17" height="0.6" fill="#c9c9c9"><title>64x32 RLTools batch other/gap: 17,125 cycles; total: 108,211,135</title></rect>
+<rect x="609.0" y="77.9" width="17" height="480.1" fill="none" stroke="#222" stroke-width=".45" opacity=".55"/>
+<text class="tick" x="617.5" y="580" text-anchor="end" transform="rotate(-45 617.5 580)">RLTools</text>
+<text class="label" transform="translate(24 314.0) rotate(-90)" text-anchor="middle">cycles per measured run</text>
+<text class="legend" x="670" y="62">Components</text>
+<rect x="670" y="66" width="16" height="16" fill="#4f6f8f"/>
+<text class="legend" x="694" y="79">zero grad</text>
+<rect x="670" y="87" width="16" height="16" fill="#7c5aa6"/>
+<text class="legend" x="694" y="100">input copy</text>
+<rect x="670" y="108" width="16" height="16" fill="#2f7f5f"/>
+<text class="legend" x="694" y="121">forward</text>
+<rect x="670" y="129" width="16" height="16" fill="#d08a2f"/>
+<text class="legend" x="694" y="142">loss/grad</text>
+<rect x="670" y="150" width="16" height="16" fill="#b64b4b"/>
+<text class="legend" x="694" y="163">backward</text>
+<rect x="670" y="171" width="16" height="16" fill="#6f6f6f"/>
+<text class="legend" x="694" y="184">C train step</text>
+<rect x="670" y="192" width="16" height="16" fill="#2f64b0"/>
+<text class="legend" x="694" y="205">Adam update</text>
+<rect x="670" y="213" width="16" height="16" fill="#c9c9c9"/>
+<text class="legend" x="694" y="226">other/gap</text>
+<text class="legend" x="670" y="272">Variant order</text>
+<text class="legend" x="670" y="288">M55: C++ M55</text>
+<text class="legend" x="670" y="307">Generic: C++ generic</text>
+<text class="legend" x="670" y="326">RLTools: RLTools batch</text>
+</svg>

@@ -20,24 +20,6 @@
 <text class="tick" x="754.6" y="566" text-anchor="middle">1792</text>
 <line class="grid" x1="865.0" y1="62" x2="865.0" y2="544"/>
 <text class="tick" x="865.0" y="566" text-anchor="middle">2048</text>
-<polyline points="92.0,180.0 202.4,184.6 312.9,209.3 423.3,275.3 533.7,297.7 644.1,301.2 754.6,327.7 865.0,399.6" fill="none" stroke="#2f2f2f" stroke-width="2.4"/>
-<circle cx="92.0" cy="180.0" r="3.2" fill="#2f2f2f"/>
-<circle cx="202.4" cy="184.6" r="3.2" fill="#2f2f2f"/>
-<circle cx="312.9" cy="209.3" r="3.2" fill="#2f2f2f"/>
-<circle cx="423.3" cy="275.3" r="3.2" fill="#2f2f2f"/>
-<circle cx="533.7" cy="297.7" r="3.2" fill="#2f2f2f"/>
-<circle cx="644.1" cy="301.2" r="3.2" fill="#2f2f2f"/>
-<circle cx="754.6" cy="327.7" r="3.2" fill="#2f2f2f"/>
-<circle cx="865.0" cy="399.6" r="3.2" fill="#2f2f2f"/>
-<polyline points="92.0,180.0 202.4,184.6 312.9,209.3 423.3,275.3 533.7,297.7 644.1,301.2 754.6,327.7 865.0,399.6" fill="none" stroke="#177245" stroke-width="2.4"/>
-<circle cx="92.0" cy="180.0" r="3.2" fill="#177245"/>
-<circle cx="202.4" cy="184.6" r="3.2" fill="#177245"/>
-<circle cx="312.9" cy="209.3" r="3.2" fill="#177245"/>
-<circle cx="423.3" cy="275.3" r="3.2" fill="#177245"/>
-<circle cx="533.7" cy="297.7" r="3.2" fill="#177245"/>
-<circle cx="644.1" cy="301.2" r="3.2" fill="#177245"/>
-<circle cx="754.6" cy="327.7" r="3.2" fill="#177245"/>
-<circle cx="865.0" cy="399.6" r="3.2" fill="#177245"/>
 <polyline points="92.0,180.0 202.4,184.6 312.9,209.3 423.3,275.3 533.7,297.7 644.1,301.2 754.6,327.7 865.0,399.6" fill="none" stroke="#1f62b2" stroke-width="2.4"/>
 <circle cx="92.0" cy="180.0" r="3.2" fill="#1f62b2"/>
 <circle cx="202.4" cy="184.6" r="3.2" fill="#1f62b2"/>
@@ -76,5 +58,5 @@
 <line x1="899" y1="130" x2="923" y2="130" stroke="#b24a1f" stroke-width="2.4"/>
 <text class="legend" x="931" y="134">C++ generic</text>
 <line x1="899" y1="150" x2="923" y2="150" stroke="#7a3db8" stroke-width="2.4"/>
-<text class="legend" x="931" y="154">RLTools generic</text>
+<text class="legend" x="931" y="154">RLTools batch</text>
 </svg>

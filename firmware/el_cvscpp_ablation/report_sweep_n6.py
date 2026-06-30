@@ -18,7 +18,7 @@ VARIANT_LABELS = {
     "cpp_direct_c_backend": "Direct C-backend",
     "cpp_m55": "C++ M55",
     "cpp_generic": "C++ Generic",
-    "rltools_generic": "RLTools Generic",
+    "rltools_generic": "RLTools Generic Batch",
 }
 PROFILE_COMPONENTS = (
     "zero",
@@ -254,7 +254,7 @@ def model_size_values(variant: str,
         obj = to_int(begin.get("rltools_model_object"), to_int(summary.get("object_bytes")))
         return {
             "model_size_kind": "static_state/model_object",
-            "model_state_bytes": obj,
+            "model_state_bytes": state,
             "arena_or_required_memory": state,
             "object_or_control_bytes": obj,
         }
@@ -556,6 +556,7 @@ def write_markdown(path: Path,
         f.write(f"Task: deterministic linear regression, input {input_features}, output 1, batch 256.\n")
         f.write("Build/run unit: one firmware ELF per variant and per network size.\n")
         f.write("Protocol: Adam, rollout 1024, 2 epochs, 8 optimizer steps, 2048 sample-passes per measured run.\n")
+        f.write("Batch semantics: EdgeLearning++ accumulates gradients over 256 samples before one Adam update; RLTools uses a static tensor with shape `[256, input_features]` and one forward/loss/backward/update per minibatch.\n")
         f.write("Warm-up: 2 full training runs per seed, with model and optimizer reset before the measured run.\n")
         f.write("Timing: pre-generated rollout hot path only; setup, import/export, reset, sample generation, warm-up, traces, and serial I/O are outside DWT.\n")
         f.write("Profiling: training-loop component counters are collected in a separate equivalent pass with the same initial parameters and dataset, then averaged over seeds.\n")
@@ -578,7 +579,7 @@ def write_markdown(path: Path,
         if "legacy_c" in active_variants:
             f.write(
                 "| Config | Input | Seeds | Warm-ups | Params | C M55 avg | Direct C-backend avg | Direct/C | "
-                "C++ M55 avg | M55/C | C++ Generic avg | Generic/C | RLTools Generic avg | RLTools/C |\n"
+                "C++ M55 avg | M55/C | C++ Generic avg | Generic/C | RLTools Batch avg | RLTools/C |\n"
             )
             f.write("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|\n")
             for row in rows:
@@ -609,7 +610,7 @@ def write_markdown(path: Path,
         else:
             f.write(
                 "| Config | Input | Seeds | Warm-ups | Params | C++ M55 avg | C++ Generic avg | "
-                "Generic/M55 | RLTools Generic avg | RLTools/M55 | RLTools/M55 runtime ratio |\n"
+                "Generic/M55 | RLTools Batch avg | RLTools/M55 | RLTools/M55 runtime ratio |\n"
             )
             f.write("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|\n")
             for row in rows:

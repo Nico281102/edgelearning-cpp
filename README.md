@@ -137,26 +137,27 @@ For extension points, see [docs/api/custom_extensions.md](docs/api/custom_extens
 ## STM32N6 Preview
 
 The checked-in STM32N6 sweep compares one static firmware ELF per topology and
-variant. The ratio below is `RLTools generic cycles / EdgeLearning++ M55
+variant. The ratio below is `RLTools batch cycles / EdgeLearning++ M55
 cycles`; values above `1.0x` mean the M55 backend completed the same measured
 training work in fewer cycles.
 
 `EL++ M55 object` is `sizeof(Model)` for the owning static model. `RLTools
 runtime state` is the static runtime bundle used by the RLTools benchmark
-wrapper. The generated report also lists arena requirements, object sizes, and
-ELF sections separately.
+wrapper, including static batch-256 input, target, output-gradient, activation,
+and backward buffers. The generated report also lists arena requirements,
+object sizes, and ELF sections separately.
 
 | Hidden | RLTools/M55 runtime ratio | EL++ M55 object | RLTools runtime state |
 |---|---:|---:|---:|
-| `8x8` | 1.36x | 2,080 B | 2,092 B |
-| `16x8` | 1.33x | 3,680 B | 3,756 B |
-| `16x16` | 1.69x | 6,048 B | 6,124 B |
-| `32x16` | 2.42x | 11,296 B | 11,500 B |
-| `32x32` | 3.03x | 20,128 B | 20,332 B |
-| `64x32` | 4.08x | 38,816 B | 39,276 B |
+| `8x8` | 1.54x | 2,080 B | 58,192 B |
+| `16x8` | 1.48x | 3,680 B | 92,496 B |
+| `16x16` | 1.95x | 6,048 B | 111,184 B |
+| `32x16` | 2.94x | 11,296 B | 181,840 B |
+| `32x32` | 3.29x | 20,128 B | 223,312 B |
+| `64x32` | 3.92x | 38,816 B | 372,816 B |
 
 Source report:
-[benchmarks/firmware/stm32n6/el_cvscpp_ablation/results/stm32n6_sweep_2026-06-26_input3_10seed.md](benchmarks/firmware/stm32n6/el_cvscpp_ablation/results/stm32n6_sweep_2026-06-26_input3_10seed.md).
+[benchmarks/firmware/stm32n6/el_cvscpp_ablation/results/stm32n6_sweep_2026-06-30_input3_10seed.md](benchmarks/firmware/stm32n6/el_cvscpp_ablation/results/stm32n6_sweep_2026-06-30_input3_10seed.md).
 Methodology and scripts:
 [firmware/el_cvscpp_ablation/README.md](firmware/el_cvscpp_ablation/README.md).
 The public firmware sweep can be reproduced without the legacy C checkout by

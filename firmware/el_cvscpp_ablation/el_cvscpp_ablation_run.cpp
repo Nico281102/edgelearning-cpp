@@ -361,7 +361,7 @@ struct RltoolsAdamParameters
 
 using RltoolsCapability =
     rlt::nn::capability::Gradient<rlt::nn::parameters::Adam, false>;
-using RltoolsInputShape = rlt::tensor::Shape<RltoolsTI, 1, kInputFeatures>;
+using RltoolsInputShape = rlt::tensor::Shape<RltoolsTI, kBatchSize, kInputFeatures>;
 
 using RltoolsDense1Config = rlt::nn::layers::dense::Configuration<
     RltoolsTypePolicy,
@@ -857,51 +857,54 @@ int train_rltools_static_batch(const RegressionDataset& dataset,
                 profile_add(profile->zero_grad, profile_begin);
             }
             const std::size_t begin = batch * kBatchSize;
+            profile_begin = dwt_read();
             for (std::size_t i = 0; i < kBatchSize; ++i) {
                 const std::size_t sample = begin + i;
-                profile_begin = dwt_read();
                 for (std::size_t feature = 0; feature < kInputFeatures; ++feature) {
                     rlt::set(runtime.device,
                              runtime.input,
                              dataset.inputs[sample][feature],
-                             0,
+                             i,
                              feature);
                 }
-                rlt::set(runtime.device, runtime.target, dataset.targets[sample][0], 0, 0);
-                if (profile != nullptr) {
-                    profile_add(profile->input_copy, profile_begin);
-                }
+                rlt::set(runtime.device, runtime.target, dataset.targets[sample][0], i, 0);
+            }
+            if (profile != nullptr) {
+                profile_add(profile->input_copy, profile_begin);
+            }
 
-                profile_begin = dwt_read();
-                rlt::forward(runtime.device,
-                             model,
-                             runtime.input,
-                             runtime.buffers,
-                             runtime.rng);
-                auto output = rlt::output(runtime.device, model);
-                if (profile != nullptr) {
-                    profile_add(profile->forward, profile_begin);
-                }
-                profile_begin = dwt_read();
-                if constexpr (Trace) {
-                    batch_loss +=
-                        rlt::nn::loss_functions::mse::evaluate(
-                            runtime.device, output, runtime.target);
-                }
-                rlt::nn::loss_functions::mse::gradient(
-                    runtime.device, output, runtime.target, runtime.output_gradient);
-                if (profile != nullptr) {
-                    profile_add(profile->loss, profile_begin);
-                }
-                profile_begin = dwt_read();
-                rlt::backward(runtime.device,
-                              model,
-                              runtime.input,
-                              runtime.output_gradient,
-                              runtime.buffers);
-                if (profile != nullptr) {
-                    profile_add(profile->backward, profile_begin);
-                }
+            profile_begin = dwt_read();
+            rlt::forward(runtime.device,
+                         model,
+                         runtime.input,
+                         runtime.buffers,
+                         runtime.rng);
+            auto output = rlt::output(runtime.device, model);
+            if (profile != nullptr) {
+                profile_add(profile->forward, profile_begin);
+            }
+            profile_begin = dwt_read();
+            if constexpr (Trace) {
+                batch_loss = rlt::nn::loss_functions::mse::evaluate(
+                    runtime.device, output, runtime.target);
+            }
+            rlt::nn::loss_functions::mse::gradient(
+                runtime.device,
+                output,
+                runtime.target,
+                runtime.output_gradient,
+                static_cast<float>(kBatchSize));
+            if (profile != nullptr) {
+                profile_add(profile->loss, profile_begin);
+            }
+            profile_begin = dwt_read();
+            rlt::backward(runtime.device,
+                          model,
+                          runtime.input,
+                          runtime.output_gradient,
+                          runtime.buffers);
+            if (profile != nullptr) {
+                profile_add(profile->backward, profile_begin);
             }
             profile_begin = dwt_read();
             rlt::step(runtime.device, runtime.optimizer, model);
@@ -911,7 +914,7 @@ int train_rltools_static_batch(const RegressionDataset& dataset,
             if constexpr (Trace) {
                 if (trace != nullptr) {
                     const std::size_t step = epoch * kBatchesPerEpoch + batch + 1U;
-                    emit_trace(*trace, epoch, batch, step, batch_loss / kBatchSize);
+                    emit_trace(*trace, epoch, batch, step, batch_loss);
                 }
             }
         }
