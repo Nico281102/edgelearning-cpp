@@ -140,9 +140,11 @@ For extension points, see [docs/api/custom_extensions.md](docs/api/custom_extens
 ## STM32N6 Preview
 
 The checked-in STM32N6 sweep compares one static firmware ELF per topology and
-variant. The ratio below is `RLTools Generic cycles / EdgeLearning++ M55
+variant. The ratio below is `RLTools baseline cycles / EdgeLearning++ M55
 cycles`; values above `1.0x` mean the M55 backend completed the same measured
 training work in fewer cycles.
+The preview is tied to the generated report linked below; regenerate the
+firmware sweep before using it as a final firmware ablation result.
 
 `Network state` is the static memory owned by the network runtime in each
 variant. For EdgeLearning++ this is the static model object, which contains
@@ -152,14 +154,14 @@ batch-256 input, target, output-gradient, activation, and backward buffers. The
 generated CSV also lists the lower-level arena/object fields and ELF sections
 separately.
 
-| Hidden | RLTools/M55 runtime ratio | EL++ M55 network state | RLTools Generic network state |
+| Hidden | RLTools/M55 runtime ratio | EL++ M55 network state | RLTools baseline network state |
 |---|---:|---:|---:|
-| `8x8` | 1.530x | 2,080 B | 58,192 B |
-| `16x8` | 1.500x | 3,680 B | 92,496 B |
-| `16x16` | 1.938x | 6,048 B | 111,184 B |
-| `32x16` | 2.933x | 11,296 B | 181,840 B |
-| `32x32` | 3.288x | 20,128 B | 223,312 B |
-| `64x32` | 3.926x | 38,816 B | 372,816 B |
+| `8x8` | 1.573x | 2,080 B | 61,284 B |
+| `16x8` | 1.650x | 3,680 B | 87,396 B |
+| `16x16` | 2.176x | 6,048 B | 114,276 B |
+| `32x16` | 2.336x | 11,296 B | 168,548 B |
+| `32x32` | 2.803x | 20,128 B | 226,404 B |
+| `64x32` | 3.165x | 38,816 B | 343,140 B |
 
 Source report:
 [benchmarks/firmware/stm32n6/el_cvscpp_ablation/results/stm32n6_sweep_2026-06-30_input3_10seed.md](benchmarks/firmware/stm32n6/el_cvscpp_ablation/results/stm32n6_sweep_2026-06-30_input3_10seed.md).

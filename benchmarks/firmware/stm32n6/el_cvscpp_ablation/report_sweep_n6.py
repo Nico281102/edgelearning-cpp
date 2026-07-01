@@ -54,6 +54,11 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Output path without extension. .csv and .md are written.",
     )
+    parser.add_argument(
+        "--date",
+        default=dt.date.today().isoformat(),
+        help="Report date used in generated filenames and Markdown title.",
+    )
     return parser.parse_args()
 
 
@@ -549,16 +554,18 @@ def write_csv(path: Path, rows: list[dict[str, object]]) -> None:
 def write_markdown(path: Path,
                    rows: list[dict[str, object]],
                    input_features: int,
-                   active_variants: tuple[str, ...]) -> None:
+                   active_variants: tuple[str, ...],
+                   report_date: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     all_done = all(int(row["status"]) == 0 for row in rows)
     with path.open("w", encoding="utf-8") as f:
-        f.write(f"# STM32N6 EL_C_vsCpp Per-Variant Sweep - {dt.date.today().isoformat()} - 10 seeds\n\n")
+        f.write(f"# STM32N6 EL_C_vsCpp Per-Variant Sweep - {report_date} - 10 seeds\n\n")
         f.write("Board target: STM32N6 Cortex-M55 with MVE.\n")
         f.write(f"Task: deterministic linear regression, input {input_features}, output 1, batch 256.\n")
         f.write("Build/run unit: one firmware ELF per variant and per network size.\n")
         f.write("Protocol: Adam, rollout 1024, 2 epochs, 8 optimizer steps, 2048 sample-passes per measured run.\n")
         f.write("Batch semantics: all variants use mean-reduced minibatch gradients. C and EdgeLearning++ accumulate 256 per-sample gradients, scale by `1/256`, and then apply one Adam update; RLTools uses a static tensor with shape `[256, input_features]` and equivalent MSE mean reduction.\n")
+        f.write("RLTools topology: generic/static RLTools layer path aligned with the fast RL firmware network selection. Symmetric hidden sizes use `standardize -> MLP`; asymmetric hidden sizes use `standardize -> dense(H1) -> MLP tail(H2, 1)`. Standardization is initialized as identity.\n")
         f.write("Warm-up: 2 full training runs per seed, with model and optimizer reset before the measured run.\n")
         f.write("Timing: pre-generated rollout hot path only; setup, import/export, reset, sample generation, warm-up, traces, and serial I/O are outside DWT.\n")
         f.write("Profiling: training-loop component counters are collected in a separate equivalent pass with the same initial parameters and dataset, then averaged over seeds.\n")
@@ -671,7 +678,7 @@ def main() -> int:
         / "stm32n6"
         / "el_cvscpp_ablation"
         / "results"
-        / f"stm32n6_sweep_{dt.date.today().isoformat()}_input{input_features}_10seed"
+        / f"stm32n6_sweep_{args.date}_input{input_features}_10seed"
     )
 
     rows: list[dict[str, object]] = []
@@ -690,7 +697,7 @@ def main() -> int:
         rows.append(build_summary_row(config, variant_rows, active_variants))
 
     write_csv(output_stem.with_suffix(".csv"), rows)
-    write_markdown(output_stem.with_suffix(".md"), rows, input_features, active_variants)
+    write_markdown(output_stem.with_suffix(".md"), rows, input_features, active_variants, args.date)
     print(output_stem.with_suffix(".csv"))
     print(output_stem.with_suffix(".md"))
     return 0

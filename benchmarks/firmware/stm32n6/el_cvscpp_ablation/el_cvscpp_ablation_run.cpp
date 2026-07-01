@@ -26,6 +26,10 @@
 #define EL_CVSCPP_VARIANT 0
 #endif
 
+#ifndef EL_CVSCPP_RLTOOLS_STAGE_TRACE
+#define EL_CVSCPP_RLTOOLS_STAGE_TRACE 0
+#endif
+
 #define EL_CVSCPP_VARIANT_ALL 0
 #define EL_CVSCPP_VARIANT_LEGACY_C 1
 #define EL_CVSCPP_VARIANT_CPP_DIRECT_C_BACKEND 2
@@ -56,11 +60,14 @@ extern "C" {
 
 #if EL_CVSCPP_ENABLE_RLTOOLS
 /*
- * STM32N6 CMSIS headers define RNG as a peripheral macro. RLTools uses RNG as a
- * template parameter name, so the macro must be removed before RLTools headers.
+ * STM32N6 CMSIS headers define short peripheral macros that collide with
+ * RLTools type names, so they must be removed before RLTools headers.
  */
 #ifdef RNG
 #undef RNG
+#endif
+#ifdef OUTPUT_TYPE
+#undef OUTPUT_TYPE
 #endif
 #ifndef RL_TOOLS_DEVICES_DISABLE_REDEFINITION_DETECTION
 #define RL_TOOLS_DEVICES_DISABLE_REDEFINITION_DETECTION
@@ -71,7 +78,9 @@ extern "C" {
 #include <rl_tools/operations/arm/group_3.h>
 #include <rl_tools/nn/optimizers/adam/instance/operations_generic.h>
 #include <rl_tools/nn/layers/dense/operations_generic.h>
+#include <rl_tools/nn/layers/standardize/operations_generic.h>
 #include <rl_tools/nn/loss_functions/mse/operations_generic.h>
+#include <rl_tools/nn_models/mlp/operations_generic.h>
 #include <rl_tools/nn_models/sequential/operations_generic.h>
 #include <rl_tools/nn/optimizers/adam/operations_generic.h>
 #endif
@@ -362,41 +371,71 @@ struct RltoolsAdamParameters
 
 using RltoolsCapability =
     rlt::nn::capability::Gradient<rlt::nn::parameters::Adam, false>;
-using RltoolsInputShape = rlt::tensor::Shape<RltoolsTI, kBatchSize, kInputFeatures>;
+using RltoolsInputShape = rlt::tensor::Shape<RltoolsTI, 1, kBatchSize, kInputFeatures>;
 
-using RltoolsDense1Config = rlt::nn::layers::dense::Configuration<
+using RltoolsStandardizeConfig =
+    rlt::nn::layers::standardize::Configuration<RltoolsTypePolicy, RltoolsTI>;
+using RltoolsStandardize =
+    rlt::nn::layers::standardize::BindConfiguration<RltoolsStandardizeConfig>;
+using RltoolsStandardizeLayer =
+    typename RltoolsStandardize::template Layer<RltoolsCapability, RltoolsInputShape>;
+
+using RltoolsMonolithicConfig = rlt::nn_models::mlp::Configuration<
+    RltoolsTypePolicy,
+    RltoolsTI,
+    kOutputFeatures,
+    3,
+    kHidden1,
+    rlt::nn::activation_functions::RELU,
+    rlt::nn::activation_functions::IDENTITY>;
+using RltoolsMonolithic =
+    rlt::nn_models::mlp::BindConfiguration<RltoolsMonolithicConfig>;
+using RltoolsMonolithicLayer = typename RltoolsMonolithic::template Layer<
+    RltoolsCapability,
+    typename RltoolsStandardizeLayer::OUTPUT_SHAPE>;
+
+using RltoolsFirstDenseConfig = rlt::nn::layers::dense::Configuration<
     RltoolsTypePolicy,
     RltoolsTI,
     kHidden1,
     rlt::nn::activation_functions::RELU,
     rlt::nn::layers::dense::DefaultInitializer<RltoolsTypePolicy, RltoolsTI>,
     rlt::nn::parameters::groups::Input>;
-using RltoolsDense2Config = rlt::nn::layers::dense::Configuration<
-    RltoolsTypePolicy,
-    RltoolsTI,
-    kHidden2,
-    rlt::nn::activation_functions::RELU,
-    rlt::nn::layers::dense::DefaultInitializer<RltoolsTypePolicy, RltoolsTI>,
-    rlt::nn::parameters::groups::Normal>;
-using RltoolsOutputConfig = rlt::nn::layers::dense::Configuration<
+using RltoolsFirstDense =
+    rlt::nn::layers::dense::BindConfiguration<RltoolsFirstDenseConfig>;
+using RltoolsFirstDenseLayer = typename RltoolsFirstDense::template Layer<
+    RltoolsCapability,
+    typename RltoolsStandardizeLayer::OUTPUT_SHAPE>;
+
+using RltoolsTailConfig = rlt::nn_models::mlp::Configuration<
     RltoolsTypePolicy,
     RltoolsTI,
     kOutputFeatures,
+    2,
+    kHidden2,
+    rlt::nn::activation_functions::RELU,
     rlt::nn::activation_functions::IDENTITY,
     rlt::nn::layers::dense::DefaultInitializer<RltoolsTypePolicy, RltoolsTI>,
-    rlt::nn::parameters::groups::Output>;
-
-using RltoolsDense1 = rlt::nn::layers::dense::BindConfiguration<RltoolsDense1Config>;
-using RltoolsDense2 = rlt::nn::layers::dense::BindConfiguration<RltoolsDense2Config>;
-using RltoolsOutput = rlt::nn::layers::dense::BindConfiguration<RltoolsOutputConfig>;
+    false,
+    true>;
+using RltoolsTail = rlt::nn_models::mlp::BindConfiguration<RltoolsTailConfig>;
+using RltoolsTailLayer = typename RltoolsTail::template Layer<
+    RltoolsCapability,
+    typename RltoolsFirstDenseLayer::OUTPUT_SHAPE>;
 
 template <typename T_CONTENT, typename T_NEXT_MODULE = rlt::nn_models::sequential::OutputModule>
 using RltoolsSequentialModule = rlt::nn_models::sequential::Module<T_CONTENT, T_NEXT_MODULE>;
 
+#if EL_CVSCPP_H1 == EL_CVSCPP_H2
 using RltoolsModuleChain =
-    RltoolsSequentialModule<RltoolsDense1,
-        RltoolsSequentialModule<RltoolsDense2,
-            RltoolsSequentialModule<RltoolsOutput>>>;
+    RltoolsSequentialModule<RltoolsStandardize,
+        RltoolsSequentialModule<RltoolsMonolithic>>;
+#else
+using RltoolsModuleChain =
+    RltoolsSequentialModule<RltoolsStandardize,
+        RltoolsSequentialModule<RltoolsFirstDense,
+            RltoolsSequentialModule<RltoolsTail>>>;
+#endif
 using RltoolsModel =
     rlt::nn_models::sequential::Build<RltoolsCapability, RltoolsModuleChain, RltoolsInputShape>;
 using RltoolsModelGradient =
@@ -404,26 +443,57 @@ using RltoolsModelGradient =
 using RltoolsOptimizerSpec =
     rlt::nn::optimizers::adam::Specification<RltoolsTypePolicy, RltoolsTI, RltoolsAdamParameters, false>;
 using RltoolsOptimizer = rlt::nn::optimizers::Adam<RltoolsOptimizerSpec>;
-using RltoolsBuffer = typename RltoolsModel::template Buffer<false>;
 using RltoolsInputTensor = rlt::Tensor<
     rlt::tensor::Specification<float, RltoolsTI, RltoolsInputShape, false>>;
 using RltoolsOutputTensor = rlt::Tensor<
     rlt::tensor::Specification<float, RltoolsTI, typename RltoolsModel::OUTPUT_SHAPE, false>>;
+using RltoolsHidden1GradientTensor = rlt::Tensor<
+    rlt::tensor::Specification<
+        float,
+        RltoolsTI,
+        rlt::tensor::Shape<RltoolsTI, 1, kBatchSize, kHidden1>,
+        false>>;
+using RltoolsHidden2GradientTensor = rlt::Tensor<
+    rlt::tensor::Specification<
+        float,
+        RltoolsTI,
+        rlt::tensor::Shape<RltoolsTI, 1, kBatchSize, kHidden2>,
+        false>>;
 
 constexpr std::size_t kRltoolsParameterCount =
     kInputFeatures * kHidden1 + kHidden1 +
     kHidden1 * kHidden2 + kHidden2 +
     kHidden2 * kOutputFeatures + kOutputFeatures;
 static_assert(kRltoolsParameterCount == GenericModel::parameter_count);
+static_assert(RltoolsStandardizeLayer::INPUT_DIM == kInputFeatures);
+static_assert(RltoolsStandardizeLayer::OUTPUT_DIM == kInputFeatures);
+#if EL_CVSCPP_H1 == EL_CVSCPP_H2
+static_assert(RltoolsMonolithicLayer::SPEC::INPUT_DIM == kInputFeatures);
+static_assert(RltoolsMonolithicLayer::SPEC::HIDDEN_DIM == kHidden1);
+static_assert(RltoolsMonolithicLayer::SPEC::OUTPUT_DIM == kOutputFeatures);
+static_assert(RltoolsMonolithicLayer::NUM_HIDDEN_LAYERS == 1);
+static_assert(RltoolsMonolithicLayer::NUM_WEIGHTS == kRltoolsParameterCount);
+#else
+static_assert(RltoolsFirstDenseLayer::INPUT_DIM == kInputFeatures);
+static_assert(RltoolsFirstDenseLayer::OUTPUT_DIM == kHidden1);
+static_assert(RltoolsTailLayer::SPEC::INPUT_DIM == kHidden1);
+static_assert(RltoolsTailLayer::SPEC::HIDDEN_DIM == kHidden2);
+static_assert(RltoolsTailLayer::SPEC::OUTPUT_DIM == kOutputFeatures);
+static_assert(RltoolsTailLayer::NUM_HIDDEN_LAYERS == 0);
+static_assert(RltoolsTailLayer::NUM_WEIGHTS ==
+              kHidden1 * kHidden2 + kHidden2 +
+              kHidden2 * kOutputFeatures + kOutputFeatures);
+#endif
 
 struct RltoolsRuntime {
     RltoolsDevice device{};
     RltoolsModel model{};
     RltoolsOptimizer optimizer{};
-    RltoolsBuffer buffers{};
     RltoolsInputTensor input{};
     RltoolsOutputTensor target{};
     RltoolsOutputTensor output_gradient{};
+    RltoolsHidden1GradientTensor hidden1_gradient{};
+    RltoolsHidden2GradientTensor hidden2_gradient{};
     RltoolsRng rng{};
 };
 
@@ -554,6 +624,36 @@ void uart_printf(const char* fmt, Args... args) {
         uart_write(line);
     }
 }
+
+#if EL_CVSCPP_ENABLE_RLTOOLS
+void emit_rltools_stage(const char* stage) {
+#if EL_CVSCPP_RLTOOLS_STAGE_TRACE
+    uart_printf("RLTOOLS_STAGE stage=%s\r\n", stage);
+#else
+    (void)stage;
+#endif
+}
+
+template<typename Device, typename Input, typename Target>
+void emit_rltools_dims(Device& device, Input& input, Target& target) {
+#if EL_CVSCPP_RLTOOLS_STAGE_TRACE
+    using InputSpec = typename decltype(rlt::matrix_view(device, input))::SPEC;
+    using TargetSpec = typename decltype(rlt::matrix_view(device, target))::SPEC;
+    uart_printf("RLTOOLS_DIMS input_rows=%u input_cols=%u input_row_pitch=%u "
+                "target_rows=%u target_cols=%u target_row_pitch=%u\r\n",
+                static_cast<unsigned>(InputSpec::ROWS),
+                static_cast<unsigned>(InputSpec::COLS),
+                static_cast<unsigned>(InputSpec::ROW_PITCH),
+                static_cast<unsigned>(TargetSpec::ROWS),
+                static_cast<unsigned>(TargetSpec::COLS),
+                static_cast<unsigned>(TargetSpec::ROW_PITCH));
+#else
+    (void)device;
+    (void)input;
+    (void)target;
+#endif
+}
+#endif
 
 void emit_trace(const TraceMeta& trace,
                 std::size_t epoch,
@@ -827,45 +927,203 @@ RltoolsModelGradient& rltools_model_view(RltoolsRuntime& runtime) {
     return static_cast<RltoolsModelGradient&>(runtime.model);
 }
 
+template<typename Layer>
+void set_rltools_dense_params(RltoolsDevice& device,
+                              Layer& layer,
+                              const std::array<float, kRltoolsParameterCount>& params,
+                              std::size_t& offset,
+                              std::size_t out_features,
+                              std::size_t in_features) {
+    for (std::size_t out = 0; out < out_features; ++out) {
+        for (std::size_t in = 0; in < in_features; ++in) {
+            rlt::set(device, layer.weights.parameters, params[offset++], out, in);
+        }
+    }
+    for (std::size_t out = 0; out < out_features; ++out) {
+        rlt::set(device, layer.biases.parameters, params[offset++], out);
+    }
+}
+
+template<typename Layer>
+void get_rltools_dense_params(RltoolsDevice& device,
+                              Layer& layer,
+                              std::array<float, kRltoolsParameterCount>& params,
+                              std::size_t& offset,
+                              std::size_t out_features,
+                              std::size_t in_features) {
+    for (std::size_t out = 0; out < out_features; ++out) {
+        for (std::size_t in = 0; in < in_features; ++in) {
+            params[offset++] = rlt::get(device, layer.weights.parameters, out, in);
+        }
+    }
+    for (std::size_t out = 0; out < out_features; ++out) {
+        params[offset++] = rlt::get(device, layer.biases.parameters, out);
+    }
+}
+
 int prepare_rltools_static_model(const std::array<float, kRltoolsParameterCount>& initial_params) {
     RltoolsRuntime& runtime = rltools_runtime();
     RltoolsModelGradient& model = rltools_model_view(runtime);
+    emit_rltools_stage("prepare_begin");
     runtime.rng.state = 0;
     rlt::init(runtime.device, runtime.optimizer);
+    emit_rltools_stage("optimizer_init_done");
+    rlt::init_weights(runtime.device, model, runtime.rng);
+    emit_rltools_stage("init_weights_done");
     rlt::reset_optimizer_state(runtime.device, runtime.optimizer, model);
+    emit_rltools_stage("reset_optimizer_done");
     rlt::zero_gradient(runtime.device, model);
+    emit_rltools_stage("zero_gradient_done");
 
     std::size_t offset = 0;
-    auto& layer1 = rlt::get_layer<0>(model);
-    for (std::size_t out = 0; out < kHidden1; ++out) {
-        for (std::size_t in = 0; in < kInputFeatures; ++in) {
-            rlt::set(runtime.device, layer1.weights.parameters, initial_params[offset++], out, in);
-        }
-    }
-    for (std::size_t out = 0; out < kHidden1; ++out) {
-        rlt::set(runtime.device, layer1.biases.parameters, initial_params[offset++], out);
-    }
-
-    auto& layer2 = rlt::get_layer<1>(model);
-    for (std::size_t out = 0; out < kHidden2; ++out) {
-        for (std::size_t in = 0; in < kHidden1; ++in) {
-            rlt::set(runtime.device, layer2.weights.parameters, initial_params[offset++], out, in);
-        }
-    }
-    for (std::size_t out = 0; out < kHidden2; ++out) {
-        rlt::set(runtime.device, layer2.biases.parameters, initial_params[offset++], out);
-    }
-
-    auto& output = rlt::get_layer<2>(model);
-    for (std::size_t out = 0; out < kOutputFeatures; ++out) {
-        for (std::size_t in = 0; in < kHidden2; ++in) {
-            rlt::set(runtime.device, output.weights.parameters, initial_params[offset++], out, in);
-        }
-    }
-    for (std::size_t out = 0; out < kOutputFeatures; ++out) {
-        rlt::set(runtime.device, output.biases.parameters, initial_params[offset++], out);
-    }
+#if EL_CVSCPP_H1 == EL_CVSCPP_H2
+    auto& network = rlt::get_layer<1>(model);
+    set_rltools_dense_params(runtime.device,
+                             network.input_layer,
+                             initial_params,
+                             offset,
+                             kHidden1,
+                             kInputFeatures);
+    set_rltools_dense_params(runtime.device,
+                             network.hidden_layers[0],
+                             initial_params,
+                             offset,
+                             kHidden2,
+                             kHidden1);
+    set_rltools_dense_params(runtime.device,
+                             network.output_layer,
+                             initial_params,
+                             offset,
+                             kOutputFeatures,
+                             kHidden2);
+#else
+    auto& layer1 = rlt::get_layer<1>(model);
+    auto& tail = rlt::get_layer<2>(model);
+    set_rltools_dense_params(runtime.device, layer1, initial_params, offset, kHidden1, kInputFeatures);
+    set_rltools_dense_params(runtime.device, tail.input_layer, initial_params, offset, kHidden2, kHidden1);
+    set_rltools_dense_params(runtime.device, tail.output_layer, initial_params, offset, kOutputFeatures, kHidden2);
+#endif
+    emit_rltools_stage("import_done");
     return offset == initial_params.size() ? 0 : -1;
+}
+
+void rltools_forward_model(RltoolsRuntime& runtime, RltoolsModelGradient& model) {
+    emit_rltools_stage("forward_standardize_begin");
+    auto& standardize = rlt::get_layer<0>(model);
+    rlt::nn::layers::standardize::Buffer standardize_buffer{};
+    rlt::forward(runtime.device, standardize, runtime.input, standardize_buffer, runtime.rng);
+    emit_rltools_stage("forward_standardize_done");
+
+    auto standardized = rlt::content_output(runtime.device, model);
+    rlt::nn::layers::dense::Buffer layer_buffer{};
+#if EL_CVSCPP_H1 == EL_CVSCPP_H2
+    emit_rltools_stage("forward_monolithic_mlp_begin");
+    auto& network = rlt::get_layer<1>(model);
+    emit_rltools_stage("forward_monolithic_input_dense_begin");
+    rlt::forward(runtime.device, network.input_layer, standardized, layer_buffer, runtime.rng);
+    emit_rltools_stage("forward_monolithic_input_dense_done");
+    auto input_dense_output = rlt::output(runtime.device, network.input_layer);
+    emit_rltools_stage("forward_monolithic_hidden_dense_begin");
+    rlt::forward(runtime.device,
+                 network.hidden_layers[0],
+                 input_dense_output,
+                 layer_buffer,
+                 runtime.rng);
+    emit_rltools_stage("forward_monolithic_hidden_dense_done");
+    auto hidden_dense_output = rlt::output(runtime.device, network.hidden_layers[0]);
+    emit_rltools_stage("forward_monolithic_output_dense_begin");
+    rlt::forward(runtime.device,
+                 network.output_layer,
+                 hidden_dense_output,
+                 layer_buffer,
+                 runtime.rng);
+    emit_rltools_stage("forward_monolithic_output_dense_done");
+    emit_rltools_stage("forward_monolithic_mlp_done");
+#else
+    emit_rltools_stage("forward_first_dense_begin");
+    auto& layer1 = rlt::get_layer<1>(model);
+    rlt::forward(runtime.device, layer1, standardized, layer_buffer, runtime.rng);
+    emit_rltools_stage("forward_first_dense_done");
+
+    auto layer1_output = rlt::output(runtime.device, layer1);
+    emit_rltools_stage("forward_tail_mlp_begin");
+    auto& tail = rlt::get_layer<2>(model);
+    emit_rltools_stage("forward_tail_input_dense_begin");
+    rlt::forward(runtime.device, tail.input_layer, layer1_output, layer_buffer, runtime.rng);
+    emit_rltools_stage("forward_tail_input_dense_done");
+    auto tail_input_output = rlt::output(runtime.device, tail.input_layer);
+    emit_rltools_stage("forward_tail_output_dense_begin");
+    rlt::forward(runtime.device,
+                 tail.output_layer,
+                 tail_input_output,
+                 layer_buffer,
+                 runtime.rng);
+    emit_rltools_stage("forward_tail_output_dense_done");
+    emit_rltools_stage("forward_tail_mlp_done");
+#endif
+}
+
+void rltools_backward_model(RltoolsRuntime& runtime, RltoolsModelGradient& model) {
+    auto standardized = rlt::content_output(runtime.device, model);
+    rlt::nn::layers::dense::Buffer layer_buffer{};
+#if EL_CVSCPP_H1 == EL_CVSCPP_H2
+    auto& network = rlt::get_layer<1>(model);
+    auto input_dense_output = rlt::output(runtime.device, network.input_layer);
+    auto hidden_dense_output = rlt::output(runtime.device, network.hidden_layers[0]);
+
+    emit_rltools_stage("backward_monolithic_output_dense_begin");
+    rlt::backward_full(runtime.device,
+                       network.output_layer,
+                       hidden_dense_output,
+                       runtime.output_gradient,
+                       runtime.hidden2_gradient,
+                       layer_buffer);
+    emit_rltools_stage("backward_monolithic_output_dense_done");
+    emit_rltools_stage("backward_monolithic_hidden_dense_begin");
+    rlt::backward_full(runtime.device,
+                       network.hidden_layers[0],
+                       input_dense_output,
+                       runtime.hidden2_gradient,
+                       runtime.hidden1_gradient,
+                       layer_buffer);
+    emit_rltools_stage("backward_monolithic_hidden_dense_done");
+    emit_rltools_stage("backward_monolithic_input_dense_begin");
+    rlt::backward(runtime.device,
+                  network.input_layer,
+                  standardized,
+                  runtime.hidden1_gradient,
+                  layer_buffer);
+    emit_rltools_stage("backward_monolithic_input_dense_done");
+#else
+    auto& layer1 = rlt::get_layer<1>(model);
+    auto& tail = rlt::get_layer<2>(model);
+    auto layer1_output = rlt::output(runtime.device, layer1);
+    auto tail_input_output = rlt::output(runtime.device, tail.input_layer);
+
+    emit_rltools_stage("backward_tail_output_dense_begin");
+    rlt::backward_full(runtime.device,
+                       tail.output_layer,
+                       tail_input_output,
+                       runtime.output_gradient,
+                       runtime.hidden2_gradient,
+                       layer_buffer);
+    emit_rltools_stage("backward_tail_output_dense_done");
+    emit_rltools_stage("backward_tail_input_dense_begin");
+    rlt::backward_full(runtime.device,
+                       tail.input_layer,
+                       layer1_output,
+                       runtime.hidden2_gradient,
+                       runtime.hidden1_gradient,
+                       layer_buffer);
+    emit_rltools_stage("backward_tail_input_dense_done");
+    emit_rltools_stage("backward_first_dense_begin");
+    rlt::backward(runtime.device,
+                  layer1,
+                  standardized,
+                  runtime.hidden1_gradient,
+                  layer_buffer);
+    emit_rltools_stage("backward_first_dense_done");
+#endif
 }
 
 template<bool Trace = false>
@@ -883,6 +1141,7 @@ int train_rltools_static_batch(const RegressionDataset& dataset,
             if (profile != nullptr) {
                 profile_add(profile->zero_grad, profile_begin);
             }
+            emit_rltools_stage("batch_zero_grad_done");
             const std::size_t begin = batch * kBatchSize;
             profile_begin = dwt_read();
             for (std::size_t i = 0; i < kBatchSize; ++i) {
@@ -891,25 +1150,26 @@ int train_rltools_static_batch(const RegressionDataset& dataset,
                     rlt::set(runtime.device,
                              runtime.input,
                              dataset.inputs[sample][feature],
+                             0,
                              i,
                              feature);
                 }
-                rlt::set(runtime.device, runtime.target, dataset.targets[sample][0], i, 0);
+                rlt::set(runtime.device, runtime.target, dataset.targets[sample][0], 0, i, 0);
             }
             if (profile != nullptr) {
                 profile_add(profile->input_copy, profile_begin);
             }
+            emit_rltools_stage("input_copy_done");
+            emit_rltools_dims(runtime.device, runtime.input, runtime.target);
 
             profile_begin = dwt_read();
-            rlt::forward(runtime.device,
-                         model,
-                         runtime.input,
-                         runtime.buffers,
-                         runtime.rng);
+            emit_rltools_stage("forward_begin");
+            rltools_forward_model(runtime, model);
             auto output = rlt::output(runtime.device, model);
             if (profile != nullptr) {
                 profile_add(profile->forward, profile_begin);
             }
+            emit_rltools_stage("forward_done");
             profile_begin = dwt_read();
             if constexpr (Trace) {
                 batch_loss = rlt::nn::loss_functions::mse::evaluate(
@@ -924,20 +1184,20 @@ int train_rltools_static_batch(const RegressionDataset& dataset,
             if (profile != nullptr) {
                 profile_add(profile->loss, profile_begin);
             }
+            emit_rltools_stage("loss_done");
             profile_begin = dwt_read();
-            rlt::backward(runtime.device,
-                          model,
-                          runtime.input,
-                          runtime.output_gradient,
-                          runtime.buffers);
+            emit_rltools_stage("backward_begin");
+            rltools_backward_model(runtime, model);
             if (profile != nullptr) {
                 profile_add(profile->backward, profile_begin);
             }
+            emit_rltools_stage("backward_done");
             profile_begin = dwt_read();
             rlt::step(runtime.device, runtime.optimizer, model);
             if (profile != nullptr) {
                 profile_add(profile->adam_update, profile_begin);
             }
+            emit_rltools_stage("adam_done");
             if constexpr (Trace) {
                 if (trace != nullptr) {
                     const std::size_t step = epoch * kBatchesPerEpoch + batch + 1U;
@@ -953,39 +1213,33 @@ int export_rltools_static_params(std::array<float, kRltoolsParameterCount>& trai
     RltoolsRuntime& runtime = rltools_runtime();
     RltoolsModelGradient& model = rltools_model_view(runtime);
     std::size_t offset = 0;
-
-    auto& layer1 = rlt::get_layer<0>(model);
-    for (std::size_t out = 0; out < kHidden1; ++out) {
-        for (std::size_t in = 0; in < kInputFeatures; ++in) {
-            trained_params[offset++] =
-                rlt::get(runtime.device, layer1.weights.parameters, out, in);
-        }
-    }
-    for (std::size_t out = 0; out < kHidden1; ++out) {
-        trained_params[offset++] = rlt::get(runtime.device, layer1.biases.parameters, out);
-    }
-
-    auto& layer2 = rlt::get_layer<1>(model);
-    for (std::size_t out = 0; out < kHidden2; ++out) {
-        for (std::size_t in = 0; in < kHidden1; ++in) {
-            trained_params[offset++] =
-                rlt::get(runtime.device, layer2.weights.parameters, out, in);
-        }
-    }
-    for (std::size_t out = 0; out < kHidden2; ++out) {
-        trained_params[offset++] = rlt::get(runtime.device, layer2.biases.parameters, out);
-    }
-
-    auto& output = rlt::get_layer<2>(model);
-    for (std::size_t out = 0; out < kOutputFeatures; ++out) {
-        for (std::size_t in = 0; in < kHidden2; ++in) {
-            trained_params[offset++] =
-                rlt::get(runtime.device, output.weights.parameters, out, in);
-        }
-    }
-    for (std::size_t out = 0; out < kOutputFeatures; ++out) {
-        trained_params[offset++] = rlt::get(runtime.device, output.biases.parameters, out);
-    }
+#if EL_CVSCPP_H1 == EL_CVSCPP_H2
+    auto& network = rlt::get_layer<1>(model);
+    get_rltools_dense_params(runtime.device,
+                             network.input_layer,
+                             trained_params,
+                             offset,
+                             kHidden1,
+                             kInputFeatures);
+    get_rltools_dense_params(runtime.device,
+                             network.hidden_layers[0],
+                             trained_params,
+                             offset,
+                             kHidden2,
+                             kHidden1);
+    get_rltools_dense_params(runtime.device,
+                             network.output_layer,
+                             trained_params,
+                             offset,
+                             kOutputFeatures,
+                             kHidden2);
+#else
+    auto& layer1 = rlt::get_layer<1>(model);
+    auto& tail = rlt::get_layer<2>(model);
+    get_rltools_dense_params(runtime.device, layer1, trained_params, offset, kHidden1, kInputFeatures);
+    get_rltools_dense_params(runtime.device, tail.input_layer, trained_params, offset, kHidden2, kHidden1);
+    get_rltools_dense_params(runtime.device, tail.output_layer, trained_params, offset, kOutputFeatures, kHidden2);
+#endif
     return offset == trained_params.size() ? 0 : -2;
 }
 #endif
@@ -1538,7 +1792,7 @@ RunStats run_rltools_generic_once(const std::array<float, kRltoolsParameterCount
         }
     }
     if (stats.status == 0 && seed == kConvergenceTraceSeed) {
-        const TraceMeta trace{"rltools_cpp_generic", "rltools_generic", seed};
+        const TraceMeta trace{"rltools_ppo_selected", "rltools_generic", seed};
         const int trace_prepare_status = prepare_rltools_static_model(initial_params);
         const int trace_status = trace_prepare_status == 0
             ? train_rltools_static_batch<true>(dataset, &trace)
@@ -1666,7 +1920,7 @@ int el_cvscpp_ablation_run(void) {
         RunStats rltools_generic =
             run_rltools_generic_once(initial_params, dataset, rltools_generic_params, seed);
         aggregate_update(rltools_generic_aggregate, rltools_generic);
-        emit_result("rltools_cpp_generic", "rltools_generic", seed, rltools_generic,
+        emit_result("rltools_ppo_selected", "rltools_generic", seed, rltools_generic,
                     kRltoolsStaticStateBytes, kRltoolsModelObjectBytes);
         if (rltools_generic.status != 0 && status == 0) {
             status = -1;
@@ -1729,7 +1983,7 @@ int el_cvscpp_ablation_run(void) {
 #endif
 #if EL_CVSCPP_VARIANT == EL_CVSCPP_VARIANT_ALL || \
     EL_CVSCPP_VARIANT == EL_CVSCPP_VARIANT_RLTOOLS_GENERIC
-    emit_summary("rltools_cpp_generic", "rltools_generic", rltools_generic_aggregate,
+    emit_summary("rltools_ppo_selected", "rltools_generic", rltools_generic_aggregate,
                  kRltoolsStaticStateBytes, kRltoolsModelObjectBytes);
 #endif
 

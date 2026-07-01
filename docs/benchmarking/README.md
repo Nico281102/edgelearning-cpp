@@ -57,7 +57,7 @@ firmware toolchain.
 separate from the host CMake benchmarks because it builds firmware images,
 flashes the board, captures UART output, and measures training work with the
 DWT cycle counter on the MCU. The public firmware path compares EdgeLearning++
-M55, EdgeLearning++ generic, and RLTools generic. Legacy-C rows require a
+M55, EdgeLearning++ generic, and RLTools Generic. Legacy-C rows require a
 private external C checkout and are not fully reproducible from this repository
 alone.
 
@@ -65,7 +65,7 @@ The current firmware sweep uses:
 
 - topology: `InputVector<3>, Dense<H1, ReLU>, Dense<H2, ReLU>, Dense<1, Linear>`
 - hidden pairs: `8x8`, `16x8`, `16x16`, `32x16`, `32x32`, `64x32`
-- public variants: C++ native M55, C++ generic, RLTools generic with static
+- public variants: C++ native M55, C++ generic, RLTools Generic with static
   batch-256 tensors
 - private legacy-C variants: legacy C M55 and C++ direct legacy-C backend
 - storage: static C arena/control for C, static compile-time model storage for
@@ -81,7 +81,13 @@ training work is measured: minibatch gradient reset, forward/backward work, and
 Adam updates. EdgeLearning++ performs one forward/loss/backward pass per sample
 and applies Adam after accumulating and mean-scaling 256 gradients. RLTools uses
 one static `[256, input_features]` input tensor and one
-forward/loss/backward/update per minibatch with equivalent MSE mean reduction.
+forward/loss/backward/update per minibatch with equivalent MSE mean reduction
+through the same fast neural-network selection used by the RL firmware:
+symmetric hidden sizes use `standardize -> MLP`, while asymmetric hidden sizes
+use `standardize -> dense(H1) -> MLP tail(H2, 1)`. Standardization is
+initialized as identity. The benchmark invokes the RLTools Dense/MLP layer
+operations directly in static storage to avoid static wrapper-copy artifacts
+while preserving the same topology and math path.
 Firmware runs also emit component profiling counters from a separate
 equivalent profiling pass with the same initial parameters and dataset, so the
 primary speedup timings are not polluted by internal probes. C++ and RLTools
@@ -119,7 +125,7 @@ The STM32N6 report contains the rows needed for the main four-way comparison:
 | `legacy_c` | `EL-C M55`, the private legacy C runtime with the M55 backend |
 | `cpp_generic` | `EL++ generic scalar`, the public C++ model without specialized M55 kernels |
 | `cpp_m55` | `EL++ M55`, the same public C++ model using the M55 backend policy |
-| `rltools_generic` | `RLTools Generic`, the external C++ baseline using generic RLTools neural-network operations with static batch-256 tensors |
+| `rltools_generic` | `RLTools Generic`, the external C++ baseline using the generic/static RLTools layer path aligned with the fast RL firmware network selection and static batch-256 tensors |
 
 The `cpp_direct_c_backend` row is an additional ablation: it keeps the C++ model
 layout while calling the legacy C backend kernels directly. It is useful for

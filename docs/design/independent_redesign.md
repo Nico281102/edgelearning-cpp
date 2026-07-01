@@ -31,5 +31,7 @@ is not distributed here.
 
 ![STM32N6 private C ablation training component breakdown](assets/stm32n6_training_component_breakdown_2026-06-30_private_c_ablation.svg)
 
+![STM32N6 private C ablation ELF component breakdown](assets/stm32n6_elf_component_breakdown_2026-06-30_private_c_ablation.svg)
+
 The public, reproducible firmware benchmark remains the C++/RLTools sweep under
 `benchmarks/firmware/stm32n6/el_cvscpp_ablation/results/`.

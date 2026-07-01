@@ -288,7 +288,7 @@ def write_speedup_svg(path: Path, rows: list[dict[str, object]]) -> None:
         return top + (1.0 - ((value - y_min) / (y_max - y_min))) * plot_h
 
     baseline_variant = str(rows[0].get("baseline_variant", "legacy_c")) if rows else "legacy_c"
-    baseline_label = "legacy C baseline" if baseline_variant == "legacy_c" else "RLTools Generic baseline"
+    baseline_label = "C M55 baseline" if baseline_variant == "legacy_c" else "RLTools Generic baseline"
     active_variants = tuple(
         variant for variant in VARIANTS if any(str(row["variant"]) == variant for row in rows)
     )

@@ -119,7 +119,7 @@ CXX_WARN_FLAGS := $(WARN_FLAGS) -Wno-unused-parameter -Wno-unused-local-typedefs
 DEP_FLAGS := -MMD -MP
 
 CFLAGS := $(CPU_FLAGS) -std=gnu11 $(OPT_FLAGS) $(WARN_FLAGS) $(COMMON_DEFS) $(COMMON_INCS) --specs=nano.specs $(DEP_FLAGS)
-CXXFLAGS := $(CPU_FLAGS) -std=gnu++20 $(OPT_FLAGS) $(CXX_WARN_FLAGS) -fno-exceptions -fno-rtti -fno-use-cxa-atexit $(COMMON_DEFS) $(COMMON_INCS) --specs=nano.specs $(DEP_FLAGS)
+CXXFLAGS := $(CPU_FLAGS) -std=gnu++20 $(OPT_FLAGS) $(CXX_WARN_FLAGS) -fno-exceptions -fno-rtti -fno-use-cxa-atexit $(COMMON_DEFS) $(COMMON_INCS) $(EXTRA_CXXFLAGS) --specs=nano.specs $(DEP_FLAGS)
 ASFLAGS := $(CPU_FLAGS) -x assembler-with-cpp $(COMMON_DEFS) --specs=nano.specs $(DEP_FLAGS)
 LDFLAGS := $(CPU_FLAGS) -T$(LINKER_SCRIPT) --specs=nosys.specs --specs=nano.specs -Wl,-Map=$(MAP) -Wl,--gc-sections -static -Wl,--cmse-implib -Wl,--out-implib=$(BUILD_DIR)/secure_nsclib.o
 LDLIBS := -Wl,--start-group -lc -lm -lstdc++ -lsupc++ -Wl,--end-group

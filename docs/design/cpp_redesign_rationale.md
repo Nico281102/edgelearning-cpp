@@ -31,7 +31,8 @@ This also makes ablation experiments cleaner:
   kernels;
 - `EL++ M55` measures the same public C++ API with the M55 backend policy;
 - `RLTools Generic` provides an external TinyRL-style static C++ baseline with
-  generic RLTools neural-network operations and batch-256 tensors.
+  RLTools neural-network APIs, batch-256 tensors, and the same fast RLTools
+  network selection used by the RL firmware path.
 
 The comparison separates language/runtime structure from backend specialization.
 If `EL++ generic scalar` is close to `EL-C M55`, the static C++ representation

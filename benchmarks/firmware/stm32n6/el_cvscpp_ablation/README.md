@@ -2,10 +2,10 @@
 
 This directory contains the firmware-side launcher for the STM32N6 benchmark.
 The public path compares EdgeLearning++ M55, EdgeLearning++ generic, and
-RLTools generic with static batch-256 tensors. The legacy-C rows are a private
-ablation: they are reproducible only when `EL_CVSCPP_EDGE_C_ROOT` points at an
-external legacy C checkout. The legacy C source is not vendored, copied, or
-published in this repository.
+RLTools Generic with static batch-256 tensors. The legacy-C rows are a
+private ablation: they are reproducible only when `EL_CVSCPP_EDGE_C_ROOT`
+points at an external legacy C checkout. The legacy C source is not vendored,
+copied, or published in this repository.
 RLTools is also referenced only by local path through `EL_CVSCPP_RLTOOLS_ROOT`;
 no RLTools sources are copied into this directory.
 
@@ -121,8 +121,8 @@ The full private ablation measures:
 - C++ static model calling the same legacy C backend kernels directly;
 - C++ static model using `edge::Backend::M55`;
 - C++ static model using `edge::Backend::Generic`.
-- RLTools C++ generic static model using only RLTools neural-network APIs and
-  static batch-256 tensors.
+- RLTools C++ static model using the generic/static RLTools layer path aligned
+  with the fast RL firmware network selection and static batch-256 tensors.
 
 All cases use input size 3 by default, batch size 256, one linear output
 neuron, static model or arena storage, 10 deterministic seeds, and
@@ -131,6 +131,12 @@ mean-reduced minibatch gradients: C and EdgeLearning++ accumulate 256
 per-sample gradients, scale them by `1/256`, and then apply one Adam update;
 RLTools uses a static `[256, input_features]` input tensor and one
 forward/loss/backward/update per minibatch with equivalent MSE mean reduction.
+Its benchmark model follows the same fast RLTools network selection used by the
+RL firmware: symmetric hidden sizes use `standardize -> MLP`, while asymmetric
+hidden sizes use `standardize -> dense(H1) -> MLP tail(H2, 1)`. Standardization
+is initialized as identity. The benchmark calls the RLTools Dense/MLP layer
+operations directly in static storage so the firmware avoids extra wrapper
+copies while preserving the same topology and math path.
 The measured training protocol uses
 Adam (`lr=1e-3`, `beta1=0.9`, `beta2=0.999`, `eps=1e-8`), a 1024-sample
 rollout, 2 epochs, 4 minibatches per epoch, 8 Adam optimizer steps, and 2048
