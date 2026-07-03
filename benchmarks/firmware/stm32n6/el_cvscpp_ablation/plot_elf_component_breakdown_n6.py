@@ -13,6 +13,7 @@ from pathlib import Path
 
 
 VARIANTS = ("legacy_c", "cpp_direct_c_backend", "cpp_m55", "cpp_generic", "rltools_generic")
+PLOT_VARIANTS = tuple(variant for variant in VARIANTS if variant != "cpp_direct_c_backend")
 VARIANT_LABELS = {
     "legacy_c": "C M55",
     "cpp_direct_c_backend": "C++ direct C backend",
@@ -79,7 +80,7 @@ def read_rows(path: Path) -> list[dict[str, object]]:
     rows: list[dict[str, object]] = []
     with path.open("r", encoding="utf-8", newline="") as f:
         for summary in csv.DictReader(f):
-            for variant in VARIANTS:
+            for variant in PLOT_VARIANTS:
                 row = {
                     "config": summary.get("config", ""),
                     "input_features": to_int(summary.get("input_features")),
@@ -168,7 +169,7 @@ def write_svg(path: Path, rows: list[dict[str, object]]) -> None:
         if config not in configs:
             configs.append(config)
     variants = tuple(
-        variant for variant in VARIANTS if any(row["variant"] == variant for row in rows)
+        variant for variant in PLOT_VARIANTS if any(row["variant"] == variant for row in rows)
     )
 
     bar_w = 16

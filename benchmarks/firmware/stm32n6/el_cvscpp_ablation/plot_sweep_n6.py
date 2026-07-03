@@ -14,6 +14,7 @@ from pathlib import Path
 
 
 VARIANTS = ("legacy_c", "cpp_direct_c_backend", "cpp_m55", "cpp_generic", "rltools_generic")
+PLOT_VARIANTS = tuple(variant for variant in VARIANTS if variant != "cpp_direct_c_backend")
 LABELS = {
     "legacy_c": "C M55",
     "cpp_direct_c_backend": "C++ direct C backend",
@@ -103,10 +104,10 @@ def to_int(value: object, default: int = 0) -> int:
 def active_variants_from_summary(rows: list[dict[str, str]]) -> tuple[str, ...]:
     active = [
         variant
-        for variant in VARIANTS
+        for variant in PLOT_VARIANTS
         if any(to_int(row.get(f"{variant}_cycles_avg")) > 0 for row in rows)
     ]
-    return tuple(active) if active else VARIANTS
+    return tuple(active) if active else PLOT_VARIANTS
 
 
 def parse_kv_line(line: str) -> tuple[str, dict[str, str]]:
@@ -151,7 +152,7 @@ def write_speedup_csv(path: Path, rows: list[dict[str, str]]) -> list[dict[str, 
         rltools = to_int(row.get("rltools_generic_cycles_avg"))
         baseline_variant = "legacy_c" if legacy > 0 else "rltools_generic"
         baseline = legacy if legacy > 0 else rltools
-        for variant in VARIANTS:
+        for variant in PLOT_VARIANTS:
             cycles = to_int(row.get(f"{variant}_cycles_avg"))
             if cycles <= 0:
                 continue
@@ -290,7 +291,7 @@ def write_speedup_svg(path: Path, rows: list[dict[str, object]]) -> None:
     baseline_variant = str(rows[0].get("baseline_variant", "legacy_c")) if rows else "legacy_c"
     baseline_label = "C M55 baseline" if baseline_variant == "legacy_c" else "RLTools Generic baseline"
     active_variants = tuple(
-        variant for variant in VARIANTS if any(str(row["variant"]) == variant for row in rows)
+        variant for variant in PLOT_VARIANTS if any(str(row["variant"]) == variant for row in rows)
     )
 
     lines = svg_header(width, height)
@@ -544,7 +545,7 @@ def write_convergence_svg(path: Path, rows: list[dict[str, object]], config: str
     x_values = sorted({int(row["sample_passes"]) for row in selected})
     y_values = [float(row["minibatch_mse"]) for row in selected]
     active_variants = tuple(
-        variant for variant in VARIANTS if any(row["variant"] == variant for row in selected)
+        variant for variant in PLOT_VARIANTS if any(row["variant"] == variant for row in selected)
     )
     x_min, x_max = min(x_values), max(x_values)
     y_min = min(y_values) * 0.80
@@ -575,7 +576,7 @@ def write_convergence_svg(path: Path, rows: list[dict[str, object]], config: str
         x = sx(x_value)
         lines.append(f'<line class="grid" x1="{x:.1f}" y1="{top}" x2="{x:.1f}" y2="{top + plot_h}"/>')
         lines.append(f'<text class="tick" x="{x:.1f}" y="{top + plot_h + 22}" text-anchor="middle">{x_value}</text>')
-    for variant in VARIANTS:
+    for variant in PLOT_VARIANTS:
         series = sorted(
             [row for row in selected if row["variant"] == variant],
             key=lambda row: int(row["sample_passes"]),
@@ -616,7 +617,10 @@ def main() -> int:
     write_speedup_svg(speedup_svg, speedup_rows)
     runtime_breakdown_rows = write_runtime_breakdown_csv(runtime_breakdown_csv, summary_rows, active_variants)
     write_runtime_breakdown_svg(runtime_breakdown_svg, runtime_breakdown_rows, active_variants)
-    trace_rows = read_trace_rows(summary_rows, project_root)
+    trace_rows = [
+        row for row in read_trace_rows(summary_rows, project_root)
+        if str(row.get("variant", "")) in PLOT_VARIANTS
+    ]
     write_convergence_csv(convergence_csv, trace_rows)
     write_convergence_svg(convergence_svg, trace_rows, args.convergence_config)
     update_markdown_plots(summary_csv, speedup_svg, convergence_svg, runtime_breakdown_svg, elf_svg)
